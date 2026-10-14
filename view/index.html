@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dragonborn XP</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="dragonborn-xp" aria-live="polite" aria-atomic="true">
+    <div class="toast-shell">
+      <div class="scene" aria-hidden="true">
+        <span class="cloud cloud-one"></span>
+        <span class="cloud cloud-two"></span>
+        <span class="grass"></span>
+      </div>
+      <div class="dragon-stage" aria-hidden="true">
+        <div class="dragon">
+          <i class="horn horn-left"></i><i class="horn horn-right"></i>
+          <i class="spike spike-one"></i><i class="spike spike-two"></i><i class="spike spike-three"></i>
+          <i class="wing wing-left"></i><i class="wing wing-right"></i>
+          <i class="body"></i><i class="belly"></i>
+          <i class="eye eye-left"></i><i class="eye eye-right"></i>
+          <i class="snout"></i><i class="mouth"></i><i class="nostril nostril-one"></i><i class="nostril nostril-two"></i>
+          <i class="tooth tooth-one"></i><i class="tooth tooth-two"></i>
+          <i class="foot foot-left"></i><i class="foot foot-right"></i><i class="claw claw-left"></i><i class="claw claw-right"></i>
+          <i class="tail"></i><i class="tail-tip"></i>
+        </div>
+        <div class="pet-art pet-mudcrab" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
+        <div class="pet-art pet-skeever" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
+        <div class="pet-art pet-fox" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
+        <div class="pet-art pet-sabrecat" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
+        <div class="pet-art pet-frostbite-spider" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i><i class="pet-eye pet-eye-three"></i><i class="pet-eye pet-eye-four"></i></div>
+        <div class="pet-art pet-horker" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i><i class="pet-tusk pet-tusk-one"></i><i class="pet-tusk pet-tusk-two"></i></div>
+        <div class="pet-art pet-troll" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
+        <div class="pet-art pet-flame-atronach" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
+        <div class="pet-art pet-frost-atronach" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
+        <div class="pet-art pet-spriggan" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
+        <div class="pet-art pet-dwarven-spider" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
+        <div class="pet-art pet-chaurus" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
+        <div class="pet-art pet-netch" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
+        <div class="pet-art pet-mammoth" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-tusk pet-tusk-one"></i><i class="pet-tusk pet-tusk-two"></i></div>
+        <div class="pet-art pet-dragon-priest" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
+        <div class="pet-art pet-wisp" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
+        <div class="pet-art pet-death-hound" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
+        <div class="pet-art pet-chicken" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-comb"></i></div>
+        <span class="fire-breath"></span>
+      </div>
+      <section class="copy">
+        <p id="title">The dragon stirs…</p>
+        <p id="detail">A little more power for the road.</p>
+      </section>
+      <div class="xp-bar" aria-hidden="true"><span></span></div>
+    </div>
+  </main>
+  <section id="settings-menu" class="hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="settings-card">
+      <header class="settings-header">
+        <div>
+          <p class="settings-kicker">DRAGONBORN XP</p>
+          <h1 id="settings-title">Dragon settings</h1>
+        </div>
+        <button id="settings-close" class="settings-close" type="button" aria-label="Close settings">×</button>
+      </header>
+      <p class="settings-help">Place your little dragon anywhere on the screen and choose the key that opens this menu.</p>
+      <div class="settings-group">
+        <h2>Pet</h2>
+        <label class="settings-row" for="pet-select">
+          <span>Choose your companion <small>Switches the dragon style</small></span>
+          <select id="pet-select">
+            <option value="dovahmin">Dovahmin</option>
+            <option value="dovahpink">Dovahpink</option>
+            <option value="mudcrab">Clack — Mudcrab</option>
+            <option value="skeever">Nibbles — Skeever</option>
+            <option value="fox">Ember — Fox</option>
+            <option value="sabrecat">Stripes — Sabre Cat</option>
+            <option value="frostbite-spider">Webber — Frostbite Spider</option>
+            <option value="horker">Waddles — Horker</option>
+            <option value="troll">Grumble — Troll</option>
+            <option value="flame-atronach">Cinder — Flame Atronach</option>
+            <option value="frost-atronach">Shiver — Frost Atronach</option>
+            <option value="spriggan">Moss — Spriggan</option>
+            <option value="dwarven-spider">Tinker — Dwarven Spider</option>
+            <option value="chaurus">Skitter — Chaurus</option>
+            <option value="netch">Bloop — Netch</option>
+            <option value="mammoth">Tusker — Mammoth</option>
+            <option value="dragon-priest">Masky — Dragon Priest</option>
+            <option value="wisp">Glowbug — Wisp</option>
+            <option value="death-hound">Gnasher — Death Hound</option>
+            <option value="chicken">Pip — Chicken</option>
+          </select>
+        </label>
+      </div>
+      <div class="settings-group">
+        <h2>Position</h2>
+        <label class="settings-row" for="position-x">
+          <span>X position <small>left edge</small></span>
+          <span class="position-control"><input id="position-x" type="range" min="0" max="3000" step="1"><input id="position-x-value" type="number" min="0" max="3000" step="1"></span>
+        </label>
+        <label class="settings-row" for="position-y">
+          <span>Y position <small>top edge</small></span>
+          <span class="position-control"><input id="position-y" type="range" min="0" max="2000" step="1"><input id="position-y-value" type="number" min="0" max="2000" step="1"></span>
+        </label>
+        <button id="reset-position" class="settings-secondary" type="button">Reset to top-right</button>
+      </div>
+      <div class="settings-group">
+        <h2>Hotkey</h2>
+        <button id="settings-hotkey" class="hotkey-capture" type="button">Shift+B</button>
+        <p id="hotkey-hint" class="settings-hint">Click the key box, then press a key or modifier combination.</p>
+      </div>
+      <footer class="settings-footer">
+        <button id="settings-cancel" class="settings-secondary" type="button">Cancel</button>
+        <button id="settings-save" class="settings-primary" type="button">Save settings</button>
+      </footer>
+    </div>
+  </section>
+  <script src="app.js"></script>
+</body>
+</html>
