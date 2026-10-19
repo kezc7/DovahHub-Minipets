@@ -14,189 +14,290 @@
 html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
 body { font-family: Georgia, "Times New Roman", serif; color: var(--gold); }
 
-#dragonborn-xp { position: fixed; inset: 0; display: grid; place-items: start end; padding: 7vh 3vw 0 0; pointer-events: none; opacity: 1; }
-#dragonborn-xp.custom-position { inset: auto; width: 256px; height: 256px; display: block; padding: 0; }
+#dragonborn-xp { position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: grid; place-items: start end; padding: 7vh 3vw 0 0; pointer-events: none; opacity: 1; }
+#dragonborn-xp.inactive { visibility: hidden; }
+#dragonborn-xp.custom-position { top: auto; right: auto; bottom: auto; left: auto; width: 256px; height: 256px; display: block; padding: 0; }
 #dragonborn-xp.pet-dovahpink { --scale: #c85b91; --scale-light: #f08bb6; --ice: #f7bdd9; --gold: #fff0a9; }
-.toast-shell { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: 256px; height: 256px; padding: 16px 18px 24px; overflow: hidden; border: 1px solid rgba(35, 65, 69, .72); border-radius: 18px 36px 18px 36px; background: #69c7e8; box-shadow: 0 10px 30px rgba(0, 0, 0, .4), inset 0 0 0 1px rgba(255, 255, 255, .28); opacity: 1; transform: translateX(0) scale(1); }
-.toast-shell::before { content: ""; position: absolute; inset: 0; z-index: 4; padding: 2px; border-radius: inherit; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .62) 0 3px, rgba(43, 79, 78, .72) 3px 6px, rgba(195, 224, 178, .48) 6px 9px); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: .72; pointer-events: none; }
+.toast-shell { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: 256px; height: 256px; padding: 16px 14px 16px; border: 7px double #c9c3b1; border-radius: 2px; background: #1c1a16; box-shadow: 0 0 0 1px #14130f, 0 0 0 2px rgba(201, 195, 177, .45), 0 10px 30px rgba(0, 0, 0, .55); opacity: 1; transform: translateX(0) scale(1); }
+/* frame: iron band, double steel rule, knot ornaments from pet-sprites.js */
+.toast-shell::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 4; border: 1px solid #14130f; box-shadow: inset 0 0 0 1px rgba(241, 237, 225, .35), inset 0 0 24px rgba(12, 12, 10, .38); pointer-events: none; }
+.frame-corner, .frame-emblem { position: absolute; z-index: 5; display: block; width: 48px; height: 48px; image-rendering: pixelated; pointer-events: none; }
+.frame-top-left { top: -7px; left: -7px; }
+.frame-top-right { top: -7px; right: -7px; }
+.frame-bottom-left { bottom: -7px; left: -7px; }
+.frame-bottom-right { right: -7px; bottom: -7px; }
+.frame-emblem { top: -17px; left: 50%; width: 51px; height: 27px; margin-left: -25px; }
 #dragonborn-xp.show .toast-shell { animation: event-pop 420ms ease-out both; }
-#dragonborn-xp.show.level-up .toast-shell { border-color: rgba(238, 210, 119, .85); box-shadow: 0 0 30px rgba(227, 177, 70, .28), 0 8px 24px rgba(0, 0, 0, .4); }
-.scene { position: absolute; inset: 0; z-index: 0; background: linear-gradient(to bottom, #68c8ea 0%, #8bd8ed 69%, #6aaf4d 69%, #4d8f3e 100%); }
+#dragonborn-xp.show.level-up .toast-shell { border-color: #2a2414; box-shadow: 0 0 0 1px rgba(238, 210, 119, .85), 0 0 30px rgba(227, 177, 70, .35), 0 8px 24px rgba(0, 0, 0, .45); }
+.scene { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 0; overflow: hidden; background: linear-gradient(to bottom, #68c8ea 0%, #8bd8ed 69%, #6aaf4d 69%, #4d8f3e 100%); }
 .scene::before { content: ""; position: absolute; right: -16px; bottom: 38px; left: -16px; height: 22px; background: #80bf5a; clip-path: polygon(0 75%, 18% 35%, 35% 65%, 52% 20%, 70% 58%, 86% 28%, 100% 68%, 100% 100%, 0 100%); opacity: .85; }
 .grass { position: absolute; right: 0; bottom: 0; left: 0; height: 34px; background: repeating-linear-gradient(115deg, rgba(35, 91, 48, .28) 0 2px, transparent 2px 9px), repeating-linear-gradient(75deg, rgba(171, 211, 86, .25) 0 1px, transparent 1px 12px); }
 .cloud { position: absolute; width: 35px; height: 11px; border: 2px solid rgba(255, 255, 255, .6); border-radius: 8px; background: rgba(255, 255, 255, .92); box-shadow: 8px -7px 0 -1px rgba(255, 255, 255, .92), 20px -4px 0 -2px rgba(255, 255, 255, .92); }
 .cloud-one { top: 19px; left: 15px; transform: scale(.82); }
 .cloud-two { top: 45px; right: 12px; transform: scale(.62); opacity: .78; }
-.scene::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.scene::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; opacity: 0; }
 .time-dawn .scene { background: linear-gradient(to bottom, #f0ad86 0%, #f9d9b2 69%, #789d53 69%, #4f8140 100%); }
 .time-sunset .scene { background: linear-gradient(to bottom, #c96568 0%, #efb071 44%, #7781af 69%, #405e3c 69%, #304f35 100%); }
 .time-night .scene { background: linear-gradient(to bottom, #101b3a 0%, #263f68 69%, #2d4735 69%, #1d3028 100%); }
 .time-night .scene::before { background: #46644b; opacity: .58; }
 .time-night .grass { background: repeating-linear-gradient(115deg, rgba(21, 52, 35, .48) 0 2px, transparent 2px 9px), repeating-linear-gradient(75deg, rgba(111, 146, 69, .24) 0 1px, transparent 1px 12px); }
 .time-night .cloud { opacity: .18; }
+/* sun/moons are placed by updateSky(), .sky ends at the horizon so they set behind it */
+.sky { position: absolute; top: 0; right: 0; left: 0; height: 69%; overflow: hidden; pointer-events: none; }
+.sky-body { position: absolute; top: 0; left: 0; transition: transform 3s linear; }
+.sky-body canvas { position: absolute; display: none; image-rendering: pixelated; }
+.sky-sun { display: none; width: 75px; height: 75px; }
+.weather-clear .sky-sun { display: block; }
+.sky .sky-body.down { display: none; }
+.sky-sun .sun-halo { top: 0; left: 0; width: 75px; height: 75px; animation: sun-turn 48s linear infinite; }
+.sky-sun .sun-noon { top: 18px; left: 18px; width: 39px; height: 39px; }
+.sky-sun .sun-dawn, .sky-sun .sun-dusk { top: 9px; left: 9px; width: 57px; height: 57px; }
+.time-day .sun-halo, .time-day .sun-noon, .time-dawn .sun-dawn, .time-sunset .sun-dusk { display: block; }
+.sky-masser { width: 51px; height: 51px; }
+.sky-secunda { width: 33px; height: 33px; }
+.sky-masser canvas, .sky-secunda canvas { display: block; top: 0; left: 0; width: 100%; height: 100%; }
+/* parallax layers are 2 tiles wide and move left by 1 tile, paused unless travelling */
+.scenery { position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow: hidden; pointer-events: none; }
+.scenery-layer { position: absolute; top: 0; left: 0; image-rendering: pixelated; animation: scenery-scroll 1s linear infinite; animation-play-state: paused; }
+.scenery-far { animation-duration: 90s; }
+.scenery-near { animation-duration: 45s; }
+.scenery-horizon { animation-duration: 22s; }
+.scenery-ground { animation-duration: 7s; }
+#dragonborn-xp.travelling .scenery-layer { animation-play-state: running; }
+#dragonborn-xp .scenery-landmark { animation: none; }
+
+/* regions */
+.region-ground { position: absolute; top: 69%; right: 0; bottom: 0; left: 0; display: none; }
+#dragonborn-xp.region-solstheim .region-ground { display: block; background: linear-gradient(#7a7064, #575047); }
+#dragonborn-xp.region-solstheim.time-sunset .region-ground, #dragonborn-xp.region-solstheim.time-dawn .region-ground { background: linear-gradient(#6c5c54, #4a403b); }
+#dragonborn-xp.region-solstheim.time-night .region-ground { background: linear-gradient(#2e2d33, #1f1e23); }
+#dragonborn-xp.region-solstheim .grass, #dragonborn-xp.region-solstheim .scene::before { display: none; }
+.volcano-plume { position: absolute; display: none; width: 0; height: 0; }
+#dragonborn-xp.region-solstheim .volcano-plume { display: block; }
+.plume-puff { position: absolute; top: -10px; left: -7px; width: 14px; height: 14px; border-radius: 3px; background: rgba(70, 64, 62, .7); opacity: 0; animation: plume-rise 6s linear infinite; }
+.plume-puff-1 { animation-delay: -1.5s; left: -5px; }
+.plume-puff-2 { animation-delay: -3s; left: -9px; }
+.plume-puff-3 { animation-delay: -4.5s; left: -6px; background: rgba(240, 120, 60, .45); animation-duration: 3s; }
+/* no sky indoors or in the realms */
+#dragonborn-xp.sky-hidden .sky, #dragonborn-xp.sky-hidden .cloud, #dragonborn-xp.sky-hidden .grass,
+#dragonborn-xp.sky-hidden .scene::before, #dragonborn-xp.sky-hidden .weather-flash { display: none; }
+#dragonborn-xp.region-dwemer .scene { background: linear-gradient(to bottom, #2a2420 0%, #3d3229 66%, #2c251f 69%, #3e3329 69%, #221c17 100%); }
+#dragonborn-xp.region-tomb .scene { background: linear-gradient(to bottom, #19181c 0%, #2b292e 66%, #232126 69%, #34302c 69%, #1b1917 100%); }
+#dragonborn-xp.region-cave .scene { background: linear-gradient(to bottom, #221f1d 0%, #36312c 66%, #2a2622 69%, #3a342e 69%, #1e1b18 100%); }
+#dragonborn-xp.region-mine .scene { background: linear-gradient(to bottom, #241f1b 0%, #3a3129 66%, #2b241e 69%, #40352a 69%, #201a15 100%); }
+#dragonborn-xp.region-house .scene, #dragonborn-xp.region-inn .scene { background: linear-gradient(to bottom, #4a3423 0%, #5e432c 66%, #4c3624 69%, #6a4a30 69%, #3b291b 100%); }
+#dragonborn-xp.region-temple .scene { background: linear-gradient(to bottom, #6e6658 0%, #8a8070 66%, #766d5e 69%, #9a907e 69%, #5e564a 100%); }
+#dragonborn-xp.region-vampire .scene { background: linear-gradient(to bottom, #160f12 0%, #2a1a1e 66%, #1f1416 69%, #2e1e20 69%, #120c0d 100%); }
+#dragonborn-xp.region-falmer .scene { background: linear-gradient(to bottom, #0f1820 0%, #1b2a36 66%, #142028 69%, #223240 69%, #0c141a 100%); }
+#dragonborn-xp.region-blackreach .scene { background: linear-gradient(to bottom, #080a16 0%, #141a30 66%, #10142a 69%, #1a2036 69%, #0a0c18 100%); }
+#dragonborn-xp.region-apocrypha .scene { background: linear-gradient(to bottom, #0c160e 0%, #1e3420 50%, #284426 69%, #16241a 69%, #0a120c 100%); }
+#dragonborn-xp.region-soulcairn .scene { background: linear-gradient(to bottom, #2a1c3e 0%, #5a4276 55%, #7a62a0 69%, #3a2c4a 69%, #221a2c 100%); }
+#dragonborn-xp.region-sovngarde .scene { background: linear-gradient(to bottom, #e8c88a 0%, #f4dfae 50%, #fbeccc 69%, #b8a26a 69%, #8c7a48 100%); }
+/* Ground colours for open-sky cities. */
+#dragonborn-xp.region-windhelm .region-ground { display: block; background: linear-gradient(#dfe6ee, #b8c2ce); }
+#dragonborn-xp.region-windhelm.time-night .region-ground { background: linear-gradient(#5a6478, #3e4658); }
+#dragonborn-xp.region-markarth .region-ground { display: block; background: linear-gradient(#a6805e, #7c5c42); }
+#dragonborn-xp.region-markarth.time-night .region-ground { background: linear-gradient(#3e3240, #2a222c); }
+#dragonborn-xp.region-windhelm .grass, #dragonborn-xp.region-markarth .grass { display: none; }
+/* per-region lighting */
+#dragonborn-xp.light-warm .scene::after { background: radial-gradient(ellipse at 50% 70%, rgba(255, 200, 120, .16), rgba(0, 0, 0, .25) 80%); opacity: 1; animation: none; }
+#dragonborn-xp.light-flicker .scene::after { background: radial-gradient(ellipse at 50% 65%, rgba(255, 150, 70, .2), rgba(0, 0, 0, .35) 80%); opacity: 1; animation: torch-flicker 1.6s steps(1) infinite; }
+#dragonborn-xp.light-hearth .scene::after { background: radial-gradient(ellipse at 50% 72%, rgba(255, 170, 80, .22), rgba(0, 0, 0, .18) 85%); opacity: 1; animation: torch-flicker 2.2s steps(1) infinite; }
+#dragonborn-xp.light-dim .scene::after { background: radial-gradient(ellipse at 50% 70%, rgba(255, 210, 150, .12), rgba(0, 0, 0, .26) 80%); opacity: 1; animation: none; }
+#dragonborn-xp.light-holy .scene::after { background: linear-gradient(rgba(255, 236, 180, .18), rgba(255, 236, 180, 0) 70%); opacity: 1; animation: none; }
+#dragonborn-xp.light-blood .scene::after { background: radial-gradient(ellipse at 50% 70%, rgba(200, 40, 50, .18), rgba(0, 0, 0, .4) 80%); opacity: 1; animation: torch-flicker 2.4s steps(1) infinite; }
+#dragonborn-xp.light-cool .scene::after { background: radial-gradient(ellipse at 50% 60%, rgba(120, 180, 255, .14), rgba(0, 0, 0, .35) 85%); opacity: 1; animation: none; }
+#dragonborn-xp.light-eldritch .scene::after { background: radial-gradient(ellipse at 50% 60%, rgba(140, 220, 120, .12), rgba(0, 0, 0, .4) 85%); opacity: 1; animation: none; }
+#dragonborn-xp.light-violet .scene::after { background: radial-gradient(ellipse at 50% 50%, rgba(220, 180, 255, .14), rgba(30, 10, 50, .3) 85%); opacity: 1; animation: none; }
+#dragonborn-xp.light-gold .scene::after { background: radial-gradient(ellipse at 50% 40%, rgba(255, 244, 210, .3), rgba(255, 220, 150, 0) 80%); opacity: 1; animation: none; }
+.weather-layer.weather-rise { animation-direction: reverse; }
+#dragonborn-xp.travelling.archetype-flyer .scenery-far, #dragonborn-xp.travelling.archetype-hover .scenery-far { animation-duration: 60s; }
+#dragonborn-xp.travelling.archetype-flyer .scenery-near, #dragonborn-xp.travelling.archetype-hover .scenery-near { animation-duration: 30s; }
+#dragonborn-xp.travelling.archetype-flyer .scenery-horizon, #dragonborn-xp.travelling.archetype-hover .scenery-horizon { animation-duration: 14s; }
+#dragonborn-xp.travelling.archetype-flyer .scenery-ground, #dragonborn-xp.travelling.archetype-hover .scenery-ground { animation-duration: 4.5s; }
+body.timelapse .sky-body { transition: none; }
 .weather-cloudy .scene::after { background: rgba(53, 69, 84, .3); opacity: 1; }
-.weather-rain .scene::after { background: repeating-linear-gradient(112deg, transparent 0 12px, rgba(212, 236, 255, .5) 13px 15px, transparent 16px 28px); opacity: .72; animation: rain 720ms linear infinite; }
-.weather-snow .scene::after { background-image: radial-gradient(circle, rgba(255, 255, 255, .95) 0 2px, transparent 2.5px), radial-gradient(circle, rgba(255, 255, 255, .72) 0 1.5px, transparent 2px); background-position: 2px 4px, 15px 12px; background-size: 24px 24px, 31px 31px; opacity: .82; animation: snow 3.5s linear infinite; }
-.weather-storm .scene::after { background: linear-gradient(rgba(29, 38, 59, .34), rgba(29, 38, 59, .34)), repeating-linear-gradient(112deg, transparent 0 12px, rgba(212, 236, 255, .5) 13px 15px, transparent 16px 28px); opacity: .9; animation: rain 620ms linear infinite, lightning 5s steps(1) infinite; }
-.dragon-stage, .copy, .xp-bar { z-index: 1; }
-.toast-shell .copy { order: 1; }
-.toast-shell .dragon-stage { order: 2; }
-.state-flying .toast-shell .copy { order: 2; }
-.state-flying .toast-shell .dragon-stage { order: 1; }
-.copy { width: 100%; min-width: 0; padding: 8px 10px 9px; border: 1px solid rgba(255, 255, 255, .38); border-radius: 9px; background: rgba(238, 247, 226, .86); box-shadow: 0 2px 0 rgba(30, 67, 54, .16); text-align: center; }
-#title { margin: 0; color: #182c38; font: 700 24px/1.05 Georgia, serif; }
-#detail { margin: 7px 0 0; color: #23434a; font: 15px/1.15 Georgia, serif; }
-.xp-bar { position: absolute; right: 18px; bottom: 13px; left: 18px; height: 4px; background: rgba(230, 199, 119, .14); }
+/* weather particles (renderWeather), 2 tiles tall so they loop */
+.weather-rain .scene::after { background: rgba(48, 64, 82, .22); opacity: 1; }
+.weather-storm .scene::after { background: rgba(26, 34, 54, .4); opacity: 1; }
+.weather-snow .scene::after { background: rgba(225, 236, 250, .12); opacity: 1; }
+.weather-sway, .weather-layer { position: absolute; top: 0; right: 0; left: 0; pointer-events: none; }
+.weather-layer { animation: weather-fall 1s linear infinite; }
+.weather-layer canvas { display: block; image-rendering: pixelated; }
+.weather-sway { bottom: 0; animation: weather-sway 3.6s ease-in-out infinite alternate; }
+.weather-flash { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: #eef4ff; opacity: 0; pointer-events: none; animation: weather-flash 6.5s linear infinite; }
+/* caption: name plate when idle, full text for events */
+.dragon-stage, .xp-bar { z-index: 1; }
+.copy { position: absolute; right: 8px; bottom: 12px; left: 8px; z-index: 3; min-width: 0; padding: 5px 10px 6px; background: linear-gradient(to right, rgba(14, 13, 11, 0), rgba(14, 13, 11, .74) 16%, rgba(14, 13, 11, .74) 84%, rgba(14, 13, 11, 0)); text-align: center; transition: padding .25s ease, background-color .25s ease; }
+#title { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0; overflow: hidden; color: #f1ede1; font: 700 17px/1.15 Georgia, serif; letter-spacing: .02em; white-space: nowrap; text-shadow: 0 1px 2px #000; }
+#title::before, #title::after { content: ""; flex: 0 0 18px; height: 1px; background: #c9c3b1; box-shadow: 0 1px 0 rgba(0, 0, 0, .6); }
+#detail { margin: 2px 0 0; overflow: hidden; color: #d9d3c3; font: 12px/1.25 Georgia, serif; white-space: nowrap; text-overflow: ellipsis; text-shadow: 0 1px 2px #000; }
+#dragonborn-xp.caption-name .copy { padding: 2px 10px 3px; background: linear-gradient(to right, rgba(14, 13, 11, 0), rgba(14, 13, 11, .5) 28%, rgba(14, 13, 11, .5) 72%, rgba(14, 13, 11, 0)); }
+#dragonborn-xp.caption-name #title { color: rgba(241, 237, 225, .9); font: 700 11px/1.3 Georgia, serif; letter-spacing: .16em; text-transform: uppercase; }
+#dragonborn-xp.caption-name #title::before, #dragonborn-xp.caption-name #title::after { flex-basis: 10px; }
+#dragonborn-xp.caption-name #detail { display: none; }
+#dragonborn-xp.caption-full .copy { animation: caption-in .3s ease-out both; }
+.xp-bar { position: absolute; right: 46px; bottom: 6px; left: 46px; height: 4px; background: rgba(230, 199, 119, .14); transition: opacity .25s ease; }
+#dragonborn-xp.caption-name .xp-bar { opacity: 0; }
 .xp-bar span { display: block; width: 68%; height: 100%; background: linear-gradient(90deg, var(--flame), var(--gold)); transform-origin: left; animation: charge 1.2s ease-out both; }
-.dragon-stage { position: relative; width: 100%; height: 116px; transform: scale(1.24); transform-origin: center bottom; }
-.dragon { position: absolute; left: calc(50% - 42px); bottom: 4px; width: 84px; height: 74px; image-rendering: pixelated; animation: bob 1.4s ease-in-out infinite; }
-.dragon i { position: absolute; display: block; }
-.body { left: 18px; top: 24px; width: 48px; height: 39px; background: var(--scale); border: 4px solid var(--ink); border-radius: 7px 10px 5px 6px; box-shadow: inset 5px 6px var(--scale-light), inset -5px -4px #111a21; }
-.belly { left: 32px; top: 36px; width: 20px; height: 22px; background: #a9794c; border: 3px solid var(--ink); border-radius: 3px 5px 4px 4px; }
-.horn { top: 6px; width: 10px; height: 20px; background: #ddd4bb; border: 3px solid var(--ink); transform: skewY(-23deg) rotate(-8deg); }
-.horn-left { left: 22px; }.horn-right { left: 52px; transform: skewY(23deg); }
-.spike { top: 17px; width: 10px; height: 14px; background: #83a56c; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-.spike-one { left: 30px; top: 18px; }.spike-two { left: 40px; top: 14px; height: 17px; }.spike-three { left: 50px; top: 18px; }
-.wing { top: 20px; width: 31px; height: 40px; background: var(--ink); clip-path: polygon(50% 100%, 0 78%, 17% 62%, 0 40%, 38% 47%, 58% 0, 72% 45%, 100% 18%, 85% 65%, 100% 87%); }
-.wing::before { content: ""; position: absolute; inset: 4px; background: var(--ice); clip-path: polygon(50% 100%, 0 78%, 17% 62%, 0 40%, 38% 47%, 58% 0, 72% 45%, 100% 18%, 85% 65%, 100% 87%); }
-.wing-left { left: -4px; transform: scaleX(-1); }.wing-right { right: -4px; }
-.eye { top: 26px; width: 8px; height: 8px; background: var(--gold); border: 2px solid var(--ink); }
-.eye-left { left: 29px; }.eye-right { left: 50px; }
-.snout { left: 42px; top: 37px; width: 28px; height: 14px; background: #6d8b78; border: 3px solid var(--ink); border-radius: 2px 7px 6px 2px; }
-.mouth { left: 46px; top: 48px; width: 20px; height: 3px; background: var(--ink); }
-.nostril { top: 41px; width: 3px; height: 3px; background: var(--ink); }
-.nostril-one { left: 58px; }.nostril-two { left: 65px; }
-.tooth { top: 49px; width: 4px; height: 6px; background: #f2e5bb; clip-path: polygon(0 0, 100% 0, 50% 100%); }
-.tooth-one { left: 51px; }.tooth-two { left: 60px; }
-.foot { top: 59px; width: 13px; height: 10px; background: var(--scale-light); border: 3px solid var(--ink); border-radius: 4px 4px 2px 2px; }
-.foot-left { left: 22px; }.foot-right { left: 52px; }
-.claw { top: 66px; width: 8px; height: 5px; background: #e1c47b; clip-path: polygon(0 0, 100% 0, 70% 100%, 48% 35%, 25% 100%); }
-.claw-left { left: 23px; }.claw-right { left: 53px; }
-.tail { left: 57px; top: 50px; width: 22px; height: 10px; background: var(--scale-light); border: 3px solid var(--ink); border-radius: 2px 7px 5px 2px; transform: rotate(18deg); transform-origin: left; }
-.tail-tip { left: 74px; top: 47px; width: 11px; height: 12px; background: #83a56c; clip-path: polygon(0 55%, 100% 0, 68% 100%); transform: rotate(16deg); }
-#dragonborn-xp.pet-dovahpink .spike, #dragonborn-xp.pet-dovahpink .tail-tip { background: #f6a2c5; }
-#dragonborn-xp.pet-dovahpink .belly { background: #ffd0df; }
-#dragonborn-xp.pet-dovahpink .foot { background: #e978aa; }
-.pet-art { display: none; position: absolute; left: 50%; bottom: 5px; width: 88px; height: 70px; transform: translateX(-50%); image-rendering: pixelated; animation: pet-bob 1.6s ease-in-out infinite; filter: drop-shadow(0 4px 0 rgba(20, 19, 23, .78)) drop-shadow(0 7px 5px rgba(20, 26, 27, .3)); }
-#dragonborn-xp.pet-dovahmin .dragon, #dragonborn-xp.pet-dovahpink .dragon { display: block; }
-#dragonborn-xp.pet-mudcrab .dragon, #dragonborn-xp.pet-skeever .dragon, #dragonborn-xp.pet-fox .dragon, #dragonborn-xp.pet-sabrecat .dragon, #dragonborn-xp.pet-frostbite-spider .dragon, #dragonborn-xp.pet-horker .dragon, #dragonborn-xp.pet-troll .dragon, #dragonborn-xp.pet-flame-atronach .dragon, #dragonborn-xp.pet-frost-atronach .dragon, #dragonborn-xp.pet-spriggan .dragon, #dragonborn-xp.pet-dwarven-spider .dragon, #dragonborn-xp.pet-chaurus .dragon, #dragonborn-xp.pet-netch .dragon, #dragonborn-xp.pet-mammoth .dragon, #dragonborn-xp.pet-dragon-priest .dragon, #dragonborn-xp.pet-wisp .dragon, #dragonborn-xp.pet-death-hound .dragon, #dragonborn-xp.pet-chicken .dragon { display: none; }
-#dragonborn-xp.pet-mudcrab .pet-mudcrab, #dragonborn-xp.pet-skeever .pet-skeever, #dragonborn-xp.pet-fox .pet-fox, #dragonborn-xp.pet-sabrecat .pet-sabrecat, #dragonborn-xp.pet-frostbite-spider .pet-frostbite-spider, #dragonborn-xp.pet-horker .pet-horker, #dragonborn-xp.pet-troll .pet-troll, #dragonborn-xp.pet-flame-atronach .pet-flame-atronach, #dragonborn-xp.pet-frost-atronach .pet-frost-atronach, #dragonborn-xp.pet-spriggan .pet-spriggan, #dragonborn-xp.pet-dwarven-spider .pet-dwarven-spider, #dragonborn-xp.pet-chaurus .pet-chaurus, #dragonborn-xp.pet-netch .pet-netch, #dragonborn-xp.pet-mammoth .pet-mammoth, #dragonborn-xp.pet-dragon-priest .pet-dragon-priest, #dragonborn-xp.pet-wisp .pet-wisp, #dragonborn-xp.pet-death-hound .pet-death-hound, #dragonborn-xp.pet-chicken .pet-chicken { display: block; }
-.pet-art::before, .pet-art::after { content: ""; position: absolute; display: block; }
-.pet-art i { position: absolute; display: block; z-index: 4; }
-.pet-eye { width: 7px; height: 7px; border: 2px solid #17151a; border-radius: 1px; background: #fff0a9; box-shadow: inset 1px 1px #fff, 1px 1px 0 rgba(255, 255, 255, .35); }
-.pet-ear { width: 12px; height: 15px; border: 3px solid #17151a; background: #b47c53; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-.pet-tusk { width: 7px; height: 15px; border: 2px solid #493a31; border-top: 0; border-radius: 0 0 7px 7px; background: #f7e6b5; transform: rotate(18deg); }
-.pet-comb { left: 69px; top: 13px; width: 7px; height: 9px; background: #c75b39; clip-path: polygon(0 100%, 0 0, 45% 38%, 70% 0, 100% 100%); }
-.pet-mudcrab .pet-eye-one { left: 27px; top: 22px; }.pet-mudcrab .pet-eye-two { left: 51px; top: 22px; }
-.pet-skeever .pet-eye-one { left: 59px; top: 34px; }.pet-skeever .pet-ear-one { left: 47px; top: 17px; transform: rotate(-20deg); }.pet-skeever .pet-ear-two { left: 60px; top: 18px; transform: rotate(20deg); }
-.pet-fox .pet-eye-one { left: 66px; top: 29px; }.pet-fox .pet-ear-one { left: 57px; top: 12px; background: #c35b32; transform: rotate(-16deg); }.pet-fox .pet-ear-two { left: 70px; top: 14px; background: #c35b32; transform: rotate(17deg); }
-.pet-sabrecat .pet-eye-one { left: 67px; top: 28px; }.pet-sabrecat .pet-ear-one { left: 59px; top: 11px; background: #b88c58; }.pet-sabrecat .pet-ear-two { left: 71px; top: 13px; background: #b88c58; }
-.pet-frostbite-spider .pet-eye-one { left: 36px; top: 31px; background: #ef6f9e; }.pet-frostbite-spider .pet-eye-two { left: 48px; top: 31px; background: #ef6f9e; }.pet-frostbite-spider .pet-eye-three { left: 40px; top: 40px; width: 5px; height: 5px; background: #f2b1ca; }.pet-frostbite-spider .pet-eye-four { left: 51px; top: 40px; width: 5px; height: 5px; background: #f2b1ca; }
-.pet-horker .pet-eye-one { left: 45px; top: 36px; }.pet-horker .pet-eye-two { left: 58px; top: 36px; }.pet-horker .pet-tusk-one { left: 60px; top: 48px; }.pet-horker .pet-tusk-two { left: 48px; top: 48px; transform: rotate(-18deg); }
-.pet-troll .pet-eye-one { left: 36px; top: 31px; }.pet-troll .pet-eye-two { left: 51px; top: 31px; }.pet-troll .pet-ear-one { left: 23px; top: 29px; transform: rotate(-60deg); }.pet-troll .pet-ear-two { left: 60px; top: 29px; transform: rotate(60deg); }
-.pet-flame-atronach .pet-eye-one { left: 36px; top: 34px; background: #fff; }.pet-flame-atronach .pet-eye-two { left: 51px; top: 34px; background: #fff; }
-.pet-frost-atronach .pet-eye-one { left: 32px; top: 35px; background: #174a6a; }.pet-frost-atronach .pet-eye-two { left: 47px; top: 35px; background: #174a6a; }
-.pet-spriggan .pet-eye-one { left: 35px; top: 34px; background: #f3d36d; }.pet-spriggan .pet-eye-two { left: 49px; top: 34px; background: #f3d36d; }
-.pet-dwarven-spider .pet-eye-one { left: 36px; top: 34px; background: #f8d26e; }.pet-dwarven-spider .pet-eye-two { left: 49px; top: 34px; background: #f8d26e; }
-.pet-chaurus .pet-eye-one { left: 48px; top: 32px; background: #f2df6d; }.pet-chaurus .pet-eye-two { left: 60px; top: 32px; background: #f2df6d; }
-.pet-netch .pet-eye-one { left: 37px; top: 27px; background: #f9c1ef; }.pet-netch .pet-eye-two { left: 51px; top: 27px; background: #f9c1ef; }
-.pet-mammoth .pet-eye-one { left: 58px; top: 32px; }.pet-mammoth .pet-tusk-one { left: 58px; top: 47px; }.pet-mammoth .pet-tusk-two { left: 68px; top: 48px; transform: rotate(32deg); }
-.pet-dragon-priest .pet-eye-one { left: 35px; top: 34px; background: #ef836d; }.pet-dragon-priest .pet-eye-two { left: 50px; top: 34px; background: #ef836d; }
-.pet-wisp .pet-eye-one { left: 36px; top: 31px; background: #466b8a; }.pet-wisp .pet-eye-two { left: 49px; top: 31px; background: #466b8a; }
-.pet-death-hound .pet-eye-one { left: 61px; top: 27px; background: #ff6b54; }.pet-death-hound .pet-eye-two { left: 72px; top: 27px; background: #ff6b54; }.pet-death-hound .pet-ear-one { left: 59px; top: 11px; background: #30363d; transform: rotate(-18deg); }.pet-death-hound .pet-ear-two { left: 72px; top: 13px; background: #30363d; transform: rotate(18deg); }
-.pet-chicken .pet-eye-one { left: 67px; top: 26px; background: #17151a; }.pet-chicken .pet-comb { z-index: 5; }
-.pet-mudcrab { --pet-main: #9b6047; --pet-light: #d59162; }
-.pet-mudcrab::before { left: 16px; top: 30px; width: 56px; height: 27px; border: 3px solid #17151a; border-radius: 55% 55% 35% 35%; background: var(--pet-main); box-shadow: inset 8px 5px var(--pet-light), -10px 17px 0 -6px var(--pet-light), 66px 17px 0 -6px var(--pet-light); }
-.pet-mudcrab::after { left: 22px; top: 18px; width: 9px; height: 14px; border: 3px solid #17151a; border-radius: 6px 6px 2px 2px; background: #efe0b3; box-shadow: 35px 0 #efe0b3, 0 0 0 3px var(--pet-main), 35px 0 0 3px var(--pet-main); }
-.pet-skeever { --pet-main: #76533e; --pet-light: #b47c53; }
-.pet-skeever::before { left: 20px; top: 32px; width: 48px; height: 25px; border: 3px solid #17151a; border-radius: 58% 45% 45% 38%; background: var(--pet-main); box-shadow: inset 7px 5px var(--pet-light), -17px 11px 0 -7px var(--pet-light); }
-.pet-skeever::after { left: 8px; top: 27px; width: 27px; height: 9px; border-top: 4px solid #17151a; border-radius: 50%; transform: rotate(-20deg); box-shadow: 48px -13px 0 -2px #b47c53, 56px -12px 0 -2px #76533e; }
-.pet-fox { --pet-main: #c35b32; --pet-light: #f0c887; }
-.pet-fox::before { left: 20px; top: 30px; width: 50px; height: 29px; border: 3px solid #17151a; border-radius: 55% 45% 38% 45%; background: var(--pet-main); box-shadow: inset 7px 5px #e78645, -18px 4px 0 -5px var(--pet-light); }
-.pet-fox::after { left: 58px; top: 22px; width: 23px; height: 27px; border: 3px solid #17151a; background: var(--pet-main); clip-path: polygon(0 100%, 11% 0, 48% 35%, 78% 3%, 100% 100%); }
-.pet-sabrecat { --pet-main: #b88c58; --pet-light: #e1bd7d; }
-.pet-sabrecat::before { left: 15px; top: 31px; width: 60px; height: 26px; border: 3px solid #17151a; border-radius: 55% 48% 38% 42%; background: var(--pet-main); box-shadow: inset 8px 5px var(--pet-light), -17px 8px 0 -6px var(--pet-main); }
-.pet-sabrecat::after { left: 60px; top: 20px; width: 21px; height: 30px; border: 3px solid #17151a; background: var(--pet-main); clip-path: polygon(0 100%, 14% 0, 48% 36%, 82% 0, 100% 100%); box-shadow: -48px 30px 0 -8px #17151a; }
-.pet-frostbite-spider { --pet-main: #4c3148; --pet-light: #a66081; }
-.pet-frostbite-spider::before { left: 30px; top: 28px; width: 30px; height: 32px; border: 3px solid #17151a; border-radius: 50%; background: var(--pet-main); box-shadow: inset 7px 6px var(--pet-light); }
-.pet-frostbite-spider::after { left: 8px; top: 34px; width: 20px; height: 4px; background: #17151a; transform: rotate(25deg); box-shadow: 46px 0 #17151a, -3px 12px #17151a, 50px 12px #17151a, 2px -12px #17151a, 44px -12px #17151a; }
-.pet-horker { --pet-main: #6d6b70; --pet-light: #aaa3a0; }
-.pet-horker::before { left: 14px; top: 26px; width: 62px; height: 37px; border: 3px solid #17151a; border-radius: 48% 52% 42% 42%; background: var(--pet-main); box-shadow: inset 8px 6px var(--pet-light), -5px 31px 0 -10px #4a494e, 41px 31px 0 -10px #4a494e; }
-.pet-horker::after { left: 64px; top: 45px; width: 8px; height: 16px; border: 3px solid #17151a; border-top: 0; background: #efe0b3; transform: rotate(18deg); box-shadow: -13px 0 #efe0b3; }
-.pet-troll { --pet-main: #657957; --pet-light: #99aa75; }
-.pet-troll::before { left: 22px; top: 17px; width: 45px; height: 49px; border: 3px solid #17151a; border-radius: 45% 45% 25% 25%; background: var(--pet-main); box-shadow: inset 8px 7px var(--pet-light), -18px 22px 0 -8px var(--pet-main), 44px 22px 0 -8px var(--pet-main); }
-.pet-troll::after { left: 32px; top: 8px; width: 10px; height: 14px; border: 3px solid #17151a; background: var(--pet-light); transform: rotate(-18deg); box-shadow: 16px 0 var(--pet-light); }
-.pet-flame-atronach { --pet-main: #e26332; --pet-light: #ffd05d; }
-.pet-flame-atronach::before { left: 25px; top: 14px; width: 38px; height: 52px; border: 3px solid #7d3027; background: linear-gradient(135deg, var(--pet-light) 0 30%, var(--pet-main) 31% 66%, #8e2e35 67%); clip-path: polygon(50% 0, 77% 19%, 100% 0, 86% 43%, 100% 65%, 72% 75%, 84% 100%, 50% 82%, 20% 100%, 29% 74%, 0 67%, 15% 43%, 0 16%, 29% 22%); filter: drop-shadow(0 0 6px #ed783d); }
-.pet-flame-atronach::after { left: 35px; top: 36px; width: 6px; height: 6px; background: #fff0a9; box-shadow: 14px 0 #fff0a9; }
-.pet-frost-atronach { --pet-main: #7fc7d7; --pet-light: #e7fbff; }
-.pet-frost-atronach::before { left: 21px; top: 17px; width: 47px; height: 48px; border: 3px solid #234e67; background: linear-gradient(135deg, var(--pet-light), var(--pet-main)); clip-path: polygon(31% 0, 62% 9%, 100% 0, 86% 35%, 100% 58%, 70% 68%, 83% 100%, 49% 85%, 15% 100%, 27% 68%, 0 58%, 13% 34%, 0 8%); filter: drop-shadow(0 0 5px #bdefff); }
-.pet-frost-atronach::after { left: 34px; top: 37px; width: 7px; height: 7px; background: #e9ffff; box-shadow: 14px 0 #e9ffff; }
-.pet-spriggan { --pet-main: #4e8b52; --pet-light: #b1cf6c; }
-.pet-spriggan::before { left: 29px; top: 20px; width: 31px; height: 45px; border: 3px solid #193b2c; border-radius: 45% 45% 25% 25%; background: var(--pet-main); box-shadow: inset 7px 6px var(--pet-light), -17px 19px 0 -8px #4e8b52, 39px 19px 0 -8px #4e8b52; }
-.pet-spriggan::after { left: 19px; top: 9px; width: 52px; height: 21px; background: var(--pet-light); clip-path: polygon(50% 100%, 40% 42%, 0 64%, 19% 18%, 43% 35%, 43% 0, 57% 35%, 82% 12%, 100% 64%, 60% 42%); }
-.pet-dwarven-spider { --pet-main: #b06d3d; --pet-light: #e2a154; }
-.pet-dwarven-spider::before { left: 25px; top: 26px; width: 39px; height: 28px; border: 3px solid #211a18; border-radius: 45%; background: repeating-linear-gradient(90deg, var(--pet-main) 0 8px, var(--pet-light) 9px 13px); box-shadow: inset 6px 5px #d58a48; }
-.pet-dwarven-spider::after { left: 7px; top: 35px; width: 18px; height: 5px; background: #211a18; transform: rotate(22deg); box-shadow: 58px 0 #211a18, -2px 13px #211a18, 60px 13px #211a18, 3px -12px #211a18, 55px -12px #211a18; }
-.pet-chaurus { --pet-main: #6b8b3b; --pet-light: #b7c968; }
-.pet-chaurus::before { left: 22px; top: 25px; width: 47px; height: 34px; border: 3px solid #18251d; border-radius: 55% 43% 34% 48%; background: var(--pet-main); box-shadow: inset 8px 5px var(--pet-light), -10px 23px 0 -7px var(--pet-main), 37px 23px 0 -7px var(--pet-main); }
-.pet-chaurus::after { left: 35px; top: 10px; width: 7px; height: 25px; border-left: 3px solid #18251d; border-radius: 50%; transform: rotate(-18deg); box-shadow: 17px 1px 0 -1px #18251d; }
-.pet-netch { --pet-main: #9a5a91; --pet-light: #d9a0c9; }
-.pet-netch::before { left: 25px; top: 14px; width: 42px; height: 39px; border: 3px solid #3b223b; border-radius: 48% 52% 45% 45%; background: var(--pet-main); box-shadow: inset 8px 6px var(--pet-light), 0 8px 13px -5px #3b223b; }
-.pet-netch::after { left: 31px; top: 45px; width: 7px; height: 22px; border-left: 3px solid #3b223b; transform: rotate(16deg); box-shadow: 15px 3px 0 -1px #3b223b, 29px -1px 0 -1px #3b223b; }
-.pet-mammoth { --pet-main: #80634c; --pet-light: #b9946b; }
-.pet-mammoth::before { left: 14px; top: 22px; width: 61px; height: 39px; border: 3px solid #241d1c; border-radius: 48% 52% 42% 38%; background: var(--pet-main); box-shadow: inset 9px 6px var(--pet-light), -4px 31px 0 -11px #514039, 36px 31px 0 -11px #514039; }
-.pet-mammoth::after { left: 62px; top: 39px; width: 17px; height: 28px; border-left: 5px solid #241d1c; border-radius: 0 0 50% 50%; box-shadow: -22px 1px 0 -1px #efe0b3; }
-.pet-dragon-priest { --pet-main: #5b5e72; --pet-light: #b7b0a2; }
-.pet-dragon-priest::before { left: 23px; top: 13px; width: 43px; height: 49px; border: 3px solid #17151a; border-radius: 48% 48% 32% 32%; background: var(--pet-main); box-shadow: inset 8px 5px var(--pet-light), -12px 52px 0 -7px #17151a, 28px 52px 0 -7px #17151a; }
-.pet-dragon-priest::after { left: 34px; top: 33px; width: 7px; height: 7px; background: #f0b56b; box-shadow: 14px 0 #f0b56b; }
-.pet-wisp { --pet-main: #b7f4ff; --pet-light: #fff6a8; }
-.pet-wisp::before { left: 25px; top: 17px; width: 39px; height: 39px; border: 3px solid #447c99; border-radius: 50%; background: radial-gradient(circle at 40% 34%, #fff 0 10%, var(--pet-light) 11% 38%, var(--pet-main) 39% 100%); box-shadow: 0 0 12px #9aefff; }
-.pet-wisp::after { left: 34px; top: 53px; width: 8px; height: 13px; background: #79d9ea; clip-path: polygon(50% 100%, 0 0, 100% 0); box-shadow: 13px 0 #79d9ea; }
-.pet-death-hound { --pet-main: #30363d; --pet-light: #aab7bb; }
-.pet-death-hound::before { left: 19px; top: 28px; width: 52px; height: 29px; border: 3px solid #14171a; border-radius: 52% 42% 36% 42%; background: var(--pet-main); box-shadow: inset 7px 5px #59676e, -13px 21px 0 -8px var(--pet-light); }
-.pet-death-hound::after { left: 57px; top: 17px; width: 26px; height: 28px; border: 3px solid #14171a; background: var(--pet-main); clip-path: polygon(0 100%, 8% 0, 43% 28%, 73% 0, 100% 100%); box-shadow: 8px 24px 0 -8px #e86f59; }
-.pet-chicken { --pet-main: #f0ede2; --pet-light: #c75b39; }
-.pet-chicken::before { left: 24px; top: 28px; width: 42px; height: 31px; border: 3px solid #38312a; border-radius: 52% 48% 42% 45%; background: var(--pet-main); box-shadow: inset 7px 4px #fff, -5px 26px 0 -9px var(--pet-light), 25px 26px 0 -9px var(--pet-light); }
-.pet-chicken::after { left: 59px; top: 21px; width: 22px; height: 23px; border: 3px solid #38312a; border-radius: 50%; background: var(--pet-main); box-shadow: 13px 4px 0 -5px var(--pet-light); }
-#dragonborn-xp:not(.pet-dovahmin):not(.pet-dovahpink) .fire-breath { display: none; }
-#dragonborn-xp.pet-flame-atronach.state-combat .pet-flame-atronach { filter: brightness(1.15) drop-shadow(0 0 8px #f49a42); }
-.state-flying .pet-art { animation: pet-fly 800ms ease-in-out infinite; }
-.state-combat .pet-art { animation: pet-combat 700ms ease-in-out infinite; }
-.state-landed .pet-art { animation: pet-land 720ms ease-out both; }
-.pet-flame-atronach.state-combat { filter: brightness(1.15); }
-.fire-breath { position: absolute; left: calc(50% + 14px); top: 45px; z-index: 2; width: 28px; height: 13px; opacity: 0; background: #f3c84b; border: 3px solid #8d3826; clip-path: polygon(0 50%, 22% 20%, 42% 40%, 60% 0, 78% 38%, 100% 20%, 82% 68%, 58% 100%, 40% 63%, 18% 84%); transform-origin: left center; }
-.state-flying .dragon { animation: fly 800ms ease-in-out infinite; }
-.state-flying .wing { animation-duration: 360ms; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; }
-.state-flying .wing-left { animation-name: flap-left; }
-.state-flying .wing-right { animation-name: flap-right; animation-delay: 120ms; }
-.state-combat .dragon { animation: breathe 700ms ease-in-out infinite; }
-.state-combat .fire-breath { animation: fire 700ms ease-out infinite; }
-.state-landed .dragon { animation: land 720ms ease-out both; }
-.state-landed .fire-breath { display: none; }
-#dragonborn-xp.show.level-up .dragon { animation: celebrate 520ms ease-in-out 2; }
-#dragonborn-xp.show.gain .dragon { animation: chew 240ms ease-in-out 3; }
+
+/* clock banner (settings > clock) */
+.clock-banner { position: absolute; top: calc(100% + 12px); left: 50%; z-index: 6; display: none; color: #f1ede1; font-family: Georgia, serif; text-align: center; white-space: nowrap; text-shadow: 0 1px 2px #000; transform: translateX(-50%); pointer-events: none; }
+#dragonborn-xp.clock-on .clock-banner { display: block; }
+#dragonborn-xp.clock-plate .clock-banner { width: 196px; padding: 6px 10px 7px; border: 5px double #c9c3b1; border-radius: 2px; background: linear-gradient(#24211c, #141310); box-shadow: 0 0 0 1px #14130f, 0 0 0 2px rgba(201, 195, 177, .45), 0 8px 18px rgba(0, 0, 0, .5); }
+#dragonborn-xp.clock-plate .clock-banner::before { content: ""; position: absolute; top: -14px; left: 50%; width: 2px; height: 9px; margin-left: -1px; background: #c9c3b1; box-shadow: 0 0 0 1px #14130f; }
+#dragonborn-xp.clock-plate .clock-time { display: block; font: 700 20px/1 Georgia, serif; letter-spacing: .04em; }
+#dragonborn-xp.clock-plate .clock-separator { display: none; }
+#dragonborn-xp.clock-plate .clock-date { display: block; margin-top: 4px; color: #d9d3c3; font: 11px/1.2 Georgia, serif; letter-spacing: .03em; }
+#dragonborn-xp.clock-ribbon .clock-banner { padding: 4px 18px; background: linear-gradient(to right, rgba(14, 13, 11, 0), rgba(14, 13, 11, .85) 14%, rgba(14, 13, 11, .85) 86%, rgba(14, 13, 11, 0)); font: 700 11px/1.3 Georgia, serif; letter-spacing: .05em; }
+#dragonborn-xp.clock-ribbon .clock-separator { margin: 0 6px; color: #b9b3a3; }
+#dragonborn-xp.clock-ribbon .clock-date { color: #d9d3c3; font-weight: 400; letter-spacing: .02em; }
+.settings-toggle { width: 18px; height: 18px; accent-color: #8cc46f; cursor: pointer; }
+
+/* .pet-position centres, .pet-motion moves, .pet-body breathes. only animate
+   transform/opacity, prisma handles those fine */
+.dragon-stage { position: absolute; right: 0; bottom: 30px; left: 0; height: 168px; transition: transform .3s ease; }
+#dragonborn-xp.caption-full .dragon-stage { transform: translateY(-16px); }
+.pet-position { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); }
+.pet-shadow { position: absolute; left: 14%; right: 14%; bottom: -4px; height: 8px; border-radius: 50%; background: rgba(18, 44, 26, .3); }
+.pet-motion, .pet-body { position: relative; transform-origin: 50% 100%; }
+.pet-sprite { position: relative; }
+.pet-part { position: absolute; }
+.pet-part canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.role-fx-combat { opacity: 0; }
+#dragonborn-xp.archetype-hover .pet-position { bottom: 11px; }
+#dragonborn-xp.archetype-hover .pet-shadow { left: 26%; right: 26%; bottom: -9px; opacity: .6; }
+
+/* Locomotion and one-shot actions by archetype. */
+#dragonborn-xp.state-idle .pet-body { animation: pet-breathe 2.8s ease-in-out infinite; }
+#dragonborn-xp.archetype-hover.state-idle .pet-motion { animation: pet-float 2.6s ease-in-out infinite; }
+#dragonborn-xp.archetype-light.state-moving .pet-motion { animation: pet-hop .42s ease-in-out infinite; }
+#dragonborn-xp.archetype-heavy.state-moving .pet-motion { animation: pet-lumber .9s ease-in-out infinite; }
+#dragonborn-xp.archetype-hover.state-moving .pet-motion { animation: pet-drift 1.3s ease-in-out infinite; }
+#dragonborn-xp.archetype-flyer.state-moving .pet-motion { animation: pet-fly .9s ease-in-out infinite; }
+#dragonborn-xp.archetype-light.state-combat .pet-motion { animation: pet-lunge .8s ease-in-out infinite; }
+#dragonborn-xp.archetype-heavy.state-combat .pet-motion { animation: pet-stomp 1s ease-in-out infinite; }
+#dragonborn-xp.archetype-hover.state-combat .pet-motion { animation: pet-surge .9s ease-in-out infinite; }
+#dragonborn-xp.archetype-flyer.state-combat .pet-motion { animation: pet-rear .8s ease-in-out infinite; }
+#dragonborn-xp.state-landing .pet-motion { animation: pet-land .9s cubic-bezier(.3, .7, .4, 1) both; }
+#dragonborn-xp.state-xp .pet-motion { animation: pet-xp .85s ease-in-out both; }
+#dragonborn-xp.state-level-up .pet-motion, #dragonborn-xp.state-celebrating .pet-motion { animation: pet-level-up 1.15s ease-in-out both; }
+#dragonborn-xp.archetype-flyer.state-moving .pet-shadow, #dragonborn-xp.state-level-up .pet-shadow { animation: pet-shadow-shrink .9s ease-in-out infinite; }
+
+/* Parts. */
+#dragonborn-xp .role-eyes { animation: pet-blink 4.2s linear infinite; }
+#dragonborn-xp .role-glow-eye { animation: pet-glow 1.6s ease-in-out infinite alternate; }
+#dragonborn-xp .role-fx-glow { animation: pet-flare 1.4s ease-in-out infinite alternate; }
+#dragonborn-xp .role-tail { animation: pet-wag 1.8s ease-in-out infinite alternate; }
+#dragonborn-xp .role-sway { animation: pet-sway 2.6s ease-in-out infinite alternate; }
+#dragonborn-xp .role-ear { animation: pet-ear 3.6s ease-in-out infinite; }
+#dragonborn-xp .role-head { animation: pet-nod 3.4s ease-in-out infinite; }
+#dragonborn-xp .role-arm-a, #dragonborn-xp .role-arm-b { animation: pet-arm-rest 3s ease-in-out infinite alternate; }
+#dragonborn-xp .role-arm-b { animation-delay: -1.5s; }
+#dragonborn-xp .role-wing-a, #dragonborn-xp .role-wing-b { animation: pet-wing-rest 2.8s ease-in-out infinite alternate; }
+#dragonborn-xp .role-wing-b { animation-delay: -1.4s; }
+
+#dragonborn-xp.state-moving .role-tail { animation-duration: .45s; }
+#dragonborn-xp.state-moving .role-sway { animation-duration: .8s; }
+#dragonborn-xp.state-moving .role-head { animation: pet-head-bob .42s ease-in-out infinite; }
+#dragonborn-xp.state-moving .role-leg-a, #dragonborn-xp.state-moving .role-leg-b,
+#dragonborn-xp.state-moving .role-arm-a, #dragonborn-xp.state-moving .role-arm-b { animation: pet-stride .42s ease-in-out infinite alternate; }
+#dragonborn-xp.state-moving .role-leg-b, #dragonborn-xp.state-moving .role-arm-b { animation-delay: -.42s; }
+#dragonborn-xp.archetype-heavy.state-moving .role-leg-a, #dragonborn-xp.archetype-heavy.state-moving .role-leg-b,
+#dragonborn-xp.archetype-heavy.state-moving .role-arm-a, #dragonborn-xp.archetype-heavy.state-moving .role-arm-b { animation-duration: .9s; }
+#dragonborn-xp.archetype-heavy.state-moving .role-leg-b, #dragonborn-xp.archetype-heavy.state-moving .role-arm-b { animation-delay: -.9s; }
+#dragonborn-xp.archetype-flyer.state-moving .role-leg-a, #dragonborn-xp.archetype-flyer.state-moving .role-leg-b { animation: pet-tuck .9s ease-in-out infinite; }
+#dragonborn-xp.state-moving .role-wing-a, #dragonborn-xp.state-moving .role-wing-b { animation: pet-flap .3s ease-in-out infinite alternate; }
+#dragonborn-xp.state-moving .role-wing-b { animation-delay: -.12s; }
+#dragonborn-xp.state-moving .role-claw-a, #dragonborn-xp.state-moving .role-claw-b { animation: pet-claw-sway .42s ease-in-out infinite alternate; }
+
+#dragonborn-xp.state-combat .role-tail { animation-duration: .3s; }
+#dragonborn-xp.state-combat .role-head { animation: pet-head-thrust .8s ease-in-out infinite; }
+#dragonborn-xp.state-combat .role-arm-a { animation: pet-punch .8s ease-in-out infinite; }
+#dragonborn-xp.state-combat .role-wing-a, #dragonborn-xp.state-combat .role-wing-b { animation: pet-wing-spread .8s ease-in-out infinite; }
+#dragonborn-xp.state-combat .role-claw-a, #dragonborn-xp.state-combat .role-claw-b { animation: pet-snap .4s ease-in-out infinite alternate; }
+#dragonborn-xp.state-combat .role-claw-b { animation-delay: -.2s; }
+#dragonborn-xp.state-combat .role-glow-eye { animation-duration: .4s; }
+#dragonborn-xp.state-combat .role-fx-combat { animation: pet-fx .8s ease-out infinite; }
+
+#dragonborn-xp.state-xp .role-tail { animation-duration: .16s; }
+#dragonborn-xp.state-xp .role-head, #dragonborn-xp.state-level-up .role-head, #dragonborn-xp.state-celebrating .role-head { animation: pet-head-cheer .85s ease-in-out both; }
+#dragonborn-xp.state-level-up .role-arm-a, #dragonborn-xp.state-level-up .role-arm-b,
+#dragonborn-xp.state-celebrating .role-arm-a, #dragonborn-xp.state-celebrating .role-arm-b { animation: pet-cheer .38s ease-in-out infinite alternate; }
+#dragonborn-xp.state-level-up .role-wing-a, #dragonborn-xp.state-level-up .role-wing-b,
+#dragonborn-xp.state-celebrating .role-wing-a, #dragonborn-xp.state-celebrating .role-wing-b { animation: pet-flap .22s ease-in-out infinite alternate; }
+#dragonborn-xp.state-level-up .role-claw-a, #dragonborn-xp.state-level-up .role-claw-b { animation: pet-snap .2s ease-in-out infinite alternate; }
+#dragonborn-xp.state-level-up .role-fx-glow { animation-duration: .3s; }
+
+/* idle variations */
+#dragonborn-xp.state-idle.idle-look .role-head { animation: pet-look .9s ease-in-out both; }
+#dragonborn-xp.state-idle.idle-peck .role-head { animation: pet-peck .6s ease-in-out both; }
+#dragonborn-xp.state-idle.idle-hop .pet-motion { animation: pet-hop-once .7s ease-in-out both; }
+#dragonborn-xp.state-idle.idle-stretch .pet-body { animation: pet-stretch 1s ease-in-out both; }
+#dragonborn-xp.state-idle.idle-wag .role-tail { animation: pet-wag .15s ease-in-out 6 alternate; }
+#dragonborn-xp.state-idle.idle-flap .role-wing-a, #dragonborn-xp.state-idle.idle-flap .role-wing-b { animation: pet-flap .26s ease-in-out 4 alternate; }
+#dragonborn-xp.state-idle.idle-snap .role-claw-a, #dragonborn-xp.state-idle.idle-snap .role-claw-b { animation: pet-snap .18s ease-in-out 4 alternate; }
+#dragonborn-xp.state-idle.idle-flare .role-fx-glow, #dragonborn-xp.state-idle.idle-flare .role-glow-eye { animation: pet-flare .2s ease-in-out 4 alternate; }
+#dragonborn-xp.state-idle.idle-sway .role-sway { animation: pet-sway .3s ease-in-out 4 alternate; }
+#dragonborn-xp.state-idle.idle-ear .role-ear { animation: pet-ear .5s ease-in-out 2; }
+
+@keyframes pet-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.025, .975); } }
+@keyframes pet-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes pet-hop { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-5px) rotate(-2deg); } }
+@keyframes pet-lumber { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-3px) rotate(2deg); } }
+@keyframes pet-drift { 0%, 100% { transform: translate(-3px, 0) rotate(-3deg); } 50% { transform: translate(3px, -6px) rotate(3deg); } }
+@keyframes pet-fly { 0%, 100% { transform: translateY(-10px) rotate(-3deg); } 50% { transform: translateY(-18px) rotate(2deg); } }
+@keyframes pet-lunge { 0%, 100% { transform: translateX(0) scale(1, 1); } 35% { transform: translateX(-3px) scale(1.06, .94); } 55% { transform: translateX(5px) scale(.97, 1.03); } }
+@keyframes pet-stomp { 0%, 100% { transform: translateY(0) scale(1, 1); } 40% { transform: translateY(-4px) scale(.97, 1.03); } 60% { transform: translateY(1px) scale(1.05, .95); } }
+@keyframes pet-surge { 0%, 100% { transform: translate(0, 0) scale(1); } 40% { transform: translate(4px, -3px) scale(1.07); } }
+@keyframes pet-rear { 0%, 100% { transform: translateX(0) rotate(0deg); } 35% { transform: translateX(-3px) rotate(-6deg); } 60% { transform: translateX(3px) rotate(3deg); } }
+@keyframes pet-land { 0% { transform: translateY(-18px) scale(1, 1); } 55% { transform: translateY(0) scale(1.08, .9); } 75% { transform: translateY(-2px) scale(.97, 1.03); } 100% { transform: translateY(0) scale(1, 1); } }
+@keyframes pet-xp { 0% { transform: translateY(0) scale(1, 1); } 20% { transform: translateY(0) scale(1.08, .9); } 50% { transform: translateY(-14px) scale(.95, 1.06); } 80% { transform: translateY(0) scale(1.05, .95); } 100% { transform: translateY(0) scale(1, 1); } }
+@keyframes pet-level-up { 0% { transform: translateY(0) rotate(0deg) scale(1, 1); } 15% { transform: translateY(0) rotate(0deg) scale(1.1, .88); } 40% { transform: translateY(-22px) rotate(-8deg) scale(1, 1); } 60% { transform: translateY(-22px) rotate(8deg) scale(1, 1); } 82% { transform: translateY(0) rotate(0deg) scale(1.08, .92); } 100% { transform: translateY(0) rotate(0deg) scale(1, 1); } }
+@keyframes pet-shadow-shrink { 0%, 100% { transform: scale(.7, .7); opacity: .6; } 50% { transform: scale(.55, .55); opacity: .4; } }
+@keyframes pet-blink { 0%, 93%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.15); } }
+@keyframes pet-glow { from { opacity: .6; } to { opacity: 1; } }
+@keyframes pet-flare { from { transform: scale(1, 1); opacity: .82; } to { transform: scale(1.06, 1.08); opacity: 1; } }
+@keyframes pet-wag { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes pet-sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@keyframes pet-ear { 0%, 70%, 100% { transform: rotate(0deg); } 80% { transform: rotate(-14deg); } 90% { transform: rotate(4deg); } }
+@keyframes pet-nod { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-2deg) translateY(-1px); } }
+@keyframes pet-head-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1px) rotate(2deg); } }
+@keyframes pet-head-thrust { 0%, 100% { transform: translateX(0) rotate(0deg); } 45% { transform: translateX(3px) rotate(-5deg); } }
+@keyframes pet-head-cheer { 0%, 100% { transform: rotate(0deg); } 40% { transform: rotate(-12deg); } 70% { transform: rotate(-6deg); } }
+@keyframes pet-look { 0%, 100% { transform: rotate(0deg); } 30%, 60% { transform: rotate(-9deg); } }
+@keyframes pet-peck { 0%, 100% { transform: rotate(0deg); } 40% { transform: translate(2px, 3px) rotate(28deg); } 55% { transform: rotate(4deg); } 70% { transform: translate(2px, 3px) rotate(28deg); } }
+@keyframes pet-stride { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+@keyframes pet-tuck { 0%, 100% { transform: rotate(-30deg); } 50% { transform: rotate(-20deg); } }
+@keyframes pet-arm-rest { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+@keyframes pet-punch { 0%, 100% { transform: rotate(0deg); } 35% { transform: rotate(-70deg); } 50% { transform: rotate(-80deg); } }
+@keyframes pet-cheer { from { transform: rotate(-120deg); } to { transform: rotate(-150deg); } }
+@keyframes pet-wing-rest { from { transform: rotate(0deg); } to { transform: rotate(-6deg); } }
+@keyframes pet-flap { from { transform: rotate(8deg) scaleY(1.05); } to { transform: rotate(-14deg) scaleY(.55); } }
+@keyframes pet-wing-spread { 0%, 100% { transform: rotate(0deg); } 45% { transform: rotate(-18deg) scale(1.08); } }
+@keyframes pet-claw-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+@keyframes pet-snap { from { transform: rotate(0deg); } to { transform: rotate(-16deg); } }
+@keyframes pet-fx { 0% { opacity: 0; transform: scale(.4); } 25% { opacity: 1; transform: scale(1); } 75% { opacity: .9; transform: translateX(8px) scale(1.2); } 100% { opacity: 0; transform: translateX(14px) scale(.7); } }
+@keyframes pet-hop-once { 0%, 100% { transform: translateY(0) scale(1, 1); } 25% { transform: translateY(0) scale(1.08, .9); } 55% { transform: translateY(-9px) scale(.96, 1.05); } }
+@keyframes pet-stretch { 0%, 100% { transform: scale(1, 1); } 45% { transform: scale(1.1, .9); } 70% { transform: scale(.96, 1.05); } }
+
+/* While settings are open the card can be dragged. */
+body.settings-open #dragonborn-xp .toast-shell { pointer-events: auto; cursor: move; outline: 2px dashed rgba(255, 241, 190, .85); outline-offset: 4px; }
+body.settings-open.dragging-pet, body.settings-open.dragging-pet * { cursor: grabbing !important; }
 @keyframes event-pop { 0% { transform: translateX(10px) scale(.96); } 65% { transform: translateX(-2px) scale(1.02); } 100% { transform: translateX(0) scale(1); } }
-@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-@keyframes pet-bob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-3px); } }
-@keyframes pet-fly { 0%, 100% { transform: translateX(-50%) translateY(1px) rotate(-2deg); } 50% { transform: translateX(-50%) translateY(-10px) rotate(3deg); } }
-@keyframes pet-combat { 0%, 100% { transform: translateX(-50%) scale(1); } 45% { transform: translateX(-50%) scale(1.06, .94); } }
-@keyframes pet-land { 0% { transform: translateX(-50%) translateY(-12px) scaleY(1.05); } 65% { transform: translateX(-50%) translateY(3px) scaleY(.88); } 100% { transform: translateX(-50%) translateY(0) scaleY(1); } }
-@keyframes fly { 0%, 100% { transform: translateY(1px) rotate(-2deg); } 50% { transform: translateY(-11px) rotate(3deg); } }
-@keyframes flap-left { from { transform: scaleX(-1) scaleY(.82); } to { transform: scaleX(-1) scaleY(1.14); } }
-@keyframes flap-right { from { transform: scaleY(.82); } to { transform: scaleY(1.14); } }
-@keyframes breathe { 0%, 100% { transform: translateX(0) scale(1); } 45% { transform: translateX(-2px) scale(1.05, .96); } }
-@keyframes fire { 0% { opacity: 0; transform: scale(.35); } 22% { opacity: 1; transform: scale(1); } 70% { opacity: .9; transform: translateX(7px) scale(1.18); } 100% { opacity: 0; transform: translateX(15px) scale(.65); } }
-@keyframes land { 0% { transform: translateY(-12px) scaleY(1.05); } 65% { transform: translateY(3px) scaleY(.88); } 100% { transform: translateY(0) scaleY(1); } }
-@keyframes rain { from { background-position: 0 -28px; } to { background-position: 0 28px; } }
-@keyframes snow { from { background-position: 2px -24px, 15px -31px; } to { background-position: 14px 24px, 3px 31px; } }
-@keyframes lightning { 0%, 91%, 100% { filter: brightness(1); } 92% { filter: brightness(1.8); } 93% { filter: brightness(1); } 95% { filter: brightness(1.45); } 96% { filter: brightness(1); } }
-@keyframes celebrate { 0%, 100% { transform: translateY(0) rotate(0); } 35% { transform: translateY(-12px) rotate(-7deg); } 70% { transform: translateY(-4px) rotate(7deg); } }
-@keyframes chew { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.88) translateY(4px); } }
+@keyframes weather-fall { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+@keyframes weather-sway { from { transform: translateX(-5px); } to { transform: translateX(5px); } }
+@keyframes weather-flash { 0%, 90%, 100% { opacity: 0; } 90.6% { opacity: .55; } 91.4% { opacity: 0; } 92.6% { opacity: .35; } 93.6% { opacity: 0; } }
+@keyframes scenery-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes plume-rise { 0% { opacity: 0; transform: translate(0, 0) scale(.6); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(10px, -46px) scale(2.2); } }
+@keyframes torch-flicker { 0%, 100% { opacity: 1; } 20% { opacity: .82; } 45% { opacity: .95; } 70% { opacity: .78; } 85% { opacity: .92; } }
+@keyframes sun-turn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes caption-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes charge { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-#settings-menu { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 18px; background: rgba(5, 12, 18, .55); pointer-events: auto; }
+/* centred, clicks pass through so the pet can still be dragged */
+#settings-menu { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 20; display: grid; place-items: center; padding: 18px; pointer-events: none; }
 #settings-menu.hidden { display: none; }
-.settings-card { width: min(410px, 100%); color: #e8f2e9; border: 1px solid rgba(192, 224, 187, .5); border-radius: 14px; background: linear-gradient(145deg, rgba(26, 53, 48, .98), rgba(18, 30, 42, .98)); box-shadow: 0 18px 42px rgba(0, 0, 0, .58), inset 0 0 0 1px rgba(255, 255, 255, .08); font-family: Georgia, "Times New Roman", serif; overflow: hidden; }
+.settings-card { width: min(410px, 100%); max-height: calc(100vh - 36px); overflow-y: auto; pointer-events: auto; color: #e8f2e9; border: 1px solid rgba(192, 224, 187, .5); border-radius: 14px; background: linear-gradient(145deg, rgba(26, 53, 48, .98), rgba(18, 30, 42, .98)); box-shadow: 0 18px 42px rgba(0, 0, 0, .58), inset 0 0 0 1px rgba(255, 255, 255, .08); font-family: Georgia, "Times New Roman", serif; overflow: hidden; }
 .settings-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 12px; border-bottom: 1px solid rgba(255, 255, 255, .1); background: rgba(5, 16, 22, .35); }
 .settings-kicker { margin: 0 0 3px; color: #c9a85f; font: 700 10px/1 Arial, sans-serif; letter-spacing: .16em; }
 .settings-header h1 { margin: 0; color: #fff1be; font: 700 21px/1.1 Georgia, serif; }
@@ -221,3 +322,27 @@ body { font-family: Georgia, "Times New Roman", serif; color: var(--gold); }
 .settings-hint { min-height: 15px; margin: 7px 0 0; color: rgba(232, 242, 233, .52); font: 11px/1.2 Arial, sans-serif; }
 .settings-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 17px; padding: 12px 18px; border-top: 1px solid rgba(255, 255, 255, .1); background: rgba(5, 16, 22, .35); }
 @media (max-width: 800px) { #dragonborn-xp { padding-right: 16px; } }
+#dragonborn-xp.animation-paused *, #dragonborn-xp.animation-paused *::before, #dragonborn-xp.animation-paused *::after { animation-play-state: paused !important; }
+@media (prefers-reduced-motion: reduce) {
+  #dragonborn-xp *, #dragonborn-xp *::before, #dragonborn-xp *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+}
+
+#animation-lab { position: fixed; top: 16px; left: 16px; z-index: 30; width: min(290px, calc(100vw - 32px)); padding: 12px; color: #e8f2e9; border: 1px solid rgba(192, 224, 187, .5); border-radius: 10px; background: rgba(18, 30, 42, .96); box-shadow: 0 10px 28px rgba(0, 0, 0, .45); font: 12px Arial, sans-serif; pointer-events: auto; }
+#animation-lab.hidden { display: none; }
+.animation-lab-card { display: grid; gap: 9px; }
+.animation-lab-header { display: flex; align-items: start; justify-content: space-between; }
+.animation-lab-header h2 { margin: 0; color: #fff1be; font: 700 18px Georgia, serif; }
+#animation-lab-close { width: 24px; height: 24px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 5px; color: #fff; background: rgba(255, 255, 255, .08); font-size: 18px; cursor: pointer; }
+#animation-lab label { display: grid; grid-template-columns: 62px 1fr; align-items: center; gap: 8px; }
+#animation-lab select, #animation-lab input { min-width: 0; accent-color: #8cc46f; }
+#animation-lab select { padding: 4px; color: #fff1be; border: 1px solid rgba(255, 255, 255, .2); border-radius: 4px; background: rgba(0, 0, 0, .28); }
+#animation-lab output { color: #c9a85f; text-align: right; }
+.animation-lab-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.animation-lab-actions button { padding: 6px 8px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 5px; color: #e8f2e9; background: rgba(255, 255, 255, .08); cursor: pointer; }
+
+/* ?preview=sheet */
+#pet-sheet { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 40; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; padding: 16px; overflow: auto; background: #7fcbe6; pointer-events: auto; }
+#pet-sheet.hidden { display: none; }
+.sheet-cell { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 150px; height: 140px; padding: 8px; border: 1px solid rgba(23, 21, 26, .3); border-radius: 10px; background: linear-gradient(to bottom, #8bd8ed 0 70%, #6aaf4d 70%); }
+.sheet-cell .pet-sprite { flex: none; }
+.sheet-cell p { margin: 6px 0 0; color: #182c38; font: 700 12px Georgia, serif; }

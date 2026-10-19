@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dragonborn XP</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css?v=44">
 </head>
 <body>
   <main id="dragonborn-xp" aria-live="polite" aria-atomic="true">
@@ -15,42 +16,17 @@
         <span class="grass"></span>
       </div>
       <div class="dragon-stage" aria-hidden="true">
-        <div class="dragon">
-          <i class="horn horn-left"></i><i class="horn horn-right"></i>
-          <i class="spike spike-one"></i><i class="spike spike-two"></i><i class="spike spike-three"></i>
-          <i class="wing wing-left"></i><i class="wing wing-right"></i>
-          <i class="body"></i><i class="belly"></i>
-          <i class="eye eye-left"></i><i class="eye eye-right"></i>
-          <i class="snout"></i><i class="mouth"></i><i class="nostril nostril-one"></i><i class="nostril nostril-two"></i>
-          <i class="tooth tooth-one"></i><i class="tooth tooth-two"></i>
-          <i class="foot foot-left"></i><i class="foot foot-right"></i><i class="claw claw-left"></i><i class="claw claw-right"></i>
-          <i class="tail"></i><i class="tail-tip"></i>
+        <div class="pet-position">
+          <div class="pet-shadow"></div>
+          <div class="pet-motion"><div class="pet-body"><div id="pet-sprite" class="pet-sprite"></div></div></div>
         </div>
-        <div class="pet-art pet-mudcrab" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
-        <div class="pet-art pet-skeever" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
-        <div class="pet-art pet-fox" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
-        <div class="pet-art pet-sabrecat" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
-        <div class="pet-art pet-frostbite-spider" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i><i class="pet-eye pet-eye-three"></i><i class="pet-eye pet-eye-four"></i></div>
-        <div class="pet-art pet-horker" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i><i class="pet-tusk pet-tusk-one"></i><i class="pet-tusk pet-tusk-two"></i></div>
-        <div class="pet-art pet-troll" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
-        <div class="pet-art pet-flame-atronach" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
-        <div class="pet-art pet-frost-atronach" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
-        <div class="pet-art pet-spriggan" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
-        <div class="pet-art pet-dwarven-spider" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
-        <div class="pet-art pet-chaurus" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
-        <div class="pet-art pet-netch" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
-        <div class="pet-art pet-mammoth" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-tusk pet-tusk-one"></i><i class="pet-tusk pet-tusk-two"></i></div>
-        <div class="pet-art pet-dragon-priest" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
-        <div class="pet-art pet-wisp" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i></div>
-        <div class="pet-art pet-death-hound" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-eye pet-eye-two"></i><i class="pet-ear pet-ear-one"></i><i class="pet-ear pet-ear-two"></i></div>
-        <div class="pet-art pet-chicken" aria-hidden="true"><i class="pet-eye pet-eye-one"></i><i class="pet-comb"></i></div>
-        <span class="fire-breath"></span>
       </div>
       <section class="copy">
         <p id="title">The dragon stirs…</p>
         <p id="detail">A little more power for the road.</p>
       </section>
       <div class="xp-bar" aria-hidden="true"><span></span></div>
+      <div id="clock-banner" class="clock-banner" aria-hidden="true"><span id="clock-time" class="clock-time"></span><span class="clock-separator">◆</span><span id="clock-date" class="clock-date"></span></div>
     </div>
   </main>
   <section id="settings-menu" class="hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -58,15 +34,15 @@
       <header class="settings-header">
         <div>
           <p class="settings-kicker">DRAGONBORN XP</p>
-          <h1 id="settings-title">Dragon settings</h1>
+          <h1 id="settings-title">Companion settings</h1>
         </div>
         <button id="settings-close" class="settings-close" type="button" aria-label="Close settings">×</button>
       </header>
-      <p class="settings-help">Place your little dragon anywhere on the screen and choose the key that opens this menu.</p>
+      <p class="settings-help">Drag your companion anywhere on screen, or fine-tune its position below.</p>
       <div class="settings-group">
         <h2>Pet</h2>
         <label class="settings-row" for="pet-select">
-          <span>Choose your companion <small>Switches the dragon style</small></span>
+          <span>Choose your companion <small>Switches your companion</small></span>
           <select id="pet-select">
             <option value="dovahmin">Dovahmin</option>
             <option value="dovahpink">Dovahpink</option>
@@ -104,6 +80,20 @@
         <button id="reset-position" class="settings-secondary" type="button">Reset to top-right</button>
       </div>
       <div class="settings-group">
+        <h2>Clock</h2>
+        <label class="settings-row" for="clock-enabled">
+          <span>Show clock <small>In-game time and date below the card</small></span>
+          <input id="clock-enabled" class="settings-toggle" type="checkbox">
+        </label>
+        <label class="settings-row" for="clock-style">
+          <span>Clock style</span>
+          <select id="clock-style">
+            <option value="plate">Plate</option>
+            <option value="ribbon">Ribbon</option>
+          </select>
+        </label>
+      </div>
+      <div class="settings-group">
         <h2>Hotkey</h2>
         <button id="settings-hotkey" class="hotkey-capture" type="button">Shift+B</button>
         <p id="hotkey-hint" class="settings-hint">Click the key box, then press a key or modifier combination.</p>
@@ -114,6 +104,39 @@
       </footer>
     </div>
   </section>
-  <script src="app.js"></script>
+  <section id="animation-lab" class="hidden" aria-label="Animation preview">
+    <div class="animation-lab-card">
+      <div class="animation-lab-header">
+        <div>
+          <p class="settings-kicker">DEVELOPMENT PREVIEW</p>
+          <h2>Animation lab</h2>
+        </div>
+        <button id="animation-lab-close" type="button" aria-label="Close animation preview">×</button>
+      </div>
+      <label>Pet <select id="animation-lab-pet"></select></label>
+      <label>Place <select id="animation-lab-region"></select></label>
+      <label>State <select id="animation-lab-state">
+        <option value="idle">Idle</option>
+        <option value="moving">Moving</option>
+        <option value="combat">Combat</option>
+        <option value="landing">Landing</option>
+        <option value="xp">XP gain</option>
+        <option value="celebrating">Celebrating</option>
+        <option value="level-up">Level up</option>
+      </select></label>
+      <label>Speed <input id="animation-lab-speed" type="range" min="0.5" max="2" step="0.1" value="1"><output id="animation-lab-speed-value">1×</output></label>
+      <div class="animation-lab-actions">
+        <button id="animation-lab-play" type="button">Play state</button>
+        <button id="animation-lab-transition" type="button">Move → combat → idle</button>
+      </div>
+    </div>
+  </section>
+  <section id="pet-sheet" class="hidden" aria-label="All companions"></section>
+  <script src="animation-state.js?v=44"></script>
+  <script src="pet-sprites.js?v=44"></script>
+  <script src="clock.js?v=44"></script>
+  <script src="regions.js?v=44"></script>
+  <script src="sky.js?v=44"></script>
+  <script src="app.js?v=44"></script>
 </body>
 </html>
