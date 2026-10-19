@@ -5,7 +5,7 @@ includes("lib/commonlibsse-ng")
 local PLUGIN_NAME = "DragonbornXP"
 -- bump this for releases
 local PLUGIN_VERSION = "1.0.0"
-local PACKAGE_NAME = "dovhub-minipets"
+local PACKAGE_NAME = "dovahhub-minipets"
 local VIEW_NAME = "DragonbornXP"
 
 set_project(PLUGIN_NAME)

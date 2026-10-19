@@ -1,4 +1,6 @@
-# DragonbornXP
+# DovahHub Minipets
+
+On Nexus: https://www.nexusmods.com/skyrimspecialedition/mods/195362
 
 A little pixel-art companion that sits on your HUD in Skyrim SE/AE and cheers you on. It reacts to skill XP, dragon souls and level-ups, follows you around, and its little scene changes with the time, weather and wherever you happen to be.
 
@@ -23,7 +25,7 @@ Setting `debug_preview_keys=1` in the INI turns on two test keys: F6 for an XP p
 
 ## Installing
 
-Install `dovhub-minipets<version>.zip` with your mod manager, or copy its `SKSE` and `PrismaUI` folders into Skyrim's `Data` folder.
+Install `dovahhub-minipets<version>.zip` with your mod manager, or copy its `SKSE` and `PrismaUI` folders into Skyrim's `Data` folder.
 
 ## Building
 
