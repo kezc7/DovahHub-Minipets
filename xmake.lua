@@ -4,13 +4,13 @@ includes("lib/commonlibsse-ng")
 
 local PLUGIN_NAME = "DragonbornXP"
 -- bump this for releases
-local PLUGIN_VERSION = "0.10.0"
+local PLUGIN_VERSION = "1.0.0"
 local PACKAGE_NAME = "dovhub-minipets"
 local VIEW_NAME = "DragonbornXP"
 
 set_project(PLUGIN_NAME)
 set_version(PLUGIN_VERSION)
-set_license("MIT")
+set_license("GPL-3.0")
 set_languages("c++23")
 set_warnings("allextra")
 add_defines("UNICODE", "_UNICODE")
@@ -24,7 +24,7 @@ target(PLUGIN_NAME)
     add_rules("commonlibsse-ng.plugin", {
         name = PLUGIN_NAME,
         author = "DragonbornXP contributors",
-        description = "A tiny Prisma UI dragon that celebrates Skyrim XP and level-ups"
+        description = "Pixel-art HUD companions that celebrate your XP and level-ups"
     })
     add_files("src/**.cpp", "keyhandler/**.cpp")
     add_headerfiles("src/**.h", "keyhandler/**.h")
@@ -41,6 +41,13 @@ target(PLUGIN_NAME)
         os.mkdir(plugindir)
         os.cp(path.join(os.projectdir(), "view", "*"), viewdir)
         os.cp(target:targetfile(), plugindir)
+
+        -- licence texts go with the DLL (GPL plus the bundled libraries)
+        local licensedir = path.join(plugindir, PLUGIN_NAME .. "-licenses")
+        os.mkdir(licensedir)
+        os.cp(path.join(os.projectdir(), "LICENSE"), path.join(licensedir, "LICENSE.txt"))
+        os.cp(path.join(os.projectdir(), "THIRD-PARTY-NOTICES.md"), licensedir)
+        os.cp(path.join(os.projectdir(), "licenses", "*"), licensedir)
 
         local symbolfile = target:symbolfile()
         if symbolfile and os.isfile(symbolfile) then
