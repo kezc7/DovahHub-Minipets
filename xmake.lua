@@ -3,7 +3,9 @@ set_xmakever("3.0.0")
 includes("lib/commonlibsse-ng")
 
 local PLUGIN_NAME = "DragonbornXP"
-local PLUGIN_VERSION = "0.1.0"
+-- bump this for releases
+local PLUGIN_VERSION = "0.10.0"
+local PACKAGE_NAME = "dovhub-minipets"
 local VIEW_NAME = "DragonbornXP"
 
 set_project(PLUGIN_NAME)
@@ -46,4 +48,12 @@ target(PLUGIN_NAME)
         end
 
         cprint("${bright green}created distribution folder: ${clear}dist/%s_%s", PLUGIN_NAME, PLUGIN_VERSION)
+
+        -- zip for MO2, SKSE/ and PrismaUI/ at the root
+        import("utils.archive")
+        local zipname = PACKAGE_NAME .. PLUGIN_VERSION .. ".zip"
+        local zipfile = path.join(os.projectdir(), zipname)
+        os.tryrm(zipfile)
+        archive.archive(zipfile, {"SKSE", "PrismaUI"}, {curdir = distdir, recurse = true})
+        cprint("${bright green}created MO2 package: ${clear}%s", zipname)
     end)

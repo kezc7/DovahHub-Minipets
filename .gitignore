@@ -1,4 +1,6 @@
 .xmake/
 build/
 dist/
+output/
 lib/commonlibsse-ng/.git
+dovhub-minipets*.zip

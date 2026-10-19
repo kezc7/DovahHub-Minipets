@@ -1,0 +1,8 @@
+{
+  "name": "dragonborn-xp-view",
+  "private": true,
+  "description": "Prisma UI view and tests for the DragonbornXP SKSE plugin",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\""
+  }
+}
