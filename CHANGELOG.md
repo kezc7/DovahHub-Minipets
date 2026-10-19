@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+- First public release
+- Licence notices for the bundled libraries are included with the download
+
 ## 0.10.0
 - New backdrops: Whiterun, Windhelm, Solitude, Riften, Markarth, Blackreach, Apocrypha, Soul Cairn, Sovngarde, caves, homes, inns, mines, temples, vampire lairs and Falmer hives
 - Home and inn windows show the time of day and weather outside
