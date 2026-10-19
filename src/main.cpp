@@ -2,23 +2,29 @@
 #include "keyhandler.h"
 
 #include <RE/A/ActorValueList.h>
+#include <RE/B/BGSLocation.h>
 #include <RE/C/Calendar.h>
 #include <RE/D/DragonSoulsGained.h>
 #include <RE/L/LevelIncrease.h>
 #include <RE/M/MenuOpenCloseEvent.h>
 #include <RE/S/SkillIncrease.h>
 #include <RE/S/Sky.h>
+#include <RE/T/TESDataHandler.h>
+#include <RE/T/TESObjectCELL.h>
+#include <RE/T/TESWorldSpace.h>
 #include <RE/U/UI.h>
 
 #include <atomic>
 #include <chrono>
 #include <cctype>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <string>
 #include <string_view>
 #include <thread>
-#include <unordered_set>
+#include <array>
+#include <vector>
 
 PRISMA_UI_API::IVPrismaUI1* g_prismaUI = nullptr;
 PrismaView g_view = 0;
@@ -37,6 +43,9 @@ namespace
         bool settingsHotkeyRequiresShift = kDefaultSettingsHotkeyRequiresShift;
         std::string settingsHotkeyName = "Shift+B";
         std::string pet = "dovahmin";
+        bool debugPreviewKeys = false;
+        bool showClock = false;
+        std::string clockStyle = "plate";
     };
 
     std::atomic_bool g_statePollerStarted = false;
@@ -45,10 +54,67 @@ namespace
     std::atomic_bool g_settingsHotkeyRequiresShift = kDefaultSettingsHotkeyRequiresShift;
     std::atomic_bool g_shiftDown = false;
     std::atomic_bool g_overlayHiddenForMenus = true;
-    std::unordered_set<std::string> g_openBlockingMenus;
+    std::atomic_bool g_gameLoaded = false;
     DragonbornSettings g_settings;
     std::string g_lastCompanionState;
     std::string g_lastWorldMood;
+    std::int64_t g_lastClockMinute = -1;
+
+    std::string Trim(std::string_view value)
+    {
+        const auto first = value.find_first_not_of(" \t\r\n");
+        if (first == std::string_view::npos) {
+            return {};
+        }
+        const auto last = value.find_last_not_of(" \t\r\n");
+        return std::string(value.substr(first, last - first + 1));
+    }
+
+    // strings end up inside a script, so escape them
+    std::string JsonString(std::string_view value)
+    {
+        std::string result = "\"";
+        for (const auto character : value) {
+            switch (character) {
+            case '"':
+                result += "\\\"";
+                break;
+            case '\\':
+                result += "\\\\";
+                break;
+            default:
+                if (static_cast<unsigned char>(character) >= 0x20) {
+                    result += character;
+                }
+            }
+        }
+        result += '"';
+        return result;
+    }
+
+    bool IsSupportedClockStyle(std::string_view style)
+    {
+        return style == "plate" || style == "ribbon";
+    }
+
+    bool ParseFlag(std::string_view value)
+    {
+        return value == "1" || value == "true";
+    }
+
+    std::vector<std::string> Split(std::string_view value, char separator)
+    {
+        std::vector<std::string> parts;
+        std::size_t start = 0;
+        while (true) {
+            const auto end = value.find(separator, start);
+            parts.emplace_back(value.substr(start, end == std::string_view::npos ? std::string_view::npos : end - start));
+            if (end == std::string_view::npos) {
+                return parts;
+            }
+            start = end + 1;
+        }
+    }
 
     bool IsSupportedPet(std::string_view pet)
     {
@@ -59,17 +125,38 @@ namespace
                pet == "dragon-priest" || pet == "wisp" || pet == "death-hound" || pet == "chicken";
     }
 
+    constexpr std::array<std::string_view, 36> kBlockingMenus{
+        "Main Menu", "Loading Menu", "LoadWaitSpinner", "Fader Menu", "SystemMenu", "TweenMenu",
+        "InventoryMenu", "MagicMenu", "MapMenu", "ContainerMenu", "Journal Menu", "LevelUpMenu",
+        "StatsMenu", "SleepWaitMenu", "FavoritesMenu", "BarterMenu", "CraftingMenu", "Crafting Menu",
+        "SmithingMenu", "Smithing Menu", "AlchemyMenu", "Alchemy Menu", "EnchantingMenu", "Enchanting Menu",
+        "CookingMenu", "Cooking Menu", "PhotoMenu", "Console", "RaceSex Menu", "Book Menu",
+        "Lockpicking Menu", "Training Menu", "GiftMenu", "Tutorial Menu", "Credits Menu", "Mod Manager Menu"
+    };
+
     bool IsBlockingMenu(std::string_view name)
     {
-        return name == "Main Menu" || name == "Loading Menu" || name == "LoadWaitSpinner" || name == "Fader Menu" ||
-               name == "SystemMenu" || name == "TweenMenu" || name == "InventoryMenu" || name == "MagicMenu" ||
-               name == "MapMenu" || name == "ContainerMenu" || name == "Journal Menu" || name == "LevelUpMenu" ||
-               name == "StatsMenu" || name == "SleepWaitMenu" || name == "FavoritesMenu" || name == "BarterMenu" ||
-               name == "CraftingMenu" || name == "Crafting Menu" || name == "SmithingMenu" || name == "Smithing Menu" ||
-               name == "AlchemyMenu" || name == "Alchemy Menu" || name == "EnchantingMenu" || name == "Enchanting Menu" ||
-               name == "CookingMenu" || name == "Cooking Menu" || name == "PhotoMenu" || name == "Console" ||
-               name == "RaceSex Menu" || name == "Book Menu" || name == "Lockpicking Menu" || name == "Training Menu" ||
-               name == "GiftMenu" || name == "Tutorial Menu" || name == "Credits Menu" || name == "Mod Manager Menu";
+        for (const auto menu : kBlockingMenus) {
+            if (menu == name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // polled because the main menu and first loading screen open before we're listening
+    bool IsAnyBlockingMenuOpen()
+    {
+        auto* ui = RE::UI::GetSingleton();
+        if (!ui) {
+            return true;
+        }
+        for (const auto menu : kBlockingMenus) {
+            if (ui->IsMenuOpen(menu)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     std::uint32_t ParseHotkey(std::string value, bool* requiresShift = nullptr)
@@ -132,8 +219,8 @@ namespace
                     continue;
                 }
 
-                const auto key = line.substr(0, separator);
-                const auto value = line.substr(separator + 1);
+                const auto key = Trim(std::string_view(line).substr(0, separator));
+                const auto value = Trim(std::string_view(line).substr(separator + 1));
                 try {
                     if (key == "position_x") {
                         g_settings.positionX = std::stoi(value);
@@ -152,6 +239,15 @@ namespace
                     }
                     else if (key == "pet" && (IsSupportedPet(value) || value == "pinky")) {
                         g_settings.pet = value == "pinky" ? "dovahpink" : value;
+                    }
+                    else if (key == "debug_preview_keys") {
+                        g_settings.debugPreviewKeys = ParseFlag(value);
+                    }
+                    else if (key == "show_clock") {
+                        g_settings.showClock = ParseFlag(value);
+                    }
+                    else if (key == "clock_style" && IsSupportedClockStyle(value)) {
+                        g_settings.clockStyle = value;
                     }
                 }
                 catch (...) {
@@ -174,7 +270,10 @@ namespace
             output << "position_x=" << g_settings.positionX << '\n'
                    << "position_y=" << g_settings.positionY << '\n'
                    << "settings_hotkey=" << g_settings.settingsHotkeyName << '\n'
-                   << "pet=" << g_settings.pet << '\n';
+                   << "pet=" << g_settings.pet << '\n'
+                   << "debug_preview_keys=" << (g_settings.debugPreviewKeys ? 1 : 0) << '\n'
+                   << "show_clock=" << (g_settings.showClock ? 1 : 0) << '\n'
+                   << "clock_style=" << g_settings.clockStyle << '\n';
         }
         catch (const std::exception& error) {
             logger::warn("DragonbornXP settings could not be saved: {}", error.what());
@@ -185,8 +284,10 @@ namespace
     {
         return "{\"x\":" + std::to_string(g_settings.positionX) +
                ",\"y\":" + std::to_string(g_settings.positionY) +
-               ",\"hotkey\":\"" + g_settings.settingsHotkeyName +
-               "\",\"pet\":\"" + g_settings.pet + "\"}";
+               ",\"hotkey\":" + JsonString(g_settings.settingsHotkeyName) +
+               ",\"pet\":" + JsonString(g_settings.pet) +
+               ",\"clock\":" + (g_settings.showClock ? "true" : "false") +
+               ",\"clockStyle\":" + JsonString(g_settings.clockStyle) + "}";
     }
 
     void Invoke(const std::string& functionName, const std::string& json)
@@ -202,7 +303,7 @@ namespace
     void ShowSkillGain(RE::ActorValue actorValue)
     {
         const auto skill = RE::ActorValueToString(actorValue);
-        Invoke("dragonbornXP.skillGain", "{\"skill\":\"" + std::string(skill) + "\"}");
+        Invoke("dragonbornXP.skillGain", "{\"skill\":" + JsonString(skill) + "}");
     }
 
     void PublishCompanionState(const std::string& state)
@@ -239,28 +340,56 @@ namespace
         PublishCompanionState(player->IsInCombat() ? "combat" : moving ? "flying" : "idle");
     }
 
+    void CloseSettings();
+
+    const char* OverlayHiddenReason()
+    {
+        if (!g_gameLoaded.load()) {
+            return "no game loaded yet";
+        }
+        if (IsAnyBlockingMenuOpen()) {
+            return "a Skyrim menu is open";
+        }
+        // other prisma menus
+        if (g_prismaUI->HasAnyActiveFocus() && !g_prismaUI->HasFocus(g_view)) {
+            return "another Prisma UI menu has focus";
+        }
+        const auto* player = RE::PlayerCharacter::GetSingleton();
+        if (!player || !player->Is3DLoaded()) {
+            return "the player is not loaded";
+        }
+        return nullptr;
+    }
+
+    // checks the real view state every poll in case something else showed it
     void UpdateOverlayMenuVisibility()
     {
         if (!g_prismaUI || !g_view || !g_prismaUI->IsValid(g_view)) {
             return;
         }
 
-        const auto* player = RE::PlayerCharacter::GetSingleton();
-        const bool menuOpen = !g_openBlockingMenus.empty() || !player || !player->Is3DLoaded();
-        const bool alreadyHidden = g_overlayHiddenForMenus.load();
-        if (menuOpen == alreadyHidden) {
-            return;
+        const char* reason = OverlayHiddenReason();
+        const bool shouldHide = reason != nullptr;
+        const bool changed = shouldHide != g_overlayHiddenForMenus.exchange(shouldHide);
+        const bool viewHidden = g_prismaUI->IsHidden(g_view);
+
+        if (changed) {
+            Invoke("dragonbornXP.setActive", shouldHide ? "false" : "true");
+            logger::info("DragonbornXP overlay {}", shouldHide ? std::string("hidden: ") + reason : std::string("shown"));
         }
 
-        if (menuOpen) {
-            g_prismaUI->Hide(g_view);
-            g_overlayHiddenForMenus.store(true);
-            logger::debug("DragonbornXP overlay hidden while a Skyrim menu is open");
+        if (shouldHide) {
+            // close settings first or the hidden view keeps input focus
+            if (g_settingsOpen.load()) {
+                Invoke("dragonbornXP.closeSettings", "{}");
+                CloseSettings();
+            }
+            if (!viewHidden) {
+                g_prismaUI->Hide(g_view);
+            }
         }
-        else {
+        else if (viewHidden) {
             g_prismaUI->Show(g_view);
-            g_overlayHiddenForMenus.store(false);
-            logger::debug("DragonbornXP overlay shown after Skyrim menus closed");
         }
     }
 
@@ -303,20 +432,148 @@ namespace
         return "clear";
     }
 
+    bool IsSolstheim(const RE::TESWorldSpace* worldspace)
+    {
+        // solstheim worldspace in Dragonborn.esm
+        static const RE::TESWorldSpace* solstheim = []() -> const RE::TESWorldSpace* {
+            auto* dataHandler = RE::TESDataHandler::GetSingleton();
+            return dataHandler ? dataHandler->LookupForm<RE::TESWorldSpace>(0x800, "Dragonborn.esm") : nullptr;
+        }();
+        return worldspace && worldspace == solstheim;
+    }
+
+    std::string Lowercase(std::string_view value)
+    {
+        std::string result(value);
+        for (auto& character : result) {
+            character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+        }
+        return result;
+    }
+
+    // matched by editor id prefix
+    const char* RegionForWorldspace(const RE::TESWorldSpace* worldspace)
+    {
+        if (!worldspace) {
+            return nullptr;
+        }
+        if (IsSolstheim(worldspace)) {
+            return "solstheim";
+        }
+        const auto editorID = Lowercase(worldspace->GetFormEditorID() ? worldspace->GetFormEditorID() : "");
+        constexpr std::array<std::pair<std::string_view, const char*>, 10> kWorldspaces{ {
+            { "dlc2solstheim", "solstheim" },
+            { "dlc2apocrypha", "apocrypha" },
+            { "dlc01soulcairn", "soulcairn" },
+            { "sovngarde", "sovngarde" },
+            { "blackreach", "blackreach" },
+            { "whiterun", "whiterun" },
+            { "windhelm", "windhelm" },
+            { "solitude", "solitude" },
+            { "riften", "riften" },
+            { "markarth", "markarth" },
+        } };
+        for (const auto& [prefix, region] : kWorldspaces) {
+            if (editorID.rfind(prefix, 0) == 0) {
+                return region;
+            }
+        }
+        return nullptr;
+    }
+
+    // most specific first, unknown interiors get the normal backdrop
+    const char* RegionForInterior(const RE::BGSLocation* location)
+    {
+        if (!location) {
+            return nullptr;
+        }
+        constexpr std::array<std::pair<std::string_view, const char*>, 18> kKeywords{ {
+            { "LocTypeDwarvenAutomatons", "dwemer" },
+            { "LocTypeDraugrCrypt", "tomb" },
+            { "LocTypeFalmerHive", "falmer" },
+            { "LocTypeVampireLair", "vampire" },
+            { "LocTypeMine", "mine" },
+            { "LocTypeTemple", "temple" },
+            { "LocTypeInn", "inn" },
+            { "LocTypePlayerHouse", "house" },
+            { "LocTypeHouse", "house" },
+            { "LocTypeStore", "house" },
+            { "LocTypeCastle", "house" },
+            { "LocTypeGuild", "house" },
+            { "LocTypeAnimalDen", "cave" },
+            { "LocTypeBanditCamp", "cave" },
+            { "LocTypeForswornCamp", "cave" },
+            { "LocTypeHagravenNest", "cave" },
+            { "LocTypeWarlockLair", "cave" },
+            { "LocTypeDungeon", "cave" },
+        } };
+        for (const auto& [keyword, region] : kKeywords) {
+            if (location->HasKeywordString(keyword)) {
+                return region;
+            }
+        }
+        return nullptr;
+    }
+
+    const char* GetRegion()
+    {
+        const auto* player = RE::PlayerCharacter::GetSingleton();
+        if (!player) {
+            return "skyrim";
+        }
+        const auto* cell = player->GetParentCell();
+        if (cell && cell->IsInteriorCell()) {
+            const auto* region = RegionForInterior(player->GetCurrentLocation());
+            return region ? region : "skyrim";
+        }
+        const auto* region = RegionForWorldspace(player->GetWorldspace());
+        return region ? region : "skyrim";
+    }
+
     void UpdateWorldMood()
     {
         const auto* calendar = RE::Calendar::GetSingleton();
         const auto* sky = RE::Sky::GetSingleton();
         const auto timeOfDay = GetTimeOfDay(calendar ? calendar->GetHour() : 12.0f);
         const auto weather = GetWeatherMood(sky);
-        const std::string mood = std::string(timeOfDay) + "|" + weather;
+        const auto region = GetRegion();
+        const std::string mood = std::string(timeOfDay) + "|" + weather + "|" + region;
 
         if (mood == g_lastWorldMood) {
             return;
         }
 
         g_lastWorldMood = mood;
-        Invoke("dragonbornXP.worldMood", "{\"time\":\"" + std::string(timeOfDay) + "\",\"weather\":\"" + weather + "\"}");
+        Invoke("dragonbornXP.worldMood", "{\"time\":\"" + std::string(timeOfDay) + "\",\"weather\":\"" + weather +
+                                             "\",\"region\":\"" + region + "\"}");
+    }
+
+    // once per in-game minute
+    void UpdateClock()
+    {
+        const auto* calendar = RE::Calendar::GetSingleton();
+        if (!calendar) {
+            return;
+        }
+
+        const auto hours = calendar->GetHour();
+        const auto hour = static_cast<int>(hours);
+        const auto minute = static_cast<int>((hours - static_cast<float>(hour)) * 60.0f);
+        const auto day = static_cast<int>(calendar->GetDay());
+        const auto year = static_cast<std::int64_t>(calendar->GetYear());
+        const auto month = static_cast<std::int64_t>(calendar->GetMonth());
+        const auto stamp = (((year * 12 + month) * 32 + day) * 24 + hour) * 60 + minute;
+        if (stamp == g_lastClockMinute) {
+            return;
+        }
+
+        g_lastClockMinute = stamp;
+        Invoke("dragonbornXP.clock", "{\"hour\":" + std::to_string(hour) +
+                                         ",\"minute\":" + std::to_string(minute) +
+                                         ",\"weekday\":" + JsonString(calendar->GetDayName()) +
+                                         ",\"day\":" + std::to_string(day) +
+                                         ",\"month\":" + JsonString(calendar->GetMonthName()) +
+                                         ",\"year\":" + std::to_string(year) + "}");
     }
 
     void OpenSettings()
@@ -328,7 +585,8 @@ namespace
 
         if (const auto* taskInterface = SKSE::GetTaskInterface()) {
             taskInterface->AddTask([]() {
-                if (!g_prismaUI || !g_view || !g_prismaUI->IsValid(g_view)) {
+                // not over game menus, the view is hidden there
+                if (!g_prismaUI || !g_view || !g_prismaUI->IsValid(g_view) || g_overlayHiddenForMenus.load()) {
                     g_settingsOpen.store(false);
                     return;
                 }
@@ -357,20 +615,21 @@ namespace
         }
     }
 
+    // x|y|hotkey|pet|clock|clockStyle, clock fields are optional
     void ApplySettings(std::string_view payload)
     {
-        const auto firstSeparator = payload.find('|');
-        const auto secondSeparator = payload.find('|', firstSeparator == std::string_view::npos ? 0 : firstSeparator + 1);
-        const auto thirdSeparator = payload.find('|', secondSeparator == std::string_view::npos ? 0 : secondSeparator + 1);
-        if (firstSeparator == std::string_view::npos || secondSeparator == std::string_view::npos || thirdSeparator == std::string_view::npos) {
+        const auto parts = Split(payload, '|');
+        if (parts.size() < 4) {
             return;
         }
 
         try {
-            const auto x = std::stoi(std::string(payload.substr(0, firstSeparator)));
-            const auto y = std::stoi(std::string(payload.substr(firstSeparator + 1, secondSeparator - firstSeparator - 1)));
-            const auto hotkeyName = std::string(payload.substr(secondSeparator + 1, thirdSeparator - secondSeparator - 1));
-            const auto pet = std::string(payload.substr(thirdSeparator + 1));
+            const auto x = std::stoi(parts[0]);
+            const auto y = std::stoi(parts[1]);
+            const auto& hotkeyName = parts[2];
+            const auto& pet = parts[3];
+            const bool showClock = parts.size() > 4 ? ParseFlag(parts[4]) : g_settings.showClock;
+            const auto clockStyle = parts.size() > 5 && IsSupportedClockStyle(parts[5]) ? parts[5] : g_settings.clockStyle;
             bool requiresShift = false;
             const auto hotkey = ParseHotkey(hotkeyName, &requiresShift);
             if (hotkey == 0 || x < -1 || y < -1 || !IsSupportedPet(pet)) {
@@ -383,6 +642,8 @@ namespace
             g_settings.settingsHotkeyRequiresShift = requiresShift;
             g_settings.settingsHotkeyName = hotkeyName;
             g_settings.pet = pet;
+            g_settings.showClock = showClock;
+            g_settings.clockStyle = clockStyle;
             g_settingsHotkey.store(hotkey);
             g_settingsHotkeyRequiresShift.store(requiresShift);
             SaveSettings();
@@ -407,6 +668,7 @@ namespace
                         UpdateOverlayMenuVisibility();
                         UpdateCompanionState();
                         UpdateWorldMood();
+                        UpdateClock();
                     });
                 }
             }
@@ -449,7 +711,9 @@ namespace
             RE::BSTEventSource<RE::DragonSoulsGained::Event>*) override
         {
             if (event && event->souls > 0.0f) {
-                Invoke("dragonbornXP.dragonSoul", "{\"amount\":" + std::to_string(event->souls) + "}");
+                const auto rounded = std::lround(event->souls);
+                const auto souls = rounded > 0 ? rounded : 1L;
+                Invoke("dragonbornXP.dragonSoul", "{\"amount\":" + std::to_string(souls) + "}");
             }
             return RE::BSEventNotifyControl::kContinue;
         }
@@ -466,16 +730,8 @@ namespace
                 return RE::BSEventNotifyControl::kContinue;
             }
 
-            const std::string menuName = event->menuName.c_str();
-            if (!IsBlockingMenu(menuName)) {
+            if (!IsBlockingMenu(event->menuName.c_str())) {
                 return RE::BSEventNotifyControl::kContinue;
-            }
-
-            if (event->opening) {
-                g_openBlockingMenus.insert(menuName);
-            }
-            else {
-                g_openBlockingMenus.erase(menuName);
             }
 
             if (const auto* taskInterface = SKSE::GetTaskInterface()) {
@@ -516,13 +772,15 @@ namespace
         KeyHandler::RegisterSink();
         auto* keyHandler = KeyHandler::GetSingleton();
 
-        // F6 previews a skill XP gain; F7 previews a level-up.
-        (void)keyHandler->Register(0x40, KeyEventType::KEY_DOWN, []() {
-            ShowSkillGain(RE::ActorValue::kDestruction);
-        });
-        (void)keyHandler->Register(0x41, KeyEventType::KEY_DOWN, []() {
-            Invoke("dragonbornXP.levelUp", "{\"level\":42}");
-        });
+        // F6/F7 test toasts, only with debug_preview_keys=1
+        if (g_settings.debugPreviewKeys) {
+            (void)keyHandler->Register(0x40, KeyEventType::KEY_DOWN, []() {
+                ShowSkillGain(RE::ActorValue::kDestruction);
+            });
+            (void)keyHandler->Register(0x41, KeyEventType::KEY_DOWN, []() {
+                Invoke("dragonbornXP.levelUp", "{\"level\":42}");
+            });
+        }
 
         (void)keyHandler->Register(0x2A, KeyEventType::KEY_DOWN, []() {
             g_shiftDown.store(true);
@@ -537,8 +795,7 @@ namespace
             g_shiftDown.store(false);
         });
 
-        // Register the keyboard range once so the settings hotkey can be rebound
-        // from Prisma UI without rebuilding or re-registering the input sink.
+        // register every key once so the hotkey can be rebound at runtime
         for (std::uint32_t scanCode = 1; scanCode < 0x80; ++scanCode) {
             (void)keyHandler->Register(scanCode, KeyEventType::KEY_DOWN, [scanCode]() {
                 const bool shiftDown = g_shiftDown.load() || (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
@@ -579,22 +836,38 @@ namespace
             g_prismaUI->RegisterJSListener(view, "settingsClosed", [](const char*) {
                 CloseSettings();
             });
+            // new page, resend everything
+            g_lastWorldMood.clear();
+            g_lastClockMinute = -1;
             Invoke("dragonbornXP.initialize", "{}");
             Invoke("dragonbornXP.applySettings", SettingsPayload());
         });
-        g_prismaUI->SetOrder(g_view, 100);
+        // draw under other prisma views
+        g_prismaUI->SetOrder(g_view, -100);
 
         RegisterGameEvents();
         RegisterPreviewKeys();
         StartCompanionStatePoller();
-        logger::info("DragonbornXP initialized. F6 previews XP; F7 previews a level-up.");
+        logger::info("DragonbornXP initialized. Preview keys {}.", g_settings.debugPreviewKeys ? "enabled (F6 XP, F7 level-up)" : "disabled");
     }
 }
 
 static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 {
-    if (message && message->type == SKSE::MessagingInterface::kDataLoaded) {
+    if (!message) {
+        return;
+    }
+    switch (message->type) {
+    case SKSE::MessagingInterface::kDataLoaded:
         OnDataLoaded();
+        break;
+    case SKSE::MessagingInterface::kPostLoadGame:
+    case SKSE::MessagingInterface::kNewGame:
+        // stay hidden until a game is loaded
+        g_gameLoaded.store(true);
+        break;
+    default:
+        break;
     }
 }
 

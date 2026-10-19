@@ -3,12 +3,14 @@ set_xmakever("3.0.0")
 includes("lib/commonlibsse-ng")
 
 local PLUGIN_NAME = "DragonbornXP"
-local PLUGIN_VERSION = "0.1.0"
+-- bump this for releases
+local PLUGIN_VERSION = "1.0.0"
+local PACKAGE_NAME = "dovhub-minipets"
 local VIEW_NAME = "DragonbornXP"
 
 set_project(PLUGIN_NAME)
 set_version(PLUGIN_VERSION)
-set_license("MIT")
+set_license("GPL-3.0")
 set_languages("c++23")
 set_warnings("allextra")
 add_defines("UNICODE", "_UNICODE")
@@ -22,7 +24,7 @@ target(PLUGIN_NAME)
     add_rules("commonlibsse-ng.plugin", {
         name = PLUGIN_NAME,
         author = "DragonbornXP contributors",
-        description = "A tiny Prisma UI dragon that celebrates Skyrim XP and level-ups"
+        description = "Pixel-art HUD companions that celebrate your XP and level-ups"
     })
     add_files("src/**.cpp", "keyhandler/**.cpp")
     add_headerfiles("src/**.h", "keyhandler/**.h")
@@ -40,10 +42,25 @@ target(PLUGIN_NAME)
         os.cp(path.join(os.projectdir(), "view", "*"), viewdir)
         os.cp(target:targetfile(), plugindir)
 
+        -- licence texts go with the DLL (GPL plus the bundled libraries)
+        local licensedir = path.join(plugindir, PLUGIN_NAME .. "-licenses")
+        os.mkdir(licensedir)
+        os.cp(path.join(os.projectdir(), "LICENSE"), path.join(licensedir, "LICENSE.txt"))
+        os.cp(path.join(os.projectdir(), "THIRD-PARTY-NOTICES.md"), licensedir)
+        os.cp(path.join(os.projectdir(), "licenses", "*"), licensedir)
+
         local symbolfile = target:symbolfile()
         if symbolfile and os.isfile(symbolfile) then
             os.cp(symbolfile, plugindir)
         end
 
         cprint("${bright green}created distribution folder: ${clear}dist/%s_%s", PLUGIN_NAME, PLUGIN_VERSION)
+
+        -- zip for MO2, SKSE/ and PrismaUI/ at the root
+        import("utils.archive")
+        local zipname = PACKAGE_NAME .. PLUGIN_VERSION .. ".zip"
+        local zipfile = path.join(os.projectdir(), zipname)
+        os.tryrm(zipfile)
+        archive.archive(zipfile, {"SKSE", "PrismaUI"}, {curdir = distdir, recurse = true})
+        cprint("${bright green}created MO2 package: ${clear}%s", zipname)
     end)

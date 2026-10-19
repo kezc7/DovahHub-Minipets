@@ -1,0 +1,58 @@
+# Changelog
+
+## 1.0.0
+- First public release
+- Licence notices for the bundled libraries are included with the download
+
+## 0.10.0
+- New backdrops: Whiterun, Windhelm, Solitude, Riften, Markarth, Blackreach, Apocrypha, Soul Cairn, Sovngarde, caves, homes, inns, mines, temples, vampire lairs and Falmer hives
+- Home and inn windows show the time of day and weather outside
+- Ambient particles per place (drips, spores, leaves, pages, souls...)
+- Place picker in the animation lab, `?preview=places`
+
+## 0.9.0
+- Location backdrops: Solstheim (with Red Mountain), Dwemer ruins and Nordic tombs
+- No sky or weather indoors
+
+## 0.8.0
+- Parallax scrolling while you travel
+
+## 0.7.0
+- Sun and moons move with the in-game clock
+- Pixel landscape behind the pet, changes every in-game day
+- Sunset sun is redder so it doesn't look like fire breath
+- `?preview=timelapse`
+
+## 0.6.0
+- Low sun at dawn and sunset
+
+## 0.5.0
+- Sun on clear days
+
+## 0.4.0
+- Masser and Secunda at night
+
+## 0.3.0
+- Optional clock under the card (plate or ribbon style)
+- Settings menu scrolls on small screens
+
+## 0.2.2
+- Fixed the pet showing on the launch splash/loading screens
+- Show/hide is logged to the SKSE log
+
+## 0.2.1
+- Clack is grey now, like an actual mudcrab
+
+## 0.2.0
+- Pixel art for all 20 companions with proper animations
+- Skyrim-style frame and caption
+- Drag the card to move it, sliders update live
+- Rain, snow and storm effects
+- F6/F7 test keys are off unless `debug_preview_keys=1`
+- Release zip renamed to `dovhub-minipets<version>.zip`
+- Settings menu is centred
+- Draws under other Prisma UI menus and hides while they're open
+- Fixed: showing on the title screen, hotkey opening over game menus, sliders only moving one axis, pet getting stuck after toasts, dragon soul counts, unescaped strings
+
+## 0.1.0
+- First version

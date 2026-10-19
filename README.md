@@ -1,32 +1,63 @@
 # DragonbornXP
 
-DragonbornXP is a small Skyrim Special Edition / Anniversary Edition SKSE plugin that uses Prisma UI for a transparent HUD toast. A chunky little pixel dragon celebrates skill XP, absorbed dragon souls, and player level-ups.
+A little pixel-art companion that sits on your HUD in Skyrim SE/AE and cheers you on. It reacts to skill XP, dragon souls and level-ups, follows you around, and its little scene changes with the time, weather and wherever you happen to be.
 
-## What is implemented
+Needs SKSE64, Address Library and Prisma UI.
 
-- `SkillIncrease` events show `XP gained` with the affected skill.
-- `DragonSoulsGained` events show the number of souls absorbed.
-- `LevelIncrease` events trigger the larger level-up celebration.
-- While the player is moving, the dragon flies; while the player is in combat, it breathes fire; after movement/combat stops, it lands before returning to idle.
-- The overlay automatically hides during Skyrim loading screens and menus, then returns when gameplay resumes.
-- The scene changes with Skyrim's time of day and weather: dawn, day, sunset, night, clear, cloudy, rain, snow, and storm.
-- The settings menu opens with Shift+B by default and lets you rebind that hotkey plus set the dragon's exact X/Y screen position; choices persist in `Data/SKSE/Plugins/DragonbornXP.ini`.
-- The settings menu can switch between named companions: Dovahmin, Dovahpink, Clack the Mudcrab, Nibbles the Skeever, Ember the Fox, Stripes the Sabre Cat, Webber the Frostbite Spider, Waddles the Horker, Grumble the Troll, Cinder the Flame Atronach, Shiver the Frost Atronach, Moss the Spriggan, Tinker the Dwarven Spider, Skitter the Chaurus, Bloop the Netch, Tusker the Mammoth, Masky the Dragon Priest, Glowbug the Wisp, Gnasher the Death Hound, and Pip the Chicken; the selected pet is persisted with the position and hotkey settings.
-- F6 previews a Destruction XP toast; F7 previews level 42.
-- Browser previews also support `?preview=fly`, `?preview=combat`, `?preview=land`, `?preview=dawn`, `?preview=sunset`, `?preview=night`, `?preview=rain`, and `?preview=snow`.
-- The visual is a larger 256x256 local HTML/CSS/JavaScript companion card under `Data/PrismaUI/views/DragonbornXP/`; it has no network dependency.
+## Features
 
-## Build
+- XP, dragon soul and level-up popups as a small caption under your companion.
+- 20 companions: Dovahmin, Dovahpink, Clack the Mudcrab, Nibbles the Skeever, Ember the Fox, Stripes the Sabre Cat, Webber the Frostbite Spider, Waddles the Horker, Grumble the Troll, Cinder the Flame Atronach, Shiver the Frost Atronach, Moss the Spriggan, Tinker the Dwarven Spider, Skitter the Chaurus, Bloop the Netch, Tusker the Mammoth, Masky the Dragon Priest, Glowbug the Wisp, Gnasher the Death Hound and Pip the Chicken.
+- They walk, fly or float when you move, get stuck in when you fight, and fidget when idle.
+- Day/night cycle with the sun and both moons following the in-game clock, plus rain, snow and storms.
+- A scrolling landscape behind them that changes every in-game day.
+- Backdrops for Solstheim, the five major cities, Blackreach, Apocrypha, the Soul Cairn and Sovngarde, and for caves, homes, inns, mines, temples, Dwemer ruins, Nordic tombs, vampire lairs and Falmer hives.
+- Optional in-game clock under the card.
+- Hides itself on loading screens, in menus and when other Prisma UI menus are open.
 
-Requirements are the ones from the official Prisma UI example: XMake 3+, a C++23 MSVC/Clang-CL toolchain, Skyrim SE/AE, SKSE64, Address Library, and Prisma UI. The `lib/commonlibsse-ng` folder is the CommonLib-NG dependency used by the template.
+## Settings
+
+Press **Shift+B** in game. You can pick your companion, drag the card wherever you like (or use the sliders), turn the clock on and pick its style, and change the hotkey. Settings are saved to `Data/SKSE/Plugins/DragonbornXP.ini`.
+
+Setting `debug_preview_keys=1` in the INI turns on two test keys: F6 for an XP popup and F7 for a level-up.
+
+## Installing
+
+Install `dovhub-minipets<version>.zip` with your mod manager, or copy its `SKSE` and `PrismaUI` folders into Skyrim's `Data` folder.
+
+## Building
+
+You'll need XMake 3+ and MSVC with C++23 support. CommonLibSSE-NG is in `lib/commonlibsse-ng`.
 
 ```powershell
 xmake f -m release
 xmake build
 ```
 
-The post-build package is written to `dist/DragonbornXP_0.1.0/`. Install that folder into MO2 as a mod, or copy its `SKSE` and `PrismaUI` folders into the Skyrim `Data` directory.
+The build puts the files in `dist/DragonbornXP_<version>/` and makes the MO2 zip in the repo root.
 
-## Notes
+Tests:
 
-The dragon is code-native pixel art so the UI stays self-contained and easy to iterate. It includes horns, swept wings, back spikes, a muzzle with nostrils and teeth, claws, and a pointed tail; a later art pass can replace it with a sprite sheet without changing the event bridge.
+```powershell
+node --test "tests/*.test.js"
+```
+
+## Previewing in a browser
+
+The UI is plain HTML/CSS/JS in `view/`, so you can work on it without starting the game:
+
+```powershell
+python -m http.server 8765 --directory view
+```
+
+Then open `http://localhost:8765/?preview=lab`. Other useful previews: `sheet` (all companions), `places` (every backdrop), `timelapse` (a full day), `settings`, `clock`, or a place name like `?preview=whiterun`.
+
+The in-game browser is WebKit based and doesn't support some newer CSS (like `inset` or the separate `translate`/`rotate`/`scale` properties), so animations stick to `transform` and `opacity`.
+
+## Releases
+
+The version is `PLUGIN_VERSION` in `xmake.lua`. Bump it, add a line to `CHANGELOG.md`, build, and tag the commit (`v0.10.0` and so on). Zips aren't committed, so build from a tag if you need an old one.
+
+## License
+
+GPL-3.0, see `LICENSE`. The plugin is built with CommonLibSSE-NG (GPL-3.0-or-later with modding exceptions) and a few MIT/BSD libraries; see `THIRD-PARTY-NOTICES.md`.
