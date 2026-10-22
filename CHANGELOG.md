@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+- Hotkeys to feed (Shift+N) and play with (Shift+K) your pet without opening the menu, both rebindable in settings
+- Settings won't let two actions share the same key
+
 ## 1.2.0
 - Raise a pet (optional, Settings > Pet): pick an egg, keep it warm with XP until it hatches, then watch it grow from baby to adult
 - Feed it by eating food yourself, or with the Feed button (uses the cheapest food in your pack)

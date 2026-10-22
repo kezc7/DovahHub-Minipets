@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dragonborn XP</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=46">
+  <link rel="stylesheet" href="styles.css?v=47">
 </head>
 <body>
   <main id="dragonborn-xp" aria-live="polite" aria-atomic="true">
@@ -120,9 +120,11 @@
         </label>
       </div>
       <div class="settings-group">
-        <h2>Hotkey</h2>
-        <button id="settings-hotkey" class="hotkey-capture" type="button">Shift+B</button>
-        <p id="hotkey-hint" class="settings-hint">Click the key box, then press a key or modifier combination.</p>
+        <h2>Hotkeys</h2>
+        <div class="settings-row hotkey-row"><span>Open this menu</span><button id="settings-hotkey" class="hotkey-capture" type="button" data-hotkey="settings">Shift+B</button></div>
+        <div class="settings-row hotkey-row pet-hotkey"><span>Feed your pet</span><button id="feed-hotkey" class="hotkey-capture" type="button" data-hotkey="feed">Shift+N</button></div>
+        <div class="settings-row hotkey-row pet-hotkey"><span>Play with your pet</span><button id="play-hotkey" class="hotkey-capture" type="button" data-hotkey="play">Shift+K</button></div>
+        <p id="hotkey-hint" class="settings-hint">Click a key box, then press a key (Shift optional).</p>
       </div>
       <footer class="settings-footer">
         <button id="settings-cancel" class="settings-secondary" type="button">Cancel</button>
@@ -158,12 +160,12 @@
     </div>
   </section>
   <section id="pet-sheet" class="hidden" aria-label="All companions"></section>
-  <script src="animation-state.js?v=46"></script>
-  <script src="pet-sprites.js?v=46"></script>
-  <script src="clock.js?v=46"></script>
-  <script src="pet-life.js?v=46"></script>
-  <script src="regions.js?v=46"></script>
-  <script src="sky.js?v=46"></script>
-  <script src="app.js?v=46"></script>
+  <script src="animation-state.js?v=47"></script>
+  <script src="pet-sprites.js?v=47"></script>
+  <script src="clock.js?v=47"></script>
+  <script src="pet-life.js?v=47"></script>
+  <script src="regions.js?v=47"></script>
+  <script src="sky.js?v=47"></script>
+  <script src="app.js?v=47"></script>
 </body>
 </html>

@@ -99,6 +99,8 @@
   let cardScale = 100;
   // raise-a-pet: on/off is a setting, the pet itself lives in the save
   let raisePet = false;
+  let feedHotkey = 'Shift+N';
+  let playHotkey = 'Shift+K';
   let petLife = null;
   let gameHours = null;
   let shownPetKey = '';
@@ -620,7 +622,7 @@
     if (typeof window.settingsChanged !== 'function') return;
     const x = hasCustomPosition() ? positionX : -1;
     const y = hasCustomPosition() ? positionY : -1;
-    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}`);
+    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}`);
   }
 
   function queueNativeSettingsChanged() {
@@ -646,6 +648,8 @@
     syncPositionFields();
     settingsHotkeyButton.textContent = settingsHotkey;
     petSelect.value = pet;
+    document.querySelector('#feed-hotkey').textContent = feedHotkey;
+    document.querySelector('#play-hotkey').textContent = playHotkey;
     clockEnabledInput.checked = showClock;
     clockStyleSelect.value = clockStyle;
     clockStyleSelect.disabled = !showClock;
@@ -664,6 +668,8 @@
       settingsHotkey = settingsSnapshot.hotkey;
       cardScale = settingsSnapshot.cardScale;
       raisePet = settingsSnapshot.raisePet;
+      feedHotkey = settingsSnapshot.feedHotkey;
+      playHotkey = settingsSnapshot.playHotkey;
       refreshPet();
       showClock = settingsSnapshot.showClock;
       clockStyle = settingsSnapshot.clockStyle;
@@ -680,7 +686,7 @@
 
   function openSettings(data) {
     if (data) applyNativeSettings(data);
-    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet };
+    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey };
     settingsOpen = true;
     document.body.classList.add('settings-open');
     settingsMenu.classList.remove('hidden');
@@ -692,6 +698,8 @@
     positionX = Number.isFinite(data.x) && data.x >= 0 ? Math.round(data.x) : null;
     positionY = Number.isFinite(data.y) && data.y >= 0 ? Math.round(data.y) : null;
     if (typeof data.hotkey === 'string' && data.hotkey) settingsHotkey = data.hotkey;
+    if (typeof data.feedHotkey === 'string' && data.feedHotkey) feedHotkey = data.feedHotkey;
+    if (typeof data.playHotkey === 'string' && data.playHotkey) playHotkey = data.playHotkey;
     if (typeof data.clock === 'boolean') showClock = data.clock;
     if (data.clockStyle === 'plate' || data.clockStyle === 'ribbon') clockStyle = data.clockStyle;
     if (Number.isFinite(data.scale)) cardScale = clampScale(data.scale);
@@ -774,9 +782,9 @@
     const name = petNames[petLife.species];
     result.events.forEach(event => {
       if (event === 'hatched') {
-        controller.play('celebrating', { payload: { kind: 'level-up', title: `${name} hatched!`, detail: 'Feed them and play with them (Shift+B).', fill: 100 } });
-      } else if (event === 'mood:hungry') petNotice(`${name} is hungry`, 'Eat something, or use Feed in the menu.');
-      else if (event === 'mood:sad') petNotice(`${name} feels lonely`, 'Play with them in the menu.');
+        controller.play('celebrating', { payload: { kind: 'level-up', title: `${name} hatched!`, detail: `Feed (${feedHotkey}) and play (${playHotkey}) with them.`, fill: 100 } });
+      } else if (event === 'mood:hungry') petNotice(`${name} is hungry`, `Eat something, or press ${feedHotkey}.`);
+      else if (event === 'mood:sad') petNotice(`${name} feels lonely`, `Press ${playHotkey} to play.`);
       else if (event === 'mood:miserable') petNotice(`${name} is miserable`, 'They need food and some attention.');
     });
     savePet();
@@ -825,6 +833,7 @@
   function renderPetPanel() {
     petSelectRow.classList.toggle('hidden', raisePet);
     petLifePanel.classList.toggle('hidden', !raisePet);
+    document.querySelectorAll('.pet-hotkey').forEach(row => row.classList.toggle('hidden', !raisePet));
     if (!raisePet) return;
     const egg = !petLife || petLife.stage === 'egg';
     petLifeEggs.classList.toggle('hidden', Boolean(petLife));
@@ -858,7 +867,8 @@
     document.querySelector('#need-food').style.width = `${Math.round(petLife.hunger)}%`;
     document.querySelector('#need-happiness').style.width = `${Math.round(petLife.happiness)}%`;
     document.querySelector('#pet-feed').disabled = egg;
-    document.querySelector('#pet-play').textContent = egg ? 'Cuddle' : 'Play';
+    document.querySelector('#pet-feed').textContent = `Feed (${feedHotkey})`;
+    document.querySelector('#pet-play').textContent = `${egg ? 'Cuddle' : 'Play'} (${playHotkey})`;
     document.querySelector('#pet-reset').textContent = resetArmed ? 'Click again to start over' : 'Start over';
     petLifeHint.textContent = egg
       ? 'XP, level-ups and time keep the egg warm.'
@@ -891,6 +901,11 @@
       const text = data && typeof data.state === 'string' ? data.state : '';
       petLife = text ? petLifeRules.restore(text, id => Boolean(petNames[id])) : null;
       refreshPet(true);
+    },
+    petAction(data) {
+      if (!raisePet) return;
+      if (data && data.action === 'feed') feedPet();
+      else if (data && data.action === 'play') playWithPet();
     },
     petFed(data) {
       if (data && data.none) return petNotice('No food in your pack', 'Pick up something to eat first.');
@@ -1119,30 +1134,45 @@
   document.querySelector('#settings-save').addEventListener('click', () => closeSettings(true));
   document.querySelector('#settings-cancel').addEventListener('click', () => closeSettings(false));
   document.querySelector('#settings-close').addEventListener('click', () => closeSettings(true));
-  settingsHotkeyButton.addEventListener('click', () => {
-    capturingHotkey = true;
-    settingsHotkeyButton.classList.add('capturing');
-    settingsHotkeyButton.textContent = 'Press a key';
-    hotkeyHint.textContent = 'Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.';
-  });
-  settingsHotkeyButton.addEventListener('keydown', event => {
-    if (!capturingHotkey) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.code === 'Escape') {
+  const hotkeyNames = { settings: 'opening this menu', feed: 'feeding', play: 'playing' };
+  const getHotkey = which => ({ settings: settingsHotkey, feed: feedHotkey, play: playHotkey })[which];
+  function setHotkey(which, label) {
+    if (which === 'settings') settingsHotkey = label;
+    else if (which === 'feed') feedHotkey = label;
+    else playHotkey = label;
+  }
+  document.querySelectorAll('.hotkey-capture').forEach(button => {
+    const which = button.dataset.hotkey;
+    const stopCapture = () => {
       capturingHotkey = false;
-      settingsHotkeyButton.classList.remove('capturing');
-      settingsHotkeyButton.textContent = settingsHotkey;
-      return;
-    }
-    const label = displayKey(event);
-    if (!label) return;
-    settingsHotkey = label;
-    capturingHotkey = false;
-    settingsHotkeyButton.classList.remove('capturing');
-    settingsHotkeyButton.textContent = settingsHotkey;
-    hotkeyHint.textContent = 'Press Save settings to keep this key.';
-    queueNativeSettingsChanged();
+      button.classList.remove('capturing');
+      button.textContent = getHotkey(which);
+    };
+    button.addEventListener('click', () => {
+      capturingHotkey = true;
+      button.classList.add('capturing');
+      button.textContent = 'Press a key';
+      hotkeyHint.textContent = 'Press a letter, number, Enter, Space, Tab, or F1\u2013F12 with optional Shift.';
+    });
+    button.addEventListener('blur', () => { if (capturingHotkey) stopCapture(); });
+    button.addEventListener('keydown', event => {
+      if (!capturingHotkey) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.code === 'Escape') return stopCapture();
+      const label = displayKey(event);
+      if (!label) return;
+      const clash = Object.keys(hotkeyNames).find(other => other !== which && getHotkey(other) === label);
+      if (clash) {
+        hotkeyHint.textContent = `${label} is already used for ${hotkeyNames[clash]}.`;
+        return;
+      }
+      setHotkey(which, label);
+      stopCapture();
+      hotkeyHint.textContent = 'Press Save settings to keep this key.';
+      renderPetPanel();
+      queueNativeSettingsChanged();
+    });
   });
   document.addEventListener('keydown', event => {
     if (settingsOpen && event.code === 'Escape' && !capturingHotkey) {

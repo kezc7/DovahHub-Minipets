@@ -20,7 +20,7 @@ Needs SKSE64, Address Library and Prisma UI.
 
 ## Settings
 
-Press **Shift+B** in game. You can pick your companion, drag the card wherever you like (or use the sliders), make it bigger or smaller, switch on raise-a-pet mode and look after your pet, turn the clock on and pick its style, and change the hotkey. Settings are saved to `Data/SKSE/Plugins/DragonbornXP.ini`.
+Press **Shift+B** in game. You can pick your companion, drag the card wherever you like (or use the sliders), make it bigger or smaller, switch on raise-a-pet mode and look after your pet (Shift+N to feed, Shift+K to play), turn the clock on and pick its style, and change any of the hotkeys. Settings are saved to `Data/SKSE/Plugins/DragonbornXP.ini`.
 
 Setting `debug_preview_keys=1` in the INI turns on two test keys: F6 for an XP popup and F7 for a level-up.
 

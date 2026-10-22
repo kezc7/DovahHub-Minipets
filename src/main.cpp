@@ -52,12 +52,22 @@ namespace
         std::string clockStyle = "plate";
         int scale = 100;
         bool raisePet = false;
+        std::string feedHotkeyName = "Shift+N";
+        std::string playHotkeyName = "Shift+K";
     };
 
     std::atomic_bool g_statePollerStarted = false;
     std::atomic_bool g_settingsOpen = false;
     std::atomic_uint32_t g_settingsHotkey = kDefaultSettingsHotkey;
     std::atomic_bool g_settingsHotkeyRequiresShift = kDefaultSettingsHotkeyRequiresShift;
+
+    struct PetKey
+    {
+        std::atomic_uint32_t scan = 0;
+        std::atomic_bool shift = false;
+    };
+    PetKey g_feedKey;
+    PetKey g_playKey;
     std::atomic_bool g_shiftDown = false;
     std::atomic_bool g_overlayHiddenForMenus = true;
     std::atomic_bool g_gameLoaded = false;
@@ -218,6 +228,13 @@ namespace
         return 0;
     }
 
+    void StorePetKey(PetKey& key, const std::string& name)
+    {
+        bool shift = false;
+        key.scan.store(ParseHotkey(name, &shift));
+        key.shift.store(shift);
+    }
+
     void LoadSettings()
     {
         try {
@@ -269,6 +286,12 @@ namespace
                     else if (key == "raise_pet") {
                         g_settings.raisePet = ParseFlag(value);
                     }
+                    else if (key == "feed_hotkey" && ParseHotkey(value) != 0) {
+                        g_settings.feedHotkeyName = value;
+                    }
+                    else if (key == "play_hotkey" && ParseHotkey(value) != 0) {
+                        g_settings.playHotkeyName = value;
+                    }
                 }
                 catch (...) {
                     logger::warn("DragonbornXP ignored invalid setting '{}'", key);
@@ -295,7 +318,9 @@ namespace
                    << "show_clock=" << (g_settings.showClock ? 1 : 0) << '\n'
                    << "clock_style=" << g_settings.clockStyle << '\n'
                    << "scale=" << g_settings.scale << '\n'
-                   << "raise_pet=" << (g_settings.raisePet ? 1 : 0) << '\n';
+                   << "raise_pet=" << (g_settings.raisePet ? 1 : 0) << '\n'
+                   << "feed_hotkey=" << g_settings.feedHotkeyName << '\n'
+                   << "play_hotkey=" << g_settings.playHotkeyName << '\n';
         }
         catch (const std::exception& error) {
             logger::warn("DragonbornXP settings could not be saved: {}", error.what());
@@ -311,7 +336,9 @@ namespace
                ",\"clock\":" + (g_settings.showClock ? "true" : "false") +
                ",\"clockStyle\":" + JsonString(g_settings.clockStyle) +
                ",\"scale\":" + std::to_string(g_settings.scale) +
-               ",\"raisePet\":" + (g_settings.raisePet ? "true" : "false") + "}";
+               ",\"raisePet\":" + (g_settings.raisePet ? "true" : "false") +
+               ",\"feedHotkey\":" + JsonString(g_settings.feedHotkeyName) +
+               ",\"playHotkey\":" + JsonString(g_settings.playHotkeyName) + "}";
     }
 
     void Invoke(const std::string& functionName, const std::string& json)
@@ -640,7 +667,7 @@ namespace
         }
     }
 
-    // x|y|hotkey|pet|clock|clockStyle|scale|raisePet, the last four are optional
+    // x|y|hotkey|pet|clock|clockStyle|scale|raisePet|feedKey|playKey, everything after pet is optional
     void ApplySettings(std::string_view payload)
     {
         const auto parts = Split(payload, '|');
@@ -657,6 +684,8 @@ namespace
             const auto clockStyle = parts.size() > 5 && IsSupportedClockStyle(parts[5]) ? parts[5] : g_settings.clockStyle;
             const auto scale = parts.size() > 6 ? ClampScale(std::stoi(parts[6])) : g_settings.scale;
             const bool raisePet = parts.size() > 7 ? ParseFlag(parts[7]) : g_settings.raisePet;
+            const auto feedKey = parts.size() > 8 && ParseHotkey(parts[8]) != 0 ? parts[8] : g_settings.feedHotkeyName;
+            const auto playKey = parts.size() > 9 && ParseHotkey(parts[9]) != 0 ? parts[9] : g_settings.playHotkeyName;
             bool requiresShift = false;
             const auto hotkey = ParseHotkey(hotkeyName, &requiresShift);
             if (hotkey == 0 || x < -1 || y < -1 || !IsSupportedPet(pet)) {
@@ -673,6 +702,10 @@ namespace
             g_settings.clockStyle = clockStyle;
             g_settings.scale = scale;
             g_settings.raisePet = raisePet;
+            g_settings.feedHotkeyName = feedKey;
+            g_settings.playHotkeyName = playKey;
+            StorePetKey(g_feedKey, feedKey);
+            StorePetKey(g_playKey, playKey);
             g_settingsHotkey.store(hotkey);
             g_settingsHotkeyRequiresShift.store(requiresShift);
             SaveSettings();
@@ -888,12 +921,32 @@ namespace
         for (std::uint32_t scanCode = 1; scanCode < 0x80; ++scanCode) {
             (void)keyHandler->Register(scanCode, KeyEventType::KEY_DOWN, [scanCode]() {
                 const bool shiftDown = g_shiftDown.load() || (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
-                if (scanCode != g_settingsHotkey.load() || g_settingsOpen.load() ||
-                    shiftDown != g_settingsHotkeyRequiresShift.load()) {
+                if (g_settingsOpen.load()) {
                     return;
                 }
-                logger::info("DragonbornXP settings hotkey pressed: {}", g_settings.settingsHotkeyName);
-                OpenSettings();
+                if (scanCode == g_settingsHotkey.load() && shiftDown == g_settingsHotkeyRequiresShift.load()) {
+                    logger::info("DragonbornXP settings hotkey pressed: {}", g_settings.settingsHotkeyName);
+                    OpenSettings();
+                    return;
+                }
+                // feed/play only while playing (not in menus) and with raise-a-pet on
+                if (!g_settings.raisePet || g_overlayHiddenForMenus.load()) {
+                    return;
+                }
+                const char* action = nullptr;
+                if (scanCode == g_feedKey.scan.load() && shiftDown == g_feedKey.shift.load()) {
+                    action = "feed";
+                }
+                else if (scanCode == g_playKey.scan.load() && shiftDown == g_playKey.shift.load()) {
+                    action = "play";
+                }
+                if (action) {
+                    if (const auto* taskInterface = SKSE::GetTaskInterface()) {
+                        taskInterface->AddTask([action]() {
+                            Invoke("dragonbornXP.petAction", std::string("{\"action\":\"") + action + "\"}");
+                        });
+                    }
+                }
             });
         }
     }
@@ -901,6 +954,8 @@ namespace
     void OnDataLoaded()
     {
         LoadSettings();
+        StorePetKey(g_feedKey, g_settings.feedHotkeyName);
+        StorePetKey(g_playKey, g_settings.playHotkeyName);
         g_prismaUI = PRISMA_UI_API::RequestPluginAPI<PRISMA_UI_API::IVPrismaUI1>();
         if (!g_prismaUI) {
             logger::critical("PrismaUI was not found. DragonbornXP will not display its overlay.");
