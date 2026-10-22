@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+- Size setting (50-150%) with a slider and a box to type the value, saved as `scale` in the INI
+- Fixed dragon fire (and other effects) spilling outside the frame
+
 ## 1.0.0
 - First public release
 - Licence notices for the bundled libraries are included with the download

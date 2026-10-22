@@ -10,6 +10,9 @@
   const positionXValue = document.querySelector('#position-x-value');
   const positionYRange = document.querySelector('#position-y');
   const positionYValue = document.querySelector('#position-y-value');
+  const sizeRange = document.querySelector('#size-range');
+  const sizeValue = document.querySelector('#size-value');
+  const cardScaler = document.querySelector('.card-scale');
   const settingsHotkeyButton = document.querySelector('#settings-hotkey');
   const hotkeyHint = document.querySelector('#hotkey-hint');
   const petSelect = document.querySelector('#pet-select');
@@ -83,6 +86,8 @@
   let positionX = null;
   let positionY = null;
   let settingsHotkey = 'Shift+B';
+  // card size in percent
+  let cardScale = 100;
   let showClock = false;
   // in-game hour (fractional) and the per-day scenery seed
   let skyHours = 12.5;
@@ -133,8 +138,8 @@
 
   function maxPosition() {
     return {
-      x: Math.max(0, Math.round(window.innerWidth - CARD_SIZE)),
-      y: Math.max(0, Math.round(window.innerHeight - CARD_SIZE - (showClock ? CLOCK_HEIGHT[clockStyle] : 0)))
+      x: Math.max(0, Math.round(window.innerWidth - CARD_SIZE * scaleFactor())),
+      y: Math.max(0, Math.round(window.innerHeight - (CARD_SIZE + (showClock ? CLOCK_HEIGHT[clockStyle] : 0)) * scaleFactor()))
     };
   }
 
@@ -151,8 +156,17 @@
     return { x: Math.round(bounds.left), y: Math.round(bounds.top) };
   }
 
+  function scaleFactor() {
+    return cardScale / 100;
+  }
+
+  function clampScale(value) {
+    return Math.min(150, Math.max(50, Math.round(Number(value) || 100)));
+  }
+
   // Prisma ignores `inset`, so set each side
   function applyPosition() {
+    cardScaler.style.transform = cardScale === 100 ? '' : `scale(${scaleFactor()})`;
     const style = root.style;
     if (hasCustomPosition()) {
       const shown = shownPosition();
@@ -176,6 +190,7 @@
     positionYRange.max = positionYValue.max = String(max.y);
     positionXRange.value = positionXValue.value = String(shown.x);
     positionYRange.value = positionYValue.value = String(shown.y);
+    sizeRange.value = sizeValue.value = String(cardScale);
   }
 
   function setPosition(x, y) {
@@ -551,7 +566,7 @@
     if (typeof window.settingsChanged !== 'function') return;
     const x = hasCustomPosition() ? positionX : -1;
     const y = hasCustomPosition() ? positionY : -1;
-    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}`);
+    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}`);
   }
 
   function queueNativeSettingsChanged() {
@@ -591,6 +606,7 @@
       positionX = settingsSnapshot.x;
       positionY = settingsSnapshot.y;
       settingsHotkey = settingsSnapshot.hotkey;
+      cardScale = settingsSnapshot.cardScale;
       showClock = settingsSnapshot.showClock;
       clockStyle = settingsSnapshot.clockStyle;
       setPet(settingsSnapshot.pet);
@@ -606,7 +622,7 @@
 
   function openSettings(data) {
     if (data) applyNativeSettings(data);
-    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle };
+    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale };
     settingsOpen = true;
     document.body.classList.add('settings-open');
     settingsMenu.classList.remove('hidden');
@@ -620,6 +636,7 @@
     if (typeof data.hotkey === 'string' && data.hotkey) settingsHotkey = data.hotkey;
     if (typeof data.clock === 'boolean') showClock = data.clock;
     if (data.clockStyle === 'plate' || data.clockStyle === 'ribbon') clockStyle = data.clockStyle;
+    if (Number.isFinite(data.scale)) cardScale = clampScale(data.scale);
     if (!setPet(data.pet || pet)) {
       applySceneClasses();
       updateCopy();
@@ -758,7 +775,7 @@
     scenerySeed = seed;
     renderScenery();
   };
-  window.previewSettings = () => window.dragonbornXP.openSettings({ x: positionX, y: positionY, hotkey: settingsHotkey, pet, clock: showClock, clockStyle });
+  window.previewSettings = () => window.dragonbornXP.openSettings({ x: positionX, y: positionY, hotkey: settingsHotkey, pet, clock: showClock, clockStyle, scale: cardScale });
   window.previewClock = style => window.dragonbornXP.applySettings({ x: positionX, y: positionY, hotkey: settingsHotkey, pet, clock: true, clockStyle: style === 'ribbon' ? 'ribbon' : 'plate' });
   window.previewPet = name => window.dragonbornXP.applySettings({ x: positionX, y: positionY, hotkey: settingsHotkey, pet: petNames[name] ? name : 'dovahmin' });
 
@@ -854,6 +871,21 @@
     }
   }
   clockEnabledInput.addEventListener('change', event => setClock(event.target.checked, clockStyle));
+
+  function setScale(value) {
+    cardScale = clampScale(value);
+    sizeRange.value = sizeValue.value = String(cardScale);
+    // bigger card might not fit where it is any more
+    if (hasCustomPosition()) setPosition(positionX, positionY);
+    else {
+      applySceneClasses();
+      syncPositionFields();
+      queueNativeSettingsChanged();
+    }
+  }
+  sizeRange.addEventListener('input', event => setScale(event.target.value));
+  sizeRange.addEventListener('change', event => setScale(event.target.value));
+  sizeValue.addEventListener('change', event => setScale(event.target.value));
   clockStyleSelect.addEventListener('change', event => setClock(showClock, event.target.value));
   petSelect.addEventListener('change', event => {
     if (setPet(event.target.value)) queueNativeSettingsChanged();

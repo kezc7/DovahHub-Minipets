@@ -46,6 +46,7 @@ namespace
         bool debugPreviewKeys = false;
         bool showClock = false;
         std::string clockStyle = "plate";
+        int scale = 100;
     };
 
     std::atomic_bool g_statePollerStarted = false;
@@ -90,6 +91,12 @@ namespace
         }
         result += '"';
         return result;
+    }
+
+    // card size in percent
+    int ClampScale(int value)
+    {
+        return value < 50 ? 50 : value > 150 ? 150 : value;
     }
 
     bool IsSupportedClockStyle(std::string_view style)
@@ -249,6 +256,9 @@ namespace
                     else if (key == "clock_style" && IsSupportedClockStyle(value)) {
                         g_settings.clockStyle = value;
                     }
+                    else if (key == "scale") {
+                        g_settings.scale = ClampScale(std::stoi(value));
+                    }
                 }
                 catch (...) {
                     logger::warn("DragonbornXP ignored invalid setting '{}'", key);
@@ -273,7 +283,8 @@ namespace
                    << "pet=" << g_settings.pet << '\n'
                    << "debug_preview_keys=" << (g_settings.debugPreviewKeys ? 1 : 0) << '\n'
                    << "show_clock=" << (g_settings.showClock ? 1 : 0) << '\n'
-                   << "clock_style=" << g_settings.clockStyle << '\n';
+                   << "clock_style=" << g_settings.clockStyle << '\n'
+                   << "scale=" << g_settings.scale << '\n';
         }
         catch (const std::exception& error) {
             logger::warn("DragonbornXP settings could not be saved: {}", error.what());
@@ -287,7 +298,8 @@ namespace
                ",\"hotkey\":" + JsonString(g_settings.settingsHotkeyName) +
                ",\"pet\":" + JsonString(g_settings.pet) +
                ",\"clock\":" + (g_settings.showClock ? "true" : "false") +
-               ",\"clockStyle\":" + JsonString(g_settings.clockStyle) + "}";
+               ",\"clockStyle\":" + JsonString(g_settings.clockStyle) +
+               ",\"scale\":" + std::to_string(g_settings.scale) + "}";
     }
 
     void Invoke(const std::string& functionName, const std::string& json)
@@ -615,7 +627,7 @@ namespace
         }
     }
 
-    // x|y|hotkey|pet|clock|clockStyle, clock fields are optional
+    // x|y|hotkey|pet|clock|clockStyle|scale, the last three are optional
     void ApplySettings(std::string_view payload)
     {
         const auto parts = Split(payload, '|');
@@ -630,6 +642,7 @@ namespace
             const auto& pet = parts[3];
             const bool showClock = parts.size() > 4 ? ParseFlag(parts[4]) : g_settings.showClock;
             const auto clockStyle = parts.size() > 5 && IsSupportedClockStyle(parts[5]) ? parts[5] : g_settings.clockStyle;
+            const auto scale = parts.size() > 6 ? ClampScale(std::stoi(parts[6])) : g_settings.scale;
             bool requiresShift = false;
             const auto hotkey = ParseHotkey(hotkeyName, &requiresShift);
             if (hotkey == 0 || x < -1 || y < -1 || !IsSupportedPet(pet)) {
@@ -644,6 +657,7 @@ namespace
             g_settings.pet = pet;
             g_settings.showClock = showClock;
             g_settings.clockStyle = clockStyle;
+            g_settings.scale = scale;
             g_settingsHotkey.store(hotkey);
             g_settingsHotkeyRequiresShift.store(requiresShift);
             SaveSettings();
