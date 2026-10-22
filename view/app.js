@@ -32,8 +32,9 @@
   const petClock = window.PetClock;
   const petSky = window.PetSky;
   const petRegions = window.PetRegions;
-  // banner height per clock style, used when clamping the position
-  const CLOCK_HEIGHT = { plate: 66, ribbon: 36 };
+  // room the clock needs above the card and the pet bars need below it, for clamping
+  const CLOCK_HEIGHT = { plate: 84, ribbon: 46 };
+  const NEEDS_HEIGHT = 66;
   const animationStates = window.PetAnimationState;
   const petSprites = window.PetSprites;
   const CARD_SIZE = 256;
@@ -169,21 +170,26 @@
     return Number.isFinite(positionX) && Number.isFinite(positionY) && positionX >= 0 && positionY >= 0;
   }
 
+  function minY() {
+    return Math.round((showClock ? CLOCK_HEIGHT[clockStyle] : 0) * scaleFactor());
+  }
+
   function maxPosition() {
+    const below = raisePet && petLife ? NEEDS_HEIGHT : 0;
     return {
       x: Math.max(0, Math.round(window.innerWidth - CARD_SIZE * scaleFactor())),
-      y: Math.max(0, Math.round(window.innerHeight - (CARD_SIZE + (showClock ? CLOCK_HEIGHT[clockStyle] : 0)) * scaleFactor()))
+      y: Math.max(minY(), Math.round(window.innerHeight - (CARD_SIZE + below) * scaleFactor()))
     };
   }
 
-  function clamp(value, max) {
-    return Math.min(max, Math.max(0, Math.round(Number(value) || 0)));
+  function clamp(value, max, min = 0) {
+    return Math.min(max, Math.max(min, Math.round(Number(value) || 0)));
   }
 
   function shownPosition() {
     if (hasCustomPosition()) {
       const max = maxPosition();
-      return { x: clamp(positionX, max.x), y: clamp(positionY, max.y) };
+      return { x: clamp(positionX, max.x), y: clamp(positionY, max.y, minY()) };
     }
     const bounds = shell.getBoundingClientRect();
     return { x: Math.round(bounds.left), y: Math.round(bounds.top) };
@@ -229,7 +235,7 @@
   function setPosition(x, y) {
     const max = maxPosition();
     positionX = clamp(x, max.x);
-    positionY = clamp(y, max.y);
+    positionY = clamp(y, max.y, minY());
     applySceneClasses();
     syncPositionFields();
     queueNativeSettingsChanged();
@@ -277,7 +283,8 @@
       includeTransient && idleVariant ? `idle-${idleVariant}` : '',
       captionFull ? 'caption-full' : 'caption-name',
       isEgg() ? `is-egg egg-warm-${petLife ? Math.min(3, Math.floor(petLifeRules.eggProgress(petLife) * 4)) : 0}` : '',
-      petMood() && petMood() !== 'egg' ? `mood-${petMood()}` : ''
+      petMood() && petMood() !== 'egg' ? `mood-${petMood()}` : '',
+      raisePet && petLife ? 'raising' : ''
     ].filter(Boolean).join(' ');
   }
 
@@ -751,8 +758,19 @@
     if (typeof window.petStateChanged === 'function') window.petStateChanged(petLife ? petLifeRules.serialize(petLife) : '');
   }
 
+  function updateNeedBars() {
+    if (!petLife) return;
+    const bars = { warmth: petLifeRules.eggProgress(petLife) * 100, food: petLife.hunger, happiness: petLife.happiness };
+    Object.entries(bars).forEach(([name, value]) => {
+      const bar = document.querySelector(`#card-need-${name}`);
+      bar.style.width = `${Math.round(value)}%`;
+      bar.classList.toggle('low', name !== 'warmth' && value < 30);
+    });
+  }
+
   // re-render only when the egg/species/growth stage actually changed
   function refreshPet(force = false) {
+    updateNeedBars();
     if (force || petVisualKey() !== shownPetKey) {
       idleVariationIndex = 0;
       renderSprite();
@@ -1188,6 +1206,7 @@
     const icon = petSprites.renderOrnament(document, name);
     icon.className = `bubble-icon bubble-${name === 'iconFood' ? 'food' : 'heart'}`;
     petBubble.append(icon);
+    document.querySelector(`.need-icon-${name === 'iconFood' ? 'food' : 'heart'}`).append(petSprites.renderOrnament(document, name));
   });
   renderWeather();
   renderSprite();

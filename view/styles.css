@@ -157,17 +157,32 @@ body.timelapse .sky-body { transition: none; }
 .pet-life-actions button:disabled { opacity: .4; cursor: default; }
 .hidden { display: none !important; }
 
-/* clock banner (settings > clock) */
-.clock-banner { position: absolute; top: calc(100% + 12px); left: 50%; z-index: 6; display: none; color: #f1ede1; font-family: Georgia, serif; text-align: center; white-space: nowrap; text-shadow: 0 1px 2px #000; transform: translateX(-50%); pointer-events: none; }
+/* clock banner (settings > clock), above the card */
+.clock-banner { position: absolute; bottom: calc(100% + 22px); left: 50%; z-index: 6; display: none; color: #f1ede1; font-family: Georgia, serif; text-align: center; white-space: nowrap; text-shadow: 0 1px 2px #000; transform: translateX(-50%); pointer-events: none; }
 #dragonborn-xp.clock-on .clock-banner { display: block; }
 #dragonborn-xp.clock-plate .clock-banner { width: 196px; padding: 6px 10px 7px; border: 5px double #c9c3b1; border-radius: 2px; background: linear-gradient(#24211c, #141310); box-shadow: 0 0 0 1px #14130f, 0 0 0 2px rgba(201, 195, 177, .45), 0 8px 18px rgba(0, 0, 0, .5); }
-#dragonborn-xp.clock-plate .clock-banner::before { content: ""; position: absolute; top: -14px; left: 50%; width: 2px; height: 9px; margin-left: -1px; background: #c9c3b1; box-shadow: 0 0 0 1px #14130f; }
+#dragonborn-xp.clock-plate .clock-banner::before { content: ""; position: absolute; bottom: -14px; left: 50%; width: 2px; height: 9px; margin-left: -1px; background: #c9c3b1; box-shadow: 0 0 0 1px #14130f; }
 #dragonborn-xp.clock-plate .clock-time { display: block; font: 700 20px/1 Georgia, serif; letter-spacing: .04em; }
 #dragonborn-xp.clock-plate .clock-separator { display: none; }
 #dragonborn-xp.clock-plate .clock-date { display: block; margin-top: 4px; color: #d9d3c3; font: 11px/1.2 Georgia, serif; letter-spacing: .03em; }
 #dragonborn-xp.clock-ribbon .clock-banner { padding: 4px 18px; background: linear-gradient(to right, rgba(14, 13, 11, 0), rgba(14, 13, 11, .85) 14%, rgba(14, 13, 11, .85) 86%, rgba(14, 13, 11, 0)); font: 700 11px/1.3 Georgia, serif; letter-spacing: .05em; }
 #dragonborn-xp.clock-ribbon .clock-separator { margin: 0 6px; color: #b9b3a3; }
 #dragonborn-xp.clock-ribbon .clock-date { color: #d9d3c3; font-weight: 400; letter-spacing: .02em; }
+/* clock above the default top-right spot needs room */
+#dragonborn-xp.clock-on.clock-plate:not(.custom-position) { padding-top: calc(7vh + 84px); }
+#dragonborn-xp.clock-on.clock-ribbon:not(.custom-position) { padding-top: calc(7vh + 46px); }
+/* raise-a-pet bars under the card */
+.pet-needs { position: absolute; top: calc(100% + 12px); left: 50%; z-index: 6; display: none; width: 196px; padding: 6px 10px; border: 5px double #c9c3b1; border-radius: 2px; background: linear-gradient(#24211c, #141310); box-shadow: 0 0 0 1px #14130f, 0 0 0 2px rgba(201, 195, 177, .45), 0 8px 18px rgba(0, 0, 0, .5); transform: translateX(-50%); pointer-events: none; }
+#dragonborn-xp.raising .pet-needs { display: block; }
+.need-line { display: flex; align-items: center; gap: 7px; margin: 3px 0; }
+.need-icon canvas { display: block; width: 16px; height: 16px; image-rendering: pixelated; }
+.need-label { color: #d9d3c3; font: 11px Georgia, serif; text-shadow: 0 1px 2px #000; }
+.need-track { flex: 1; height: 8px; overflow: hidden; border: 1px solid rgba(201, 195, 177, .45); background: rgba(0, 0, 0, .45); }
+.need-track span { display: block; width: 0; height: 100%; background: #a8d47d; transition: width .4s ease; }
+#card-need-warmth { background: #f0a050; }
+#card-need-happiness { background: #e78aa8; }
+#dragonborn-xp .need-track span.low { background: #d8485a; }
+#dragonborn-xp.is-egg .need-line-food, #dragonborn-xp.is-egg .need-line-happiness, #dragonborn-xp:not(.is-egg) .need-line-warmth { display: none; }
 .settings-toggle { width: 18px; height: 18px; accent-color: #8cc46f; cursor: pointer; }
 
 /* .pet-position centres, .pet-motion moves, .pet-body breathes. only animate

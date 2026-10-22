@@ -15,7 +15,7 @@ Needs SKSE64, Address Library and Prisma UI.
 - A scrolling landscape behind them that changes every in-game day.
 - Backdrops for Solstheim, the five major cities, Blackreach, Apocrypha, the Soul Cairn and Sovngarde, and for caves, homes, inns, mines, temples, Dwemer ruins, Nordic tombs, vampire lairs and Falmer hives.
 - Optional raise-a-pet mode: pick an egg, hatch it with XP, then feed it and play with it. Saved per character.
-- Optional in-game clock under the card.
+- Optional in-game clock above the card.
 - Hides itself on loading screens, in menus and when other Prisma UI menus are open.
 
 ## Settings

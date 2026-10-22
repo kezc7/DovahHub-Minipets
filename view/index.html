@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dragonborn XP</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=47">
+  <link rel="stylesheet" href="styles.css?v=49">
 </head>
 <body>
   <main id="dragonborn-xp" aria-live="polite" aria-atomic="true">
@@ -29,6 +29,11 @@
       </section>
       <div class="xp-bar" aria-hidden="true"><span></span></div>
       <div id="clock-banner" class="clock-banner" aria-hidden="true"><span id="clock-time" class="clock-time"></span><span class="clock-separator">◆</span><span id="clock-date" class="clock-date"></span></div>
+      <div class="pet-needs" aria-hidden="true">
+        <div class="need-line need-line-warmth"><span class="need-label">Warmth</span><span class="need-track"><span id="card-need-warmth"></span></span></div>
+        <div class="need-line need-line-food"><span class="need-icon need-icon-food"></span><span class="need-track"><span id="card-need-food"></span></span></div>
+        <div class="need-line need-line-happiness"><span class="need-icon need-icon-heart"></span><span class="need-track"><span id="card-need-happiness"></span></span></div>
+      </div>
     </div>
     </div>
   </main>
@@ -160,12 +165,12 @@
     </div>
   </section>
   <section id="pet-sheet" class="hidden" aria-label="All companions"></section>
-  <script src="animation-state.js?v=47"></script>
-  <script src="pet-sprites.js?v=47"></script>
-  <script src="clock.js?v=47"></script>
-  <script src="pet-life.js?v=47"></script>
-  <script src="regions.js?v=47"></script>
-  <script src="sky.js?v=47"></script>
-  <script src="app.js?v=47"></script>
+  <script src="animation-state.js?v=49"></script>
+  <script src="pet-sprites.js?v=49"></script>
+  <script src="clock.js?v=49"></script>
+  <script src="pet-life.js?v=49"></script>
+  <script src="regions.js?v=49"></script>
+  <script src="sky.js?v=49"></script>
+  <script src="app.js?v=49"></script>
 </body>
 </html>

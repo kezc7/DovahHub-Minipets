@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+- Your pet's food and happiness bars (or the egg's warmth) now sit under the card, and turn red when low
+- The clock moved above the card
+- Positioning keeps the clock and bars on screen
+
 ## 1.3.0
 - Hotkeys to feed (Shift+N) and play with (Shift+K) your pet without opening the menu, both rebindable in settings
 - Settings won't let two actions share the same key
