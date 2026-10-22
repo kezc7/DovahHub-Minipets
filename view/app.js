@@ -16,6 +16,15 @@
   const settingsHotkeyButton = document.querySelector('#settings-hotkey');
   const hotkeyHint = document.querySelector('#hotkey-hint');
   const petSelect = document.querySelector('#pet-select');
+  const petSelectRow = document.querySelector('#pet-select-row');
+  const raisePetInput = document.querySelector('#raise-pet');
+  const petLifePanel = document.querySelector('#pet-life');
+  const petLifeName = document.querySelector('#pet-life-name');
+  const petLifeEggs = document.querySelector('#pet-life-eggs');
+  const petLifeNeeds = document.querySelector('#pet-life-needs');
+  const petLifeHint = document.querySelector('#pet-life-hint');
+  const petBubble = document.querySelector('.pet-bubble');
+  const petLifeRules = window.PetLife;
   const clockEnabledInput = document.querySelector('#clock-enabled');
   const clockStyleSelect = document.querySelector('#clock-style');
   const clockTime = document.querySelector('#clock-time');
@@ -88,6 +97,13 @@
   let settingsHotkey = 'Shift+B';
   // card size in percent
   let cardScale = 100;
+  // raise-a-pet: on/off is a setting, the pet itself lives in the save
+  let raisePet = false;
+  let petLife = null;
+  let gameHours = null;
+  let shownPetKey = '';
+  let resetArmed = false;
+  const eggProfile = { idle: ['hop'], idleDelay: 4200, idleDuration: 700, moving: ['Rolling along', 'The egg wobbles along with you.'], combat: ['Hide the egg!', 'The egg huddles out of harm\u2019s way.'] };
   let showClock = false;
   // in-game hour (fractional) and the per-day scenery seed
   let skyHours = 12.5;
@@ -118,12 +134,27 @@
 
   const controller = animationStates.createController({ onChange: render });
 
+  // the species on the card: the picked companion, or the one being raised
+  function shownSpecies() {
+    return raisePet ? (petLife ? petLife.species : null) : pet;
+  }
+
+  function isEgg() {
+    return raisePet && (!petLife || petLife.stage === 'egg');
+  }
+
   function petName() {
-    return petNames[pet] || 'Dovahmin';
+    if (raisePet && !petLife) return 'No egg yet';
+    const name = petNames[shownSpecies()] || 'Dovahmin';
+    return isEgg() ? `${name}'s egg` : name;
   }
 
   function profile() {
-    return profiles[pet] || profiles.dovahmin;
+    return isEgg() ? eggProfile : profiles[shownSpecies()] || profiles.dovahmin;
+  }
+
+  function petMood() {
+    return raisePet && petLife ? petLifeRules.mood(petLife) : null;
   }
 
   function fillName(text) {
@@ -242,7 +273,9 @@
       showClock ? `clock-on clock-${clockStyle}` : '',
       includeTransient && toast ? `show ${toast}` : '',
       includeTransient && idleVariant ? `idle-${idleVariant}` : '',
-      captionFull ? 'caption-full' : 'caption-name'
+      captionFull ? 'caption-full' : 'caption-name',
+      isEgg() ? `is-egg egg-warm-${petLife ? Math.min(3, Math.floor(petLifeRules.eggProgress(petLife) * 4)) : 0}` : '',
+      petMood() && petMood() !== 'egg' ? `mood-${petMood()}` : ''
     ].filter(Boolean).join(' ');
   }
 
@@ -304,8 +337,24 @@
   }
 
   function renderSprite() {
-    const result = petSprites.render(spriteHost, pet);
-    archetype = result.archetype;
+    if (isEgg()) {
+      petSprites.renderEgg(spriteHost, petLife ? petLife.species : null);
+      archetype = 'light';
+      spriteHost.style.transform = '';
+    } else {
+      archetype = petSprites.render(spriteHost, shownSpecies()).archetype;
+      const stage = raisePet && petLife ? petLifeRules.growth(petLife, gameHours ?? petLife.hatchedAt) : 'adult';
+      const growth = petLifeRules.GROWTH_SCALE[stage] || 1;
+      spriteHost.style.transformOrigin = '50% 100%';
+      spriteHost.style.transform = growth === 1 ? '' : `scale(${growth})`;
+    }
+    shownPetKey = petVisualKey();
+  }
+
+  function petVisualKey() {
+    if (!raisePet) return `pick|${pet}`;
+    if (!petLife) return 'none';
+    return `${petLife.species}|${petLife.stage}|${petLifeRules.growth(petLife, gameHours ?? petLife.laidAt)}`;
   }
 
   // far to near, seconds = time to cross the scene
@@ -539,6 +588,11 @@
     const delay = petProfile.idleDelay + ((idleVariationIndex * 137) % 1100);
     idleVariationTimer = window.setTimeout(() => {
       if (current.state !== 'idle') return;
+      // unhappy pets don't fidget
+      if (['hungry', 'sad', 'miserable'].includes(petMood())) {
+        scheduleIdleVariation();
+        return;
+      }
       idleVariant = petProfile.idle[idleVariationIndex++ % petProfile.idle.length];
       applySceneClasses();
       idleVariationTimer = window.setTimeout(() => {
@@ -566,7 +620,7 @@
     if (typeof window.settingsChanged !== 'function') return;
     const x = hasCustomPosition() ? positionX : -1;
     const y = hasCustomPosition() ? positionY : -1;
-    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}`);
+    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}`);
   }
 
   function queueNativeSettingsChanged() {
@@ -595,6 +649,8 @@
     clockEnabledInput.checked = showClock;
     clockStyleSelect.value = clockStyle;
     clockStyleSelect.disabled = !showClock;
+    raisePetInput.checked = raisePet;
+    renderPetPanel();
   }
 
   function closeSettings(save) {
@@ -607,6 +663,8 @@
       positionY = settingsSnapshot.y;
       settingsHotkey = settingsSnapshot.hotkey;
       cardScale = settingsSnapshot.cardScale;
+      raisePet = settingsSnapshot.raisePet;
+      refreshPet();
       showClock = settingsSnapshot.showClock;
       clockStyle = settingsSnapshot.clockStyle;
       setPet(settingsSnapshot.pet);
@@ -622,7 +680,7 @@
 
   function openSettings(data) {
     if (data) applyNativeSettings(data);
-    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale };
+    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet };
     settingsOpen = true;
     document.body.classList.add('settings-open');
     settingsMenu.classList.remove('hidden');
@@ -637,6 +695,10 @@
     if (typeof data.clock === 'boolean') showClock = data.clock;
     if (data.clockStyle === 'plate' || data.clockStyle === 'ribbon') clockStyle = data.clockStyle;
     if (Number.isFinite(data.scale)) cardScale = clampScale(data.scale);
+    if (typeof data.raisePet === 'boolean' && data.raisePet !== raisePet) {
+      raisePet = data.raisePet;
+      refreshPet();
+    }
     if (!setPet(data.pet || pet)) {
       applySceneClasses();
       updateCopy();
@@ -675,6 +737,134 @@
     document.body.classList.remove('dragging-pet');
   }
 
+  // --- Raise a pet --------------------------------------------------------
+
+  function savePet() {
+    if (typeof window.petStateChanged === 'function') window.petStateChanged(petLife ? petLifeRules.serialize(petLife) : '');
+  }
+
+  // re-render only when the egg/species/growth stage actually changed
+  function refreshPet(force = false) {
+    if (force || petVisualKey() !== shownPetKey) {
+      idleVariationIndex = 0;
+      renderSprite();
+      controller.reset();
+    } else {
+      // leave any caption that's showing alone, just keep the name plate current
+      applySceneClasses();
+      if (!captionFull) title.textContent = petName();
+    }
+    if (settingsOpen) renderPetPanel();
+  }
+
+  function petNotice(title, detail) {
+    showCaption([title, detail, 60], 4500);
+    applySceneClasses();
+  }
+
+  function petCheer(title, detail) {
+    controller.play('xp', { payload: { kind: 'gain', title, detail, fill: 80 } });
+  }
+
+  function tickPet() {
+    if (!raisePet || !petLife || gameHours === null) return;
+    const result = petLifeRules.tick(petLife, gameHours);
+    petLife = result.pet;
+    refreshPet();
+    const name = petNames[petLife.species];
+    result.events.forEach(event => {
+      if (event === 'hatched') {
+        controller.play('celebrating', { payload: { kind: 'level-up', title: `${name} hatched!`, detail: 'Feed them and play with them (Shift+B).', fill: 100 } });
+      } else if (event === 'mood:hungry') petNotice(`${name} is hungry`, 'Eat something, or use Feed in the menu.');
+      else if (event === 'mood:sad') petNotice(`${name} feels lonely`, 'Play with them in the menu.');
+      else if (event === 'mood:miserable') petNotice(`${name} is miserable`, 'They need food and some attention.');
+    });
+    savePet();
+  }
+
+  function petXp(amount) {
+    if (!raisePet || !petLife) return;
+    petLife = amount === 'level' ? petLifeRules.levelUp(petLife) : petLifeRules.xp(petLife, amount);
+    savePet();
+    refreshPet();
+  }
+
+  function pickEgg(species) {
+    petLife = petLifeRules.create(species, gameHours ?? 0);
+    savePet();
+    refreshPet(true);
+    petNotice(`${petNames[species]}'s egg`, 'Earn XP to help it hatch.');
+  }
+
+  function startOver() {
+    petLife = null;
+    resetArmed = false;
+    savePet();
+    refreshPet(true);
+  }
+
+  function feedPet() {
+    if (!petLife || petLife.stage === 'egg') return petNotice('Eggs don\u2019t eat', 'Keep it warm with XP instead.');
+    if (petLife.hunger >= 98) return petNotice(`${petNames[petLife.species]} is full`, 'Try again later.');
+    if (typeof window.feedPet === 'function') window.feedPet('');
+    else window.dragonbornXP.petFed({ name: 'Sweetroll', source: 'pack' });
+  }
+
+  function playWithPet() {
+    if (!petLife) return;
+    const result = petLifeRules.play(petLife, gameHours ?? 0);
+    const name = petNames[petLife.species];
+    if (result.reason === 'tired') return petNotice(`${name} is tired`, 'Let them rest for a bit.');
+    petLife = result.pet;
+    savePet();
+    refreshPet();
+    if (result.reason === 'egg') petNotice('You cuddle the egg', 'It feels a little warmer.');
+    else controller.play('celebrating', { payload: { kind: 'gain', title: `${name} loves playing!`, detail: 'Happiness is up.', fill: 90 } });
+  }
+
+  function renderPetPanel() {
+    petSelectRow.classList.toggle('hidden', raisePet);
+    petLifePanel.classList.toggle('hidden', !raisePet);
+    if (!raisePet) return;
+    const egg = !petLife || petLife.stage === 'egg';
+    petLifeEggs.classList.toggle('hidden', Boolean(petLife));
+    petLifeNeeds.classList.toggle('hidden', !petLife);
+    petLifePanel.classList.toggle('is-egg', egg);
+    if (!petLife) {
+      petLifeName.textContent = 'Choose an egg';
+      petLifeHint.textContent = 'Pick the companion you want to raise.';
+      if (!petLifeEggs.childElementCount) {
+        Object.entries(petNames).forEach(([id, name]) => {
+          const button = document.createElement('button');
+          const art = document.createElement('div');
+          const label = document.createElement('span');
+          button.type = 'button';
+          button.className = 'egg-choice';
+          art.className = 'pet-sprite';
+          label.textContent = name;
+          button.append(art, label);
+          button.addEventListener('click', () => pickEgg(id));
+          petLifeEggs.append(button);
+          petSprites.renderEgg(art, id, { pixel: 2 });
+        });
+      }
+      return;
+    }
+    const name = petNames[petLife.species];
+    const species = petSpecies[petLife.species];
+    const stage = petLifeRules.growth(petLife, gameHours ?? petLife.laidAt);
+    petLifeName.textContent = egg ? `${name}'s egg${species ? ` (${species})` : ''}` : `${name}, ${{ baby: 'baby', young: 'young', adult: 'all grown up' }[stage]}`;
+    document.querySelector('#need-warmth').style.width = `${Math.round(petLifeRules.eggProgress(petLife) * 100)}%`;
+    document.querySelector('#need-food').style.width = `${Math.round(petLife.hunger)}%`;
+    document.querySelector('#need-happiness').style.width = `${Math.round(petLife.happiness)}%`;
+    document.querySelector('#pet-feed').disabled = egg;
+    document.querySelector('#pet-play').textContent = egg ? 'Cuddle' : 'Play';
+    document.querySelector('#pet-reset').textContent = resetArmed ? 'Click again to start over' : 'Start over';
+    petLifeHint.textContent = egg
+      ? 'XP, level-ups and time keep the egg warm.'
+      : { hungry: `${name} is hungry.`, sad: `${name} feels lonely.`, miserable: `${name} needs food and attention.`, happy: `${name} is very happy!`, content: `${name} is doing fine.` }[petLifeRules.mood(petLife)];
+  }
+
   // --- Native bridge ------------------------------------------------------
 
   window.dragonbornXP = {
@@ -683,15 +873,35 @@
     },
     skillGain(data) {
       const skill = data && data.skill ? data.skill : 'Skill';
-      showToast('gain', 'XP gained', `${skill} grows stronger.`, 68);
+      showToast('gain', 'XP gained', isEgg() && petLife ? 'The egg feels warmer.' : `${skill} grows stronger.`, 68);
+      petXp(1);
     },
     levelUp(data) {
       const level = data && data.level ? data.level : '?';
-      showToast('level-up', `Level ${level}!`, 'The Dragonborn grows mighty.', 100);
+      showToast('level-up', `Level ${level}!`, isEgg() && petLife ? 'The egg glows with warmth!' : 'The Dragonborn grows mighty.', 100);
+      petXp('level');
     },
     dragonSoul(data) {
       const amount = Math.max(1, Math.round(Number(data && data.amount) || 1));
       showToast('gain', 'Dragon soul absorbed', `+${amount} soul${amount === 1 ? '' : 's'}.`, 82);
+      petXp(2);
+    },
+    // saved pet from the co-save ('' = none yet)
+    petState(data) {
+      const text = data && typeof data.state === 'string' ? data.state : '';
+      petLife = text ? petLifeRules.restore(text, id => Boolean(petNames[id])) : null;
+      refreshPet(true);
+    },
+    petFed(data) {
+      if (data && data.none) return petNotice('No food in your pack', 'Pick up something to eat first.');
+      if (!raisePet || !petLife) return;
+      const result = petLifeRules.feed(petLife);
+      if (!result.ok) return;
+      petLife = result.pet;
+      savePet();
+      refreshPet();
+      const food = data && data.name ? data.name : 'a snack';
+      petCheer(`${petNames[petLife.species]} ate ${data && data.source === 'ate' ? 'with you' : 'well'}`, `Mmm, ${food}!`);
     },
     companionState(data) {
       controller.setBase(data && data.state ? data.state : 'idle');
@@ -700,6 +910,8 @@
       clockTime.textContent = petClock.formatTime(data && data.hour, data && data.minute);
       clockDate.textContent = petClock.formatDate(data);
       skyHours = (Number(data && data.hour) || 0) + (Number(data && data.minute) || 0) / 60;
+      gameHours = Number.isFinite(data && data.hours) ? data.hours : (Number(data && data.day) || 0) * 24 + skyHours;
+      tickPet();
       scenerySeed = daySeed(data);
       updateSky();
       renderScenery();
@@ -887,6 +1099,19 @@
   sizeRange.addEventListener('change', event => setScale(event.target.value));
   sizeValue.addEventListener('change', event => setScale(event.target.value));
   clockStyleSelect.addEventListener('change', event => setClock(showClock, event.target.value));
+  raisePetInput.addEventListener('change', event => {
+    raisePet = event.target.checked;
+    refreshPet(true);
+    renderPetPanel();
+    queueNativeSettingsChanged();
+  });
+  document.querySelector('#pet-feed').addEventListener('click', feedPet);
+  document.querySelector('#pet-play').addEventListener('click', playWithPet);
+  document.querySelector('#pet-reset').addEventListener('click', () => {
+    if (resetArmed) return startOver();
+    resetArmed = true;
+    renderPetPanel();
+  });
   petSelect.addEventListener('change', event => {
     if (setPet(event.target.value)) queueNativeSettingsChanged();
   });
@@ -929,6 +1154,11 @@
   document.addEventListener('visibilitychange', () => applySceneClasses());
 
   renderFrame();
+  ['iconFood', 'iconHeart'].forEach(name => {
+    const icon = petSprites.renderOrnament(document, name);
+    icon.className = `bubble-icon bubble-${name === 'iconFood' ? 'food' : 'heart'}`;
+    petBubble.append(icon);
+  });
   renderWeather();
   renderSprite();
   render(controller.snapshot());
@@ -941,6 +1171,10 @@
     rain: window.previewRain, snow: window.previewSnow, settings: window.previewSettings,
     clock: () => window.previewClock('plate'), ribbon: () => window.previewClock('ribbon'),
     timelapse: () => window.previewTimelapse(),
+    raise: () => {
+      window.dragonbornXP.applySettings({ x: positionX, y: positionY, hotkey: settingsHotkey, pet, raisePet: true });
+      window.previewSettings();
+    },
     places: () => window.previewPlaces()
   };
   // sample time for the preview

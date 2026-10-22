@@ -2,14 +2,17 @@
 #include "keyhandler.h"
 
 #include <RE/A/ActorValueList.h>
+#include <RE/A/AlchemyItem.h>
 #include <RE/B/BGSLocation.h>
 #include <RE/C/Calendar.h>
 #include <RE/D/DragonSoulsGained.h>
 #include <RE/L/LevelIncrease.h>
 #include <RE/M/MenuOpenCloseEvent.h>
 #include <RE/S/SkillIncrease.h>
+#include <RE/S/ScriptEventSourceHolder.h>
 #include <RE/S/Sky.h>
 #include <RE/T/TESDataHandler.h>
+#include <RE/T/TESEquipEvent.h>
 #include <RE/T/TESObjectCELL.h>
 #include <RE/T/TESWorldSpace.h>
 #include <RE/U/UI.h>
@@ -24,6 +27,7 @@
 #include <string_view>
 #include <thread>
 #include <array>
+#include <limits>
 #include <vector>
 
 PRISMA_UI_API::IVPrismaUI1* g_prismaUI = nullptr;
@@ -47,6 +51,7 @@ namespace
         bool showClock = false;
         std::string clockStyle = "plate";
         int scale = 100;
+        bool raisePet = false;
     };
 
     std::atomic_bool g_statePollerStarted = false;
@@ -59,6 +64,8 @@ namespace
     DragonbornSettings g_settings;
     std::string g_lastCompanionState;
     std::string g_lastWorldMood;
+    // raise-a-pet state from the view (JSON), kept per save in the SKSE co-save
+    std::string g_petState;
     std::int64_t g_lastClockMinute = -1;
 
     std::string Trim(std::string_view value)
@@ -259,6 +266,9 @@ namespace
                     else if (key == "scale") {
                         g_settings.scale = ClampScale(std::stoi(value));
                     }
+                    else if (key == "raise_pet") {
+                        g_settings.raisePet = ParseFlag(value);
+                    }
                 }
                 catch (...) {
                     logger::warn("DragonbornXP ignored invalid setting '{}'", key);
@@ -284,7 +294,8 @@ namespace
                    << "debug_preview_keys=" << (g_settings.debugPreviewKeys ? 1 : 0) << '\n'
                    << "show_clock=" << (g_settings.showClock ? 1 : 0) << '\n'
                    << "clock_style=" << g_settings.clockStyle << '\n'
-                   << "scale=" << g_settings.scale << '\n';
+                   << "scale=" << g_settings.scale << '\n'
+                   << "raise_pet=" << (g_settings.raisePet ? 1 : 0) << '\n';
         }
         catch (const std::exception& error) {
             logger::warn("DragonbornXP settings could not be saved: {}", error.what());
@@ -299,7 +310,8 @@ namespace
                ",\"pet\":" + JsonString(g_settings.pet) +
                ",\"clock\":" + (g_settings.showClock ? "true" : "false") +
                ",\"clockStyle\":" + JsonString(g_settings.clockStyle) +
-               ",\"scale\":" + std::to_string(g_settings.scale) + "}";
+               ",\"scale\":" + std::to_string(g_settings.scale) +
+               ",\"raisePet\":" + (g_settings.raisePet ? "true" : "false") + "}";
     }
 
     void Invoke(const std::string& functionName, const std::string& json)
@@ -585,7 +597,8 @@ namespace
                                          ",\"weekday\":" + JsonString(calendar->GetDayName()) +
                                          ",\"day\":" + std::to_string(day) +
                                          ",\"month\":" + JsonString(calendar->GetMonthName()) +
-                                         ",\"year\":" + std::to_string(year) + "}");
+                                         ",\"year\":" + std::to_string(year) +
+                                         ",\"hours\":" + std::to_string(calendar->GetHoursPassed()) + "}");
     }
 
     void OpenSettings()
@@ -627,7 +640,7 @@ namespace
         }
     }
 
-    // x|y|hotkey|pet|clock|clockStyle|scale, the last three are optional
+    // x|y|hotkey|pet|clock|clockStyle|scale|raisePet, the last four are optional
     void ApplySettings(std::string_view payload)
     {
         const auto parts = Split(payload, '|');
@@ -643,6 +656,7 @@ namespace
             const bool showClock = parts.size() > 4 ? ParseFlag(parts[4]) : g_settings.showClock;
             const auto clockStyle = parts.size() > 5 && IsSupportedClockStyle(parts[5]) ? parts[5] : g_settings.clockStyle;
             const auto scale = parts.size() > 6 ? ClampScale(std::stoi(parts[6])) : g_settings.scale;
+            const bool raisePet = parts.size() > 7 ? ParseFlag(parts[7]) : g_settings.raisePet;
             bool requiresShift = false;
             const auto hotkey = ParseHotkey(hotkeyName, &requiresShift);
             if (hotkey == 0 || x < -1 || y < -1 || !IsSupportedPet(pet)) {
@@ -658,6 +672,7 @@ namespace
             g_settings.showClock = showClock;
             g_settings.clockStyle = clockStyle;
             g_settings.scale = scale;
+            g_settings.raisePet = raisePet;
             g_settingsHotkey.store(hotkey);
             g_settingsHotkeyRequiresShift.store(requiresShift);
             SaveSettings();
@@ -760,10 +775,67 @@ namespace
         }
     };
 
+    void SendPetFed(const RE::TESForm* food, const char* source)
+    {
+        const char* name = food ? food->GetName() : nullptr;
+        Invoke("dragonbornXP.petFed", "{\"name\":" + JsonString(name ? name : "") + ",\"source\":\"" + source + "\"}");
+    }
+
+    // eating food in game feeds the pet too
+    class EquipSink final : public RE::BSTEventSink<RE::TESEquipEvent>
+    {
+    public:
+        RE::BSEventNotifyControl ProcessEvent(const RE::TESEquipEvent* event, RE::BSTEventSource<RE::TESEquipEvent>*) override
+        {
+            if (!event || !event->equipped || event->actor.get() != RE::PlayerCharacter::GetSingleton()) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+            const auto* form = RE::TESForm::LookupByID(event->baseObject);
+            const auto* alchemy = form ? form->As<RE::AlchemyItem>() : nullptr;
+            if (alchemy && alchemy->IsFood()) {
+                SendPetFed(alchemy, "ate");
+            }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+    };
+
+    // Feed button: uses the cheapest food in the player's inventory.
+    void FeedFromPack()
+    {
+        auto* player = RE::PlayerCharacter::GetSingleton();
+        if (!player) {
+            return;
+        }
+        auto inventory = player->GetInventory([](RE::TESBoundObject& object) {
+            const auto* alchemy = object.As<RE::AlchemyItem>();
+            return alchemy && alchemy->IsFood();
+        });
+        RE::TESBoundObject* cheapest = nullptr;
+        auto cheapestValue = (std::numeric_limits<std::int32_t>::max)();
+        for (const auto& [object, entry] : inventory) {
+            if (entry.first > 0 && object->GetGoldValue() < cheapestValue) {
+                cheapest = object;
+                cheapestValue = object->GetGoldValue();
+            }
+        }
+        if (!cheapest) {
+            Invoke("dragonbornXP.petFed", "{\"none\":true}");
+            return;
+        }
+        SendPetFed(cheapest, "pack");
+        player->RemoveItem(cheapest, 1, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+    }
+
+    void SendPetState()
+    {
+        Invoke("dragonbornXP.petState", "{\"state\":" + JsonString(g_petState) + "}");
+    }
+
     SkillIncreaseSink g_skillSink;
     LevelIncreaseSink g_levelSink;
     DragonSoulSink g_soulSink;
     MenuStateSink g_menuSink;
+    EquipSink g_equipSink;
 
     void RegisterGameEvents()
     {
@@ -778,6 +850,9 @@ namespace
         }
         if (auto* ui = RE::UI::GetSingleton()) {
             ui->AddEventSink<RE::MenuOpenCloseEvent>(&g_menuSink);
+        }
+        if (auto* scripts = RE::ScriptEventSourceHolder::GetSingleton()) {
+            scripts->AddEventSink<RE::TESEquipEvent>(&g_equipSink);
         }
     }
 
@@ -850,11 +925,23 @@ namespace
             g_prismaUI->RegisterJSListener(view, "settingsClosed", [](const char*) {
                 CloseSettings();
             });
+            g_prismaUI->RegisterJSListener(view, "petStateChanged", [](const char* payload) {
+                const std::string copy(payload ? payload : "");
+                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
+                    taskInterface->AddTask([copy]() { g_petState = copy; });
+                }
+            });
+            g_prismaUI->RegisterJSListener(view, "feedPet", [](const char*) {
+                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
+                    taskInterface->AddTask([]() { FeedFromPack(); });
+                }
+            });
             // new page, resend everything
             g_lastWorldMood.clear();
             g_lastClockMinute = -1;
             Invoke("dragonbornXP.initialize", "{}");
             Invoke("dragonbornXP.applySettings", SettingsPayload());
+            SendPetState();
         });
         // draw under other prisma views
         g_prismaUI->SetOrder(g_view, -100);
@@ -864,6 +951,34 @@ namespace
         StartCompanionStatePoller();
         logger::info("DragonbornXP initialized. Preview keys {}.", g_settings.debugPreviewKeys ? "enabled (F6 XP, F7 level-up)" : "disabled");
     }
+}
+
+constexpr std::uint32_t kPetRecord = 'PETS';
+
+static void OnGameSaved(SKSE::SerializationInterface* serialization)
+{
+    if (!g_petState.empty()) {
+        serialization->WriteRecord(kPetRecord, 1, g_petState.data(), static_cast<std::uint32_t>(g_petState.size()));
+    }
+}
+
+static void OnGameLoaded(SKSE::SerializationInterface* serialization)
+{
+    std::uint32_t type = 0;
+    std::uint32_t version = 0;
+    std::uint32_t length = 0;
+    while (serialization->GetNextRecordInfo(type, version, length)) {
+        if (type == kPetRecord && version == 1) {
+            std::string state(length, '\0');
+            serialization->ReadRecordData(state.data(), length);
+            g_petState = state;
+        }
+    }
+}
+
+static void OnRevert(SKSE::SerializationInterface*)
+{
+    g_petState.clear();
 }
 
 static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
@@ -879,6 +994,7 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
     case SKSE::MessagingInterface::kNewGame:
         // stay hidden until a game is loaded
         g_gameLoaded.store(true);
+        SendPetState();
         break;
     default:
         break;
@@ -898,5 +1014,12 @@ extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface* skse)
     }
 
     messaging->RegisterListener("SKSE", SKSEMessageHandler);
+
+    if (auto* serialization = SKSE::GetSerializationInterface()) {
+        serialization->SetUniqueID('DBXP');
+        serialization->SetSaveCallback(OnGameSaved);
+        serialization->SetLoadCallback(OnGameLoaded);
+        serialization->SetRevertCallback(OnRevert);
+    }
     return true;
 }

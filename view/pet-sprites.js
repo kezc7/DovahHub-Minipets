@@ -817,7 +817,10 @@
   }
 
   function render(container, petId, options = {}) {
-    const pet = pets[petId] || pets.dovahmin;
+    return renderDef(container, pets[petId] || pets.dovahmin, options);
+  }
+
+  function renderDef(container, pet, options = {}) {
     const doc = container.ownerDocument;
     const pixel = options.pixel || PIXEL;
     const box = bounds(pet);
@@ -826,6 +829,77 @@
     container.style.height = `${box.height * pixel}px`;
     pet.parts.forEach(part => container.append(drawPart(doc, part, pet.palette, box.x, box.y, pixel)));
     return { archetype: pet.archetype, width: box.width * pixel, height: box.height * pixel };
+  }
+
+  // egg shell and spot colours per companion
+  const eggColours = {
+    dovahmin: ['#467552', '#dcbc7e'], dovahpink: ['#d0679c', '#ffe0ea'], mudcrab: ['#5c5f64', '#8d9094'],
+    skeever: ['#7a5a45', '#e39a9a'], fox: ['#d8662c', '#f7e8cc'], sabrecat: ['#c8955a', '#5a3a24'],
+    'frostbite-spider': ['#5a3f5e', '#d7e8ef'], horker: ['#7d7a80', '#f2e7c6'], troll: ['#7c8a6a', '#a99d84'],
+    'flame-atronach': ['#f07a2e', '#ffcf4a'], 'frost-atronach': ['#8fd3e8', '#e8fbff'], spriggan: ['#7a5a3a', '#6fae4a'],
+    'dwarven-spider': ['#b8823f', '#6fe3ff'], chaurus: ['#7d8f3e', '#c9b98a'], netch: ['#a5629b', '#f6dcef'],
+    mammoth: ['#8a6a4e', '#f2e7c6'], 'dragon-priest': ['#4a4560', '#d6a84a'], wisp: ['#9eeaff', '#fff6a8'],
+    'death-hound': ['#3a4048', '#ff5a42'], chicken: ['#f7f3e8', '#d84a32']
+  };
+  const MYSTERY_EGG = ['#b9b3a3', '#77725f'];
+
+  // 13x16 egg: fuller at the bottom, light top-left, a few spots
+  function eggRows() {
+    const width = 13;
+    const height = 16;
+    const spots = ['4,5', '8,4', '6,9', '9,10', '3,11', '7,13'];
+    const rows = [];
+    for (let y = 0; y < height; y += 1) {
+      let row = '';
+      for (let x = 0; x < width; x += 1) {
+        const dx = (x - 6) / 6.2;
+        const dy = y < 9 ? (y - 9) / 9 : (y - 9) / 6.8;
+        const inside = dx * dx + dy * dy <= 1;
+        const edge = inside && ((x - 6) / 5.2) ** 2 + (y < 9 ? (y - 9) / 8 : (y - 9) / 5.8) ** 2 > 1;
+        if (!inside) row += '.';
+        else if (edge) row += 'k';
+        else if (x < 5 && y < 6 && x + y > 4) row += 'l';
+        else if (spots.includes(`${x},${y}`)) row += 's';
+        else if (x > 8 && y > 9) row += 'd';
+        else row += 'e';
+      }
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  const crackRows = [
+    '.............',
+    '.............',
+    '.............',
+    '.............',
+    '.............',
+    '.............',
+    '.............',
+    '..c..c...c...',
+    '.c.cc.c.c.c..',
+    '.......c...c.',
+    '.............'
+  ];
+
+  function shadeHex(hex, factor) {
+    const value = parseInt(hex.slice(1), 16);
+    const channels = [(value >> 16) & 255, (value >> 8) & 255, value & 255].map(channel => Math.min(255, Math.round(channel * factor)));
+    return `rgb(${channels.join(', ')})`;
+  }
+
+  // Draws a companion's egg (or the grey mystery egg when `petId` is null).
+  function renderEgg(container, petId, options = {}) {
+    const [shell, spot] = eggColours[petId] || MYSTERY_EGG;
+    const egg = {
+      archetype: 'egg',
+      palette: { k: '#2a2622', e: shell, d: shadeHex(shell, 0.78), l: shadeHex(shell, 1.25), s: spot, c: '#2a2622' },
+      parts: [
+        { name: 'egg', role: 'body', at: [0, 0], rows: eggRows() },
+        { name: 'cracks', role: 'static', at: [0, 2], rows: crackRows }
+      ]
+    };
+    return renderDef(container, egg, options);
   }
 
   // frame ornaments, the corner is top-left and gets mirrored
@@ -840,7 +914,9 @@
       W: '#ffffff', Y: '#fff6c8', y: '#ffd860', o: '#f5a93a', r: 'rgba(255, 236, 160, .6)', a: 'rgba(255, 244, 196, .2)',
       // dawn/dusk suns (dusk kept away from fire colours)
       D: '#fff4d6', E: '#ffd27a', F: '#f6a04d', I: 'rgba(255, 214, 150, .28)',
-      J: '#ffd2c0', K: '#f2626a', L: '#b8364f', N: 'rgba(240, 96, 110, .28)'
+      J: '#ffd2c0', K: '#f2626a', L: '#b8364f', N: 'rgba(240, 96, 110, .28)',
+      // mood icons
+      p: '#c9703f', P: '#8e4a2b', q: '#f2ead2', R: '#d8485a'
     },
     corner: [
       'kkkkkkkkkkkkkkk.',
@@ -875,6 +951,8 @@
     masser: disc(17, [[1.4, 'n', -2, -1.5], [1.1, 'n', 2, 1.5], [0.9, 'n', 0.5, -3], [1.0, 'n', -1.5, 3], [5.6, 'M', -0.8, -0.8], [6.4, 'm'], [8.3, 'h']]),
     sun: disc(13, [[1.4, 'W', -1.5, -1.5], [3.4, 'Y', -0.6, -0.6], [4.8, 'y'], [5.7, 'o']]),
     sunHalo: rays(25, 8, 11.6, 8.6),
+    iconFood: ['.....kk.', '....kqqk', '...kPkqk', '..kpPPk.', '.kppPPk.', 'kppppk..', 'kpppk...', '.kkk....'],
+    iconHeart: ['.kk..kk.', 'kRRkkRRk', 'kRRRkRRk', 'kRRkRRRk', '.kRRkRk.', '..kRRk..', '...kk...'],
     sunDawn: disc(19, [[2.2, 'D', -1, -1], [5.4, 'E'], [6.6, 'F'], [9.3, 'I']]),
     sunDusk: disc(19, [[2.2, 'J', -1, -1], [5.4, 'K'], [6.6, 'L'], [9.3, 'N']]),
     secunda: disc(11, [[0.8, 't', 1, -1], [0.7, 't', -1, 1.5], [3.2, 'S', -0.6, -0.6], [3.9, 's'], [5.4, 'H']])
@@ -904,5 +982,5 @@
     return canvas;
   }
 
-  return Object.freeze({ PIXEL, ROLES, pets, ornaments, bounds, render, renderOrnament });
+  return Object.freeze({ PIXEL, ROLES, pets, ornaments, bounds, render, renderEgg, eggColours, renderOrnament });
 });

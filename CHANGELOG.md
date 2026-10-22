@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+- Raise a pet (optional, Settings > Pet): pick an egg, keep it warm with XP until it hatches, then watch it grow from baby to adult
+- Feed it by eating food yourself, or with the Feed button (uses the cheapest food in your pack)
+- Play with it to keep it happy. A neglected pet gets hungry or sad but never dies
+- Your pet is saved with each character
+
 ## 1.1.0
 - Size setting (50-150%) with a slider and a box to type the value, saved as `scale` in the INI
 - Fixed dragon fire (and other effects) spilling outside the frame

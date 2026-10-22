@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dragonborn XP</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=45">
+  <link rel="stylesheet" href="styles.css?v=46">
 </head>
 <body>
   <main id="dragonborn-xp" aria-live="polite" aria-atomic="true">
@@ -17,6 +17,7 @@
         <span class="grass"></span>
       </div>
       <div class="dragon-stage" aria-hidden="true">
+        <div class="pet-bubble" aria-hidden="true"></div>
         <div class="pet-position">
           <div class="pet-shadow"></div>
           <div class="pet-motion"><div class="pet-body"><div id="pet-sprite" class="pet-sprite"></div></div></div>
@@ -43,7 +44,26 @@
       <p class="settings-help">Drag your companion anywhere on screen, or fine-tune its position below.</p>
       <div class="settings-group">
         <h2>Pet</h2>
-        <label class="settings-row" for="pet-select">
+        <label class="settings-row" for="raise-pet">
+          <span>Raise a pet <small>Start from an egg, feed it and play with it</small></span>
+          <input id="raise-pet" class="settings-toggle" type="checkbox">
+        </label>
+        <div id="pet-life" class="pet-life hidden">
+          <p id="pet-life-name" class="pet-life-name"></p>
+          <div id="pet-life-eggs" class="egg-picker"></div>
+          <div id="pet-life-needs">
+            <div class="need need-warmth"><span>Warmth</span><span class="need-bar"><span id="need-warmth"></span></span></div>
+            <div class="need need-food"><span>Food</span><span class="need-bar"><span id="need-food"></span></span></div>
+            <div class="need need-happiness"><span>Happiness</span><span class="need-bar"><span id="need-happiness"></span></span></div>
+            <div class="pet-life-actions">
+              <button id="pet-feed" class="settings-secondary" type="button">Feed</button>
+              <button id="pet-play" class="settings-secondary" type="button">Play</button>
+              <button id="pet-reset" class="settings-secondary" type="button">Start over</button>
+            </div>
+          </div>
+          <p id="pet-life-hint" class="settings-hint"></p>
+        </div>
+        <label id="pet-select-row" class="settings-row" for="pet-select">
           <span>Choose your companion <small>Switches your companion</small></span>
           <select id="pet-select">
             <option value="dovahmin">Dovahmin</option>
@@ -138,11 +158,12 @@
     </div>
   </section>
   <section id="pet-sheet" class="hidden" aria-label="All companions"></section>
-  <script src="animation-state.js?v=45"></script>
-  <script src="pet-sprites.js?v=45"></script>
-  <script src="clock.js?v=45"></script>
-  <script src="regions.js?v=45"></script>
-  <script src="sky.js?v=45"></script>
-  <script src="app.js?v=45"></script>
+  <script src="animation-state.js?v=46"></script>
+  <script src="pet-sprites.js?v=46"></script>
+  <script src="clock.js?v=46"></script>
+  <script src="pet-life.js?v=46"></script>
+  <script src="regions.js?v=46"></script>
+  <script src="sky.js?v=46"></script>
+  <script src="app.js?v=46"></script>
 </body>
 </html>

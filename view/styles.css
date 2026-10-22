@@ -141,6 +141,22 @@ body.timelapse .sky-body { transition: none; }
 #dragonborn-xp.caption-name .xp-bar { opacity: 0; }
 .xp-bar span { display: block; width: 68%; height: 100%; background: linear-gradient(90deg, var(--flame), var(--gold)); transform-origin: left; animation: charge 1.2s ease-out both; }
 
+/* raise-a-pet panel in settings */
+.pet-life { margin-top: 6px; }
+.pet-life-name { margin: 2px 0 8px; color: #fff1be; font: 700 14px Georgia, serif; }
+.egg-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.egg-choice { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px 4px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 6px; color: #e8f2e9; background: rgba(0, 0, 0, .2); font: 10px Arial, sans-serif; cursor: pointer; }
+.egg-choice:hover { border-color: #a8d47d; background: rgba(168, 212, 125, .12); }
+.need { display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 8px; margin: 5px 0; font: 12px Arial, sans-serif; color: #e8f2e9; }
+.need-bar { height: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .2); border-radius: 4px; background: rgba(0, 0, 0, .3); }
+.need-bar span { display: block; width: 0; height: 100%; background: #a8d47d; transition: width .3s ease; }
+#need-warmth { background: #f0a050; }
+#need-happiness { background: #e78aa8; }
+.pet-life.is-egg .need-food, .pet-life.is-egg .need-happiness, .pet-life:not(.is-egg) .need-warmth { display: none; }
+.pet-life-actions { display: flex; gap: 6px; margin-top: 8px; }
+.pet-life-actions button:disabled { opacity: .4; cursor: default; }
+.hidden { display: none !important; }
+
 /* clock banner (settings > clock) */
 .clock-banner { position: absolute; top: calc(100% + 12px); left: 50%; z-index: 6; display: none; color: #f1ede1; font-family: Georgia, serif; text-align: center; white-space: nowrap; text-shadow: 0 1px 2px #000; transform: translateX(-50%); pointer-events: none; }
 #dragonborn-xp.clock-on .clock-banner { display: block; }
@@ -232,6 +248,20 @@ body.timelapse .sky-body { transition: none; }
 #dragonborn-xp.state-level-up .role-claw-a, #dragonborn-xp.state-level-up .role-claw-b { animation: pet-snap .2s ease-in-out infinite alternate; }
 #dragonborn-xp.state-level-up .role-fx-glow { animation-duration: .3s; }
 
+/* raise a pet: eggs wobble more as they warm up, cracks show just before hatching */
+#dragonborn-xp.is-egg.state-idle .pet-motion { animation: egg-wobble 2.6s ease-in-out infinite; }
+#dragonborn-xp.is-egg.egg-warm-2.state-idle .pet-motion { animation-duration: 1.5s; }
+#dragonborn-xp.is-egg.egg-warm-3.state-idle .pet-motion { animation-duration: .8s; }
+.part-cracks { display: none; }
+#dragonborn-xp.egg-warm-3 .part-cracks { display: block; }
+#dragonborn-xp.mood-sad.state-idle .pet-body, #dragonborn-xp.mood-miserable.state-idle .pet-body,
+#dragonborn-xp.mood-hungry.state-idle .pet-body { animation: pet-droop 3.8s ease-in-out infinite; }
+.pet-bubble { position: absolute; top: 10px; right: 20px; z-index: 2; display: none; padding: 4px 5px 2px; border: 2px solid #2a2622; border-radius: 8px; background: #f8f4e8; }
+.pet-bubble .bubble-icon { display: none; width: 24px; height: 24px; image-rendering: pixelated; }
+#dragonborn-xp.mood-hungry .pet-bubble, #dragonborn-xp.mood-sad .pet-bubble, #dragonborn-xp.mood-miserable .pet-bubble { display: flex; gap: 2px; animation: pet-bubble-bob 2s ease-in-out infinite; }
+#dragonborn-xp.mood-hungry .bubble-food, #dragonborn-xp.mood-miserable .bubble-food,
+#dragonborn-xp.mood-sad .bubble-heart, #dragonborn-xp.mood-miserable .bubble-heart { display: block; }
+
 /* idle variations */
 #dragonborn-xp.state-idle.idle-look .role-head { animation: pet-look .9s ease-in-out both; }
 #dragonborn-xp.state-idle.idle-peck .role-head { animation: pet-peck .6s ease-in-out both; }
@@ -294,6 +324,9 @@ body.settings-open.dragging-pet, body.settings-open.dragging-pet * { cursor: gra
 @keyframes scenery-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes plume-rise { 0% { opacity: 0; transform: translate(0, 0) scale(.6); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(10px, -46px) scale(2.2); } }
 @keyframes torch-flicker { 0%, 100% { opacity: 1; } 20% { opacity: .82; } 45% { opacity: .95; } 70% { opacity: .78; } 85% { opacity: .92; } }
+@keyframes egg-wobble { 0%, 60%, 100% { transform: rotate(0deg); } 70% { transform: rotate(-6deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(-3deg); } }
+@keyframes pet-droop { 0%, 100% { transform: scale(1.03, .95); } 50% { transform: scale(1.05, .92); } }
+@keyframes pet-bubble-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @keyframes sun-turn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @keyframes caption-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes charge { from { transform: scaleX(0); } to { transform: scaleX(1); } }

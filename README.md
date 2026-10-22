@@ -14,12 +14,13 @@ Needs SKSE64, Address Library and Prisma UI.
 - Day/night cycle with the sun and both moons following the in-game clock, plus rain, snow and storms.
 - A scrolling landscape behind them that changes every in-game day.
 - Backdrops for Solstheim, the five major cities, Blackreach, Apocrypha, the Soul Cairn and Sovngarde, and for caves, homes, inns, mines, temples, Dwemer ruins, Nordic tombs, vampire lairs and Falmer hives.
+- Optional raise-a-pet mode: pick an egg, hatch it with XP, then feed it and play with it. Saved per character.
 - Optional in-game clock under the card.
 - Hides itself on loading screens, in menus and when other Prisma UI menus are open.
 
 ## Settings
 
-Press **Shift+B** in game. You can pick your companion, drag the card wherever you like (or use the sliders), make it bigger or smaller, turn the clock on and pick its style, and change the hotkey. Settings are saved to `Data/SKSE/Plugins/DragonbornXP.ini`.
+Press **Shift+B** in game. You can pick your companion, drag the card wherever you like (or use the sliders), make it bigger or smaller, switch on raise-a-pet mode and look after your pet, turn the clock on and pick its style, and change the hotkey. Settings are saved to `Data/SKSE/Plugins/DragonbornXP.ini`.
 
 Setting `debug_preview_keys=1` in the INI turns on two test keys: F6 for an XP popup and F7 for a level-up.
 
