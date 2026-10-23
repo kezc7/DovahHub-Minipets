@@ -910,6 +910,8 @@
     // eggs can't eat, say so rather than looking like the key is taken
     document.querySelector('#pet-feed').textContent = egg ? 'Feed (after hatching)' : `Feed (${feedHotkey})`;
     document.querySelector('#pet-play').textContent = `${egg ? 'Cuddle' : 'Play'} (${playHotkey})`;
+    // same key either way, cuddling is what play does for an egg
+    document.querySelector('#play-hotkey-label').textContent = egg ? 'Cuddle your egg' : 'Play with your pet';
     document.querySelector('#pet-reset').textContent = resetArmed ? 'Click again to start over' : 'Start over';
     petLifeHint.textContent = egg
       ? 'XP, level-ups and time keep the egg warm.'

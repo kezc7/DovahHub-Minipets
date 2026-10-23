@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.1
+- The play hotkey says "Cuddle your egg" in settings while your pet is an egg, so it's clear which key cuddles
+
 ## 1.5.0
 - Card shape setting: square, or wide to see more of the scenery (`card_shape` in the INI)
 
