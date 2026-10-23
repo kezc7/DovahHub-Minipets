@@ -1,7 +1,7 @@
 # Third-party notices
 
 DragonbornXP is licensed under the GNU General Public License v3.0 (see `LICENSE`).
-Source code: https://github.com/kezc7/wayframe-pets
+Source code: https://github.com/kezc7/DovahHub-Minipets
 
 The plugin DLL is built with the following, which are compiled into it:
 
