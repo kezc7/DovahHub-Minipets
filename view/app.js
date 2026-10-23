@@ -721,6 +721,12 @@
     if (settingsOpen) syncSettingsFields();
   }
 
+  // Prisma's engine doesn't always fill in event.code or shiftKey, so fall back to
+  // keyCode and our own record of whether Shift is held.
+  let shiftHeld = false;
+  const isShift = event => event.key === 'Shift' || event.keyCode === 16 || /^Shift/.test(event.code || '');
+  const isEscape = event => event.code === 'Escape' || event.key === 'Escape' || event.keyCode === 27;
+
   function displayKey(event) {
     const code = event.code || '';
     const names = { Enter: 'Enter', Space: 'Space', Tab: 'Tab', Backspace: 'Backspace' };
@@ -728,8 +734,16 @@
     if (/^Key[A-Z]$/.test(code)) key = code.slice(3);
     if (/^Digit[0-9]$/.test(code)) key = code.slice(5);
     if (/^F(?:[1-9]|1[0-2])$/.test(code)) key = code;
+    if (!key) {
+      const keyCode = event.keyCode || event.which || 0;
+      const codes = { 13: 'Enter', 32: 'Space', 9: 'Tab', 8: 'Backspace' };
+      if ((keyCode >= 65 && keyCode <= 90) || (keyCode >= 48 && keyCode <= 57)) key = String.fromCharCode(keyCode);
+      else if (keyCode >= 112 && keyCode <= 123) key = `F${keyCode - 111}`;
+      else key = codes[keyCode] || null;
+    }
+    if (!key && /^[a-z0-9]$/i.test(event.key || '')) key = event.key.toUpperCase();
     if (!key) return null;
-    return event.shiftKey ? `Shift+${key}` : key;
+    return event.shiftKey || shiftHeld ? `Shift+${key}` : key;
   }
 
   function startDrag(event) {
@@ -885,7 +899,8 @@
     document.querySelector('#need-food').style.width = `${Math.round(petLife.hunger)}%`;
     document.querySelector('#need-happiness').style.width = `${Math.round(petLife.happiness)}%`;
     document.querySelector('#pet-feed').disabled = egg;
-    document.querySelector('#pet-feed').textContent = `Feed (${feedHotkey})`;
+    // eggs can't eat, say so rather than looking like the key is taken
+    document.querySelector('#pet-feed').textContent = egg ? 'Feed (after hatching)' : `Feed (${feedHotkey})`;
     document.querySelector('#pet-play').textContent = `${egg ? 'Cuddle' : 'Play'} (${playHotkey})`;
     document.querySelector('#pet-reset').textContent = resetArmed ? 'Click again to start over' : 'Start over';
     petLifeHint.textContent = egg
@@ -1159,41 +1174,52 @@
     else if (which === 'feed') feedHotkey = label;
     else playHotkey = label;
   }
+  // One page-wide listener: in game, clicking a button doesn't always give it focus.
+  let captureButton = null;
+  function stopCapture() {
+    if (!captureButton) return;
+    captureButton.classList.remove('capturing');
+    captureButton.textContent = getHotkey(captureButton.dataset.hotkey);
+    captureButton = null;
+    capturingHotkey = false;
+  }
   document.querySelectorAll('.hotkey-capture').forEach(button => {
-    const which = button.dataset.hotkey;
-    const stopCapture = () => {
-      capturingHotkey = false;
-      button.classList.remove('capturing');
-      button.textContent = getHotkey(which);
-    };
     button.addEventListener('click', () => {
+      stopCapture();
+      captureButton = button;
       capturingHotkey = true;
       button.classList.add('capturing');
       button.textContent = 'Press a key';
-      hotkeyHint.textContent = 'Press a letter, number, Enter, Space, Tab, or F1\u2013F12 with optional Shift.';
-    });
-    button.addEventListener('blur', () => { if (capturingHotkey) stopCapture(); });
-    button.addEventListener('keydown', event => {
-      if (!capturingHotkey) return;
-      event.preventDefault();
-      event.stopPropagation();
-      if (event.code === 'Escape') return stopCapture();
-      const label = displayKey(event);
-      if (!label) return;
-      const clash = Object.keys(hotkeyNames).find(other => other !== which && getHotkey(other) === label);
-      if (clash) {
-        hotkeyHint.textContent = `${label} is already used for ${hotkeyNames[clash]}.`;
-        return;
-      }
-      setHotkey(which, label);
-      stopCapture();
-      hotkeyHint.textContent = 'Press Save settings to keep this key.';
-      renderPetPanel();
-      queueNativeSettingsChanged();
+      hotkeyHint.textContent = 'Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.';
     });
   });
+  document.addEventListener('keyup', event => { if (isShift(event)) shiftHeld = false; }, true);
+  window.addEventListener('blur', () => { shiftHeld = false; });
   document.addEventListener('keydown', event => {
-    if (settingsOpen && event.code === 'Escape' && !capturingHotkey) {
+    if (isShift(event)) {
+      shiftHeld = true;
+      return;
+    }
+    if (!captureButton) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (isEscape(event)) return stopCapture();
+    const label = displayKey(event);
+    if (!label) return;
+    const which = captureButton.dataset.hotkey;
+    const clash = Object.keys(hotkeyNames).find(other => other !== which && getHotkey(other) === label);
+    if (clash) {
+      hotkeyHint.textContent = `${label} is already used for ${hotkeyNames[clash]}.`;
+      return;
+    }
+    setHotkey(which, label);
+    stopCapture();
+    hotkeyHint.textContent = 'Press Save settings to keep this key.';
+    renderPetPanel();
+    queueNativeSettingsChanged();
+  }, true);
+  document.addEventListener('keydown', event => {
+    if (settingsOpen && isEscape(event) && !capturingHotkey) {
       event.preventDefault();
       closeSettings(false);
     }

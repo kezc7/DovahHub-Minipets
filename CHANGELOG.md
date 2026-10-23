@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1
+- Fixed rebinding hotkeys in game (Shift+key combinations weren't picked up)
+- The Feed button says "after hatching" while your pet is still an egg, instead of just being greyed out
+- Fixed the clock setting description (the clock is above the card now)
+
 ## 1.4.0
 - Your pet's food and happiness bars (or the egg's warmth) now sit under the card, and turn red when low
 - The clock moved above the card
