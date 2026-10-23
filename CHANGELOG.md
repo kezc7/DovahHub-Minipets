@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.0
+- Card shape setting: square, or wide to see more of the scenery (`card_shape` in the INI)
+
 ## 1.4.1
 - Fixed rebinding hotkeys in game (Shift+key combinations weren't picked up)
 - The Feed button says "after hatching" while your pet is still an egg, instead of just being greyed out

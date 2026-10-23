@@ -37,7 +37,11 @@
   const NEEDS_HEIGHT = 66;
   const animationStates = window.PetAnimationState;
   const petSprites = window.PetSprites;
-  const CARD_SIZE = 256;
+  // square card, or a wider one that shows more scenery
+  const CARD_SHAPES = { square: [256, 256], wide: [384, 224] };
+  let cardShape = 'square';
+  const cardWidth = () => CARD_SHAPES[cardShape][0];
+  const cardHeight = () => CARD_SHAPES[cardShape][1];
 
   const petNames = {
     dovahmin: 'Dovahmin', dovahpink: 'Dovahpink', mudcrab: 'Clack', skeever: 'Nibbles',
@@ -177,8 +181,8 @@
   function maxPosition() {
     const below = raisePet && petLife ? NEEDS_HEIGHT : 0;
     return {
-      x: Math.max(0, Math.round(window.innerWidth - CARD_SIZE * scaleFactor())),
-      y: Math.max(minY(), Math.round(window.innerHeight - (CARD_SIZE + below) * scaleFactor()))
+      x: Math.max(0, Math.round(window.innerWidth - cardWidth() * scaleFactor())),
+      y: Math.max(minY(), Math.round(window.innerHeight - (cardHeight() + below) * scaleFactor()))
     };
   }
 
@@ -214,8 +218,8 @@
       style.right = 'auto';
       style.bottom = 'auto';
       style.padding = '0';
-      style.width = `${CARD_SIZE}px`;
-      style.height = `${CARD_SIZE}px`;
+      style.width = `${cardWidth()}px`;
+      style.height = `${cardHeight()}px`;
       style.display = 'block';
     } else {
       ['left', 'top', 'right', 'bottom', 'padding', 'width', 'height', 'display'].forEach(property => { style[property] = ''; });
@@ -230,6 +234,7 @@
     positionXRange.value = positionXValue.value = String(shown.x);
     positionYRange.value = positionYValue.value = String(shown.y);
     sizeRange.value = sizeValue.value = String(cardScale);
+    document.querySelector('#card-shape').value = cardShape;
   }
 
   function setPosition(x, y) {
@@ -276,6 +281,7 @@
       `time-${timeOfDay}`,
       `weather-${weather}`,
       `region-${region}`,
+      `shape-${cardShape}`,
       regionInfo().sky === 'hidden' ? 'sky-hidden' : '',
       regionInfo().light ? `light-${regionInfo().light}` : '',
       showClock ? `clock-on clock-${clockStyle}` : '',
@@ -434,7 +440,7 @@
   }
 
   function renderWeather() {
-    const weatherKey = `${weather}|${region}`;
+    const weatherKey = `${weather}|${region}|${cardShape}`;
     if (renderedWeather === weatherKey) return;
     renderedWeather = weatherKey;
     const scene = shell.querySelector('.scene');
@@ -629,7 +635,7 @@
     if (typeof window.settingsChanged !== 'function') return;
     const x = hasCustomPosition() ? positionX : -1;
     const y = hasCustomPosition() ? positionY : -1;
-    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}`);
+    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}|${cardShape}`);
   }
 
   function queueNativeSettingsChanged() {
@@ -676,6 +682,7 @@
       cardScale = settingsSnapshot.cardScale;
       raisePet = settingsSnapshot.raisePet;
       feedHotkey = settingsSnapshot.feedHotkey;
+      applyShape(settingsSnapshot.cardShape);
       playHotkey = settingsSnapshot.playHotkey;
       refreshPet();
       showClock = settingsSnapshot.showClock;
@@ -693,7 +700,7 @@
 
   function openSettings(data) {
     if (data) applyNativeSettings(data);
-    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey };
+    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey, cardShape };
     settingsOpen = true;
     document.body.classList.add('settings-open');
     settingsMenu.classList.remove('hidden');
@@ -710,6 +717,7 @@
     if (typeof data.clock === 'boolean') showClock = data.clock;
     if (data.clockStyle === 'plate' || data.clockStyle === 'ribbon') clockStyle = data.clockStyle;
     if (Number.isFinite(data.scale)) cardScale = clampScale(data.scale);
+    if (CARD_SHAPES[data.cardShape]) applyShape(data.cardShape);
     if (typeof data.raisePet === 'boolean' && data.raisePet !== raisePet) {
       raisePet = data.raisePet;
       refreshPet();
@@ -1131,6 +1139,26 @@
     }
   }
   clockEnabledInput.addEventListener('change', event => setClock(event.target.checked, clockStyle));
+
+  // resize the card, then redraw everything that's drawn to its size
+  function applyShape(shape) {
+    if (!CARD_SHAPES[shape] || shape === cardShape) return;
+    cardShape = shape;
+    applySceneClasses();
+    window.requestAnimationFrame(() => {
+      renderWeather();
+      renderScenery();
+      updateSky();
+    });
+  }
+  document.querySelector('#card-shape').addEventListener('change', event => {
+    applyShape(event.target.value);
+    if (hasCustomPosition()) setPosition(positionX, positionY);
+    else {
+      syncPositionFields();
+      queueNativeSettingsChanged();
+    }
+  });
 
   function setScale(value) {
     cardScale = clampScale(value);

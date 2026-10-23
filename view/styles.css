@@ -27,6 +27,7 @@ body { font-family: Georgia, "Times New Roman", serif; color: var(--gold); }
 .frame-bottom-left { bottom: -7px; left: -7px; }
 .frame-bottom-right { right: -7px; bottom: -7px; }
 .frame-emblem { top: -17px; left: 50%; width: 51px; height: 27px; margin-left: -25px; }
+#dragonborn-xp.shape-wide .toast-shell { width: 384px; height: 224px; }
 #dragonborn-xp.show .toast-shell { animation: event-pop 420ms ease-out both; }
 #dragonborn-xp.show.level-up .toast-shell { border-color: #2a2414; box-shadow: 0 0 0 1px rgba(238, 210, 119, .85), 0 0 30px rgba(227, 177, 70, .35), 0 8px 24px rgba(0, 0, 0, .45); }
 .scene { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 0; overflow: hidden; background: linear-gradient(to bottom, #68c8ea 0%, #8bd8ed 69%, #6aaf4d 69%, #4d8f3e 100%); }

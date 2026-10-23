@@ -54,6 +54,7 @@ namespace
         bool raisePet = false;
         std::string feedHotkeyName = "Shift+N";
         std::string playHotkeyName = "Shift+K";
+        std::string cardShape = "square";
     };
 
     std::atomic_bool g_statePollerStarted = false;
@@ -114,6 +115,11 @@ namespace
     int ClampScale(int value)
     {
         return value < 50 ? 50 : value > 150 ? 150 : value;
+    }
+
+    bool IsSupportedCardShape(std::string_view shape)
+    {
+        return shape == "square" || shape == "wide";
     }
 
     bool IsSupportedClockStyle(std::string_view style)
@@ -292,6 +298,9 @@ namespace
                     else if (key == "play_hotkey" && ParseHotkey(value) != 0) {
                         g_settings.playHotkeyName = value;
                     }
+                    else if (key == "card_shape" && IsSupportedCardShape(value)) {
+                        g_settings.cardShape = value;
+                    }
                 }
                 catch (...) {
                     logger::warn("DragonbornXP ignored invalid setting '{}'", key);
@@ -320,7 +329,8 @@ namespace
                    << "scale=" << g_settings.scale << '\n'
                    << "raise_pet=" << (g_settings.raisePet ? 1 : 0) << '\n'
                    << "feed_hotkey=" << g_settings.feedHotkeyName << '\n'
-                   << "play_hotkey=" << g_settings.playHotkeyName << '\n';
+                   << "play_hotkey=" << g_settings.playHotkeyName << '\n'
+                   << "card_shape=" << g_settings.cardShape << '\n';
         }
         catch (const std::exception& error) {
             logger::warn("DragonbornXP settings could not be saved: {}", error.what());
@@ -338,7 +348,8 @@ namespace
                ",\"scale\":" + std::to_string(g_settings.scale) +
                ",\"raisePet\":" + (g_settings.raisePet ? "true" : "false") +
                ",\"feedHotkey\":" + JsonString(g_settings.feedHotkeyName) +
-               ",\"playHotkey\":" + JsonString(g_settings.playHotkeyName) + "}";
+               ",\"playHotkey\":" + JsonString(g_settings.playHotkeyName) +
+               ",\"cardShape\":" + JsonString(g_settings.cardShape) + "}";
     }
 
     void Invoke(const std::string& functionName, const std::string& json)
@@ -667,7 +678,7 @@ namespace
         }
     }
 
-    // x|y|hotkey|pet|clock|clockStyle|scale|raisePet|feedKey|playKey, everything after pet is optional
+    // x|y|hotkey|pet|clock|clockStyle|scale|raisePet|feedKey|playKey|shape, everything after pet is optional
     void ApplySettings(std::string_view payload)
     {
         const auto parts = Split(payload, '|');
@@ -686,6 +697,7 @@ namespace
             const bool raisePet = parts.size() > 7 ? ParseFlag(parts[7]) : g_settings.raisePet;
             const auto feedKey = parts.size() > 8 && ParseHotkey(parts[8]) != 0 ? parts[8] : g_settings.feedHotkeyName;
             const auto playKey = parts.size() > 9 && ParseHotkey(parts[9]) != 0 ? parts[9] : g_settings.playHotkeyName;
+            const auto cardShape = parts.size() > 10 && IsSupportedCardShape(parts[10]) ? parts[10] : g_settings.cardShape;
             bool requiresShift = false;
             const auto hotkey = ParseHotkey(hotkeyName, &requiresShift);
             if (hotkey == 0 || x < -1 || y < -1 || !IsSupportedPet(pet)) {
@@ -704,6 +716,7 @@ namespace
             g_settings.raisePet = raisePet;
             g_settings.feedHotkeyName = feedKey;
             g_settings.playHotkeyName = playKey;
+            g_settings.cardShape = cardShape;
             StorePetKey(g_feedKey, feedKey);
             StorePetKey(g_playKey, playKey);
             g_settingsHotkey.store(hotkey);
