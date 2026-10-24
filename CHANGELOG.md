@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.2
+- Hides while other mods' menus are open, like SKSE Menu Framework and Swiftly Order Squad
+
 ## 1.5.1
 - The play hotkey says "Cuddle your egg" in settings while your pet is an egg, so it's clear which key cuddles
 

@@ -7,6 +7,7 @@
 #include <RE/C/Calendar.h>
 #include <RE/D/DragonSoulsGained.h>
 #include <RE/L/LevelIncrease.h>
+#include <RE/I/IMenu.h>
 #include <RE/M/MenuOpenCloseEvent.h>
 #include <RE/S/SkillIncrease.h>
 #include <RE/S/ScriptEventSourceHolder.h>
@@ -16,6 +17,7 @@
 #include <RE/T/TESObjectCELL.h>
 #include <RE/T/TESWorldSpace.h>
 #include <RE/U/UI.h>
+#include <REX/W32/KERNEL32.h>
 
 #include <atomic>
 #include <chrono>
@@ -155,24 +157,15 @@ namespace
                pet == "dragon-priest" || pet == "wisp" || pet == "death-hound" || pet == "chicken";
     }
 
-    constexpr std::array<std::string_view, 36> kBlockingMenus{
+    constexpr std::array<std::string_view, 37> kBlockingMenus{
         "Main Menu", "Loading Menu", "LoadWaitSpinner", "Fader Menu", "SystemMenu", "TweenMenu",
         "InventoryMenu", "MagicMenu", "MapMenu", "ContainerMenu", "Journal Menu", "LevelUpMenu",
         "StatsMenu", "SleepWaitMenu", "FavoritesMenu", "BarterMenu", "CraftingMenu", "Crafting Menu",
         "SmithingMenu", "Smithing Menu", "AlchemyMenu", "Alchemy Menu", "EnchantingMenu", "Enchanting Menu",
         "CookingMenu", "Cooking Menu", "PhotoMenu", "Console", "RaceSex Menu", "Book Menu",
-        "Lockpicking Menu", "Training Menu", "GiftMenu", "Tutorial Menu", "Credits Menu", "Mod Manager Menu"
+        "Lockpicking Menu", "Training Menu", "GiftMenu", "Tutorial Menu", "Credits Menu", "Mod Manager Menu",
+        "CustomMenu"
     };
-
-    bool IsBlockingMenu(std::string_view name)
-    {
-        for (const auto menu : kBlockingMenus) {
-            if (menu == name) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     // polled because the main menu and first loading screen open before we're listening
     bool IsAnyBlockingMenuOpen()
@@ -187,6 +180,41 @@ namespace
             }
         }
         return false;
+    }
+
+    // menus from other mods (SKSE's CustomMenu, UIExtensions and so on) that pause or show a cursor
+    bool IsModMenuOpen()
+    {
+        auto* ui = RE::UI::GetSingleton();
+        if (!ui) {
+            return false;
+        }
+        for (const auto& [name, entry] : ui->menuMap) {
+            const auto* menu = entry.menu.get();
+            if (!menu || (!menu->PausesGame() && !menu->UsesCursor())) {
+                continue;
+            }
+            const std::string_view menuName = name.c_str();
+            if (menuName == "HUD Menu" || menuName == "Cursor Menu" || menuName == "Dialogue Menu" ||
+                menuName.find("Prisma") != std::string_view::npos) {
+                continue;
+            }
+            if (ui->IsMenuOpen(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // SKSE Menu Framework draws with ImGui, so it never shows up as a Skyrim menu
+    bool IsMenuFrameworkOpen()
+    {
+        using IsOpenFn = bool (*)();
+        static const auto isOpen = []() -> IsOpenFn {
+            const auto module = REX::W32::GetModuleHandleW(L"SKSEMenuFramework.dll");
+            return module ? reinterpret_cast<IsOpenFn>(REX::W32::GetProcAddress(module, "IsAnyBlockingWindowOpened")) : nullptr;
+        }();
+        return isOpen && isOpen();
     }
 
     std::uint32_t ParseHotkey(std::string value, bool* requiresShift = nullptr)
@@ -415,6 +443,15 @@ namespace
         // other prisma menus
         if (g_prismaUI->HasAnyActiveFocus() && !g_prismaUI->HasFocus(g_view)) {
             return "another Prisma UI menu has focus";
+        }
+        // our own settings open a cursor menu too
+        if (!g_prismaUI->HasFocus(g_view)) {
+            if (IsModMenuOpen()) {
+                return "a mod menu is open";
+            }
+            if (IsMenuFrameworkOpen()) {
+                return "SKSE Menu Framework is open";
+            }
         }
         const auto* player = RE::PlayerCharacter::GetSingleton();
         if (!player || !player->Is3DLoaded()) {
@@ -802,10 +839,6 @@ namespace
             RE::BSTEventSource<RE::MenuOpenCloseEvent>*) override
         {
             if (!event) {
-                return RE::BSEventNotifyControl::kContinue;
-            }
-
-            if (!IsBlockingMenu(event->menuName.c_str())) {
                 return RE::BSEventNotifyControl::kContinue;
             }
 
