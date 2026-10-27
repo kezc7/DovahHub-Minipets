@@ -160,14 +160,13 @@ namespace
                pet == "dragon-priest" || pet == "wisp" || pet == "death-hound" || pet == "chicken";
     }
 
-    constexpr std::array<std::string_view, 37> kBlockingMenus{
+    constexpr std::array<std::string_view, 36> kBlockingMenus{
         "Main Menu", "Loading Menu", "LoadWaitSpinner", "Fader Menu", "SystemMenu", "TweenMenu",
         "InventoryMenu", "MagicMenu", "MapMenu", "ContainerMenu", "Journal Menu", "LevelUpMenu",
         "StatsMenu", "SleepWaitMenu", "FavoritesMenu", "BarterMenu", "CraftingMenu", "Crafting Menu",
         "SmithingMenu", "Smithing Menu", "AlchemyMenu", "Alchemy Menu", "EnchantingMenu", "Enchanting Menu",
         "CookingMenu", "Cooking Menu", "PhotoMenu", "Console", "RaceSex Menu", "Book Menu",
-        "Lockpicking Menu", "Training Menu", "GiftMenu", "Tutorial Menu", "Credits Menu", "Mod Manager Menu",
-        "CustomMenu"
+        "Lockpicking Menu", "Training Menu", "GiftMenu", "Tutorial Menu", "Credits Menu", "Mod Manager Menu"
     };
 
     // polled because the main menu and first loading screen open before we're listening
@@ -186,11 +185,11 @@ namespace
     }
 
     // menus from other mods (SKSE's CustomMenu, UIExtensions and so on) that pause or show a cursor
-    bool IsModMenuOpen()
+    const char* OpenModMenu()
     {
         auto* ui = RE::UI::GetSingleton();
         if (!ui) {
-            return false;
+            return nullptr;
         }
         for (const auto& [name, entry] : ui->menuMap) {
             const auto* menu = entry.menu.get();
@@ -203,10 +202,10 @@ namespace
                 continue;
             }
             if (ui->IsMenuOpen(name)) {
-                return true;
+                return name.c_str();
             }
         }
-        return false;
+        return nullptr;
     }
 
     // SKSE Menu Framework draws with ImGui, so it never shows up as a Skyrim menu
@@ -263,6 +262,30 @@ namespace
             return MapVirtualKeyW(static_cast<UINT>(value.front()), MAPVK_VK_TO_VSC_EX);
         }
         return 0;
+    }
+
+    bool SameHotkey(const std::string& a, const std::string& b)
+    {
+        bool shiftA = false;
+        bool shiftB = false;
+        const auto scanA = ParseHotkey(a, &shiftA);
+        return scanA != 0 && scanA == ParseHotkey(b, &shiftB) && shiftA == shiftB;
+    }
+
+    // settings > hide > feed > play, the first one bound to a key gets it
+    void WarnAboutDuplicateHotkeys()
+    {
+        const std::pair<const char*, const std::string*> keys[] = {
+            { "settings", &g_settings.settingsHotkeyName }, { "hide", &g_settings.hideHotkeyName },
+            { "feed", &g_settings.feedHotkeyName }, { "play", &g_settings.playHotkeyName }
+        };
+        for (std::size_t i = 0; i < std::size(keys); ++i) {
+            for (std::size_t j = i + 1; j < std::size(keys); ++j) {
+                if (SameHotkey(*keys[i].second, *keys[j].second)) {
+                    logger::warn("DragonbornXP: {} and {} are both bound to {}, {} wins", keys[i].first, keys[j].first, *keys[i].second, keys[i].first);
+                }
+            }
+        }
     }
 
     void StorePetKey(PetKey& key, const std::string& name)
@@ -345,6 +368,7 @@ namespace
             }
             g_settingsHotkey.store(g_settings.settingsHotkey);
             g_settingsHotkeyRequiresShift.store(g_settings.settingsHotkeyRequiresShift);
+            WarnAboutDuplicateHotkeys();
         }
         catch (const std::exception& error) {
             logger::warn("DragonbornXP settings could not be loaded: {}", error.what());
@@ -459,8 +483,10 @@ namespace
         }
         // our own settings open a cursor menu too
         if (!g_prismaUI->HasFocus(g_view)) {
-            if (IsModMenuOpen()) {
-                return "a mod menu is open";
+            if (const char* menu = OpenModMenu()) {
+                static std::string reason;
+                reason = std::string("a mod menu is open (") + menu + ")";
+                return reason.c_str();
             }
             if (IsMenuFrameworkOpen()) {
                 return "SKSE Menu Framework is open";
@@ -774,6 +800,7 @@ namespace
             StorePetKey(g_hideKey, hideKey);
             g_settingsHotkey.store(hotkey);
             g_settingsHotkeyRequiresShift.store(requiresShift);
+            WarnAboutDuplicateHotkeys();
             SaveSettings();
         }
         catch (const std::exception& error) {
@@ -1001,8 +1028,8 @@ namespace
                     }
                     return;
                 }
-                // feed/play only while playing (not in menus) and with raise-a-pet on
-                if (!g_settings.raisePet || g_overlayHiddenForMenus.load()) {
+                // feed/play only while the pet is on screen and raise-a-pet is on
+                if (!g_settings.raisePet || g_settings.petHidden || g_overlayHiddenForMenus.load()) {
                     return;
                 }
                 const char* action = nullptr;

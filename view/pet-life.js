@@ -52,11 +52,11 @@
   }
 
   function play(pet, hours) {
+    if (pet.lastPlay !== null && hours - pet.lastPlay < PLAY_COOLDOWN) return { pet, ok: false, reason: 'tired' };
     if (pet.stage === 'egg') {
       // a cuddle warms the egg a little
-      return { pet: Object.assign({}, pet, { warmth: Math.min(HATCH_WARMTH, pet.warmth + 0.5) }), ok: true, reason: 'egg' };
+      return { pet: Object.assign({}, pet, { warmth: Math.min(HATCH_WARMTH, pet.warmth + 0.5), lastPlay: hours }), ok: true, reason: 'egg' };
     }
-    if (pet.lastPlay !== null && hours - pet.lastPlay < PLAY_COOLDOWN) return { pet, ok: false, reason: 'tired' };
     return { pet: Object.assign({}, pet, { happiness: clamp(pet.happiness + 25), lastPlay: hours }), ok: true };
   }
 

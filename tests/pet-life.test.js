@@ -72,6 +72,10 @@ test('eggs cannot eat, full pets refuse food, play has a cooldown', () => {
   assert.equal(life.play(played.pet, 1).reason, 'tired');
   assert.ok(life.play(played.pet, 2).ok);
   assert.equal(life.play(life.create('fox', 0), 0).pet.warmth, 0.5);
+  // cuddles share the cooldown, so an egg can't be hatched by mashing the key
+  const cuddled = life.play(life.create('fox', 0), 0).pet;
+  assert.equal(life.play(cuddled, 1).reason, 'tired');
+  assert.equal(life.play(cuddled, 2).pet.warmth, 1);
 });
 
 test('pets grow from baby to adult over in-game days', () => {

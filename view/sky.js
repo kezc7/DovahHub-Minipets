@@ -240,5 +240,5 @@
     }
   }
 
-  return Object.freeze({ phaseFor, skyPositions, buildScenery, drawScenery, shade });
+  return Object.freeze({ phaseFor, skyPositions, buildScenery, drawScenery, shade, seededRandom, hashText });
 });

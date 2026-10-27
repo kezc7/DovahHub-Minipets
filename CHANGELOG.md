@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.1
+- Feed and play hotkeys are ignored while the pet is hidden, so food doesn't vanish off screen
+- Cuddling an egg has the same cooldown as playing, so it can't be hatched by mashing the key
+- Fixed a key box staying in "press a key" mode if a game menu closed the settings while rebinding
+- Feeding with no egg picked says so instead of "Eggs don't eat"
+- The play hotkey row stops saying "Cuddle your egg" after Start over
+- Hotkey clashes are spotted whatever the capitalisation, and the SKSE log warns if two actions share a key
+- The log names the mod menu that hid the pet
+
 ## 1.6.0
 - Hotkey to hide or show the pet (Shift+V, rebindable). It stays hidden until you press it again, and still shows while the settings menu is open
 

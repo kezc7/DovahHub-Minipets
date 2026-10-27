@@ -406,16 +406,6 @@
   const WEATHER_PIXEL = 2;
   let renderedWeather = null;
 
-  function seededRandom(seed) {
-    let value = seed;
-    return () => {
-      value = (value + 0x6d2b79f5) | 0;
-      let mixed = Math.imul(value ^ (value >>> 15), 1 | value);
-      mixed = (mixed + Math.imul(mixed ^ (mixed >>> 7), 61 | mixed)) ^ mixed;
-      return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
   // two stacked copies so it loops when shifted by one tile
   function weatherCanvas(layer, width, height, seed) {
     const canvas = document.createElement('canvas');
@@ -424,7 +414,7 @@
     const context = canvas.getContext && canvas.getContext('2d');
     if (!context) return canvas;
     context.fillStyle = layer.colour;
-    const random = seededRandom(seed);
+    const random = petSky.seededRandom(seed);
     const cell = WEATHER_PIXEL;
     for (let index = 0; index < layer.count; index += 1) {
       const x = Math.floor(random() * width / cell) * cell;
@@ -521,13 +511,6 @@
       volcanoPlume.style.left = `${layout.volcano.x * cell}px`;
       volcanoPlume.style.top = `${(horizonRow - layout.volcano.height) * cell}px`;
     }
-  }
-
-  function daySeed(data) {
-    const text = `${data && data.year}-${data && data.month}-${data && data.day}`;
-    let hash = 7;
-    for (let index = 0; index < text.length; index += 1) hash = (Math.imul(hash, 31) + text.charCodeAt(index)) | 0;
-    return hash;
   }
 
   function renderFrame() {
@@ -678,8 +661,7 @@
   function closeSettings(save) {
     if (!settingsOpen) return;
     endDrag();
-    capturingHotkey = false;
-    settingsHotkeyButton.classList.remove('capturing');
+    stopCapture();
     if (!save && settingsSnapshot) {
       positionX = settingsSnapshot.x;
       positionY = settingsSnapshot.y;
@@ -862,7 +844,8 @@
   }
 
   function feedPet() {
-    if (!petLife || petLife.stage === 'egg') return petNotice('Eggs don\u2019t eat', 'Keep it warm with XP instead.');
+    if (!petLife) return petNotice('No egg yet', 'Pick one in settings.');
+    if (petLife.stage === 'egg') return petNotice('Eggs don\u2019t eat', 'Keep it warm with XP instead.');
     if (petLife.hunger >= 98) return petNotice(`${petNames[petLife.species]} is full`, 'Try again later.');
     if (typeof window.feedPet === 'function') window.feedPet('');
     else window.dragonbornXP.petFed({ name: 'Sweetroll', source: 'pack' });
@@ -872,7 +855,7 @@
     if (!petLife) return;
     const result = petLifeRules.play(petLife, gameHours ?? 0);
     const name = petNames[petLife.species];
-    if (result.reason === 'tired') return petNotice(`${name} is tired`, 'Let them rest for a bit.');
+    if (result.reason === 'tired') return petNotice(petLife.stage === 'egg' ? 'The egg is cosy' : `${name} is tired`, petLife.stage === 'egg' ? 'Give it a little while.' : 'Let them rest for a bit.');
     petLife = result.pet;
     savePet();
     refreshPet();
@@ -889,6 +872,9 @@
     petLifeEggs.classList.toggle('hidden', Boolean(petLife));
     petLifeNeeds.classList.toggle('hidden', !petLife);
     petLifePanel.classList.toggle('is-egg', egg);
+    // same key either way, cuddling is what play does for an egg
+    document.querySelector('#play-hotkey-label').textContent = petLife && egg ? 'Cuddle your egg' : 'Play with your pet';
+    document.querySelector('#pet-play').textContent = `${egg ? 'Cuddle' : 'Play'} (${playHotkey})`;
     if (!petLife) {
       petLifeName.textContent = 'Choose an egg';
       petLifeHint.textContent = 'Pick the companion you want to raise.';
@@ -919,9 +905,6 @@
     document.querySelector('#pet-feed').disabled = egg;
     // eggs can't eat, say so rather than looking like the key is taken
     document.querySelector('#pet-feed').textContent = egg ? 'Feed (after hatching)' : `Feed (${feedHotkey})`;
-    document.querySelector('#pet-play').textContent = `${egg ? 'Cuddle' : 'Play'} (${playHotkey})`;
-    // same key either way, cuddling is what play does for an egg
-    document.querySelector('#play-hotkey-label').textContent = egg ? 'Cuddle your egg' : 'Play with your pet';
     document.querySelector('#pet-reset').textContent = resetArmed ? 'Click again to start over' : 'Start over';
     petLifeHint.textContent = egg
       ? 'XP, level-ups and time keep the egg warm.'
@@ -980,7 +963,7 @@
       skyHours = (Number(data && data.hour) || 0) + (Number(data && data.minute) || 0) / 60;
       gameHours = Number.isFinite(data && data.hours) ? data.hours : (Number(data && data.day) || 0) * 24 + skyHours;
       tickPet();
-      scenerySeed = daySeed(data);
+      scenerySeed = petSky.hashText(`${data && data.year}-${data && data.month}-${data && data.day}`);
       updateSky();
       renderScenery();
     },
@@ -1252,7 +1235,7 @@
     const label = displayKey(event);
     if (!label) return;
     const which = captureButton.dataset.hotkey;
-    const clash = Object.keys(hotkeyNames).find(other => other !== which && getHotkey(other) === label);
+    const clash = Object.keys(hotkeyNames).find(other => other !== which && getHotkey(other).toUpperCase() === label.toUpperCase());
     if (clash) {
       hotkeyHint.textContent = `${label} is already used for ${hotkeyNames[clash]}.`;
       return;
