@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.0
+- Hotkey to hide or show the pet (Shift+V, rebindable). It stays hidden until you press it again, and still shows while the settings menu is open
+
 ## 1.5.2
 - Hides while other mods' menus are open, like SKSE Menu Framework and Swiftly Order Squad
 

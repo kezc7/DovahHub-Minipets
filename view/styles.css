@@ -16,6 +16,7 @@ body { font-family: Georgia, "Times New Roman", serif; color: var(--gold); }
 
 #dragonborn-xp { position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: grid; place-items: start end; padding: 7vh 3vw 0 0; pointer-events: none; opacity: 1; }
 #dragonborn-xp.inactive { visibility: hidden; }
+#dragonborn-xp.user-hidden { visibility: hidden; }
 #dragonborn-xp.custom-position { top: auto; right: auto; bottom: auto; left: auto; width: 256px; height: 256px; display: block; padding: 0; }
 #dragonborn-xp.pet-dovahpink { --scale: #c85b91; --scale-light: #f08bb6; --ice: #f7bdd9; --gold: #fff0a9; }
 .toast-shell { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; width: 256px; height: 256px; padding: 16px 14px 16px; border: 7px double #c9c3b1; border-radius: 2px; background: #1c1a16; box-shadow: 0 0 0 1px #14130f, 0 0 0 2px rgba(201, 195, 177, .45), 0 10px 30px rgba(0, 0, 0, .55); opacity: 1; transform: translateX(0) scale(1); }

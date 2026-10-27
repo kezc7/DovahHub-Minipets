@@ -106,6 +106,9 @@
   let raisePet = false;
   let feedHotkey = 'Shift+N';
   let playHotkey = 'Shift+K';
+  let hideHotkey = 'Shift+V';
+  // toggled with the hide hotkey, settings still show the card
+  let petHidden = false;
   let petLife = null;
   let gameHours = null;
   let shownPetKey = '';
@@ -269,6 +272,7 @@
     return [
       'persistent',
       overlayActive ? '' : 'inactive',
+      petHidden && !settingsOpen ? 'user-hidden' : '',
       animationLabActive ? 'animation-lab' : '',
       document.hidden ? 'animation-paused' : '',
       hasCustomPosition() ? 'custom-position' : '',
@@ -635,7 +639,7 @@
     if (typeof window.settingsChanged !== 'function') return;
     const x = hasCustomPosition() ? positionX : -1;
     const y = hasCustomPosition() ? positionY : -1;
-    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}|${cardShape}`);
+    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}|${cardShape}|${hideHotkey}`);
   }
 
   function queueNativeSettingsChanged() {
@@ -663,6 +667,7 @@
     petSelect.value = pet;
     document.querySelector('#feed-hotkey').textContent = feedHotkey;
     document.querySelector('#play-hotkey').textContent = playHotkey;
+    document.querySelector('#hide-hotkey').textContent = hideHotkey;
     clockEnabledInput.checked = showClock;
     clockStyleSelect.value = clockStyle;
     clockStyleSelect.disabled = !showClock;
@@ -684,6 +689,7 @@
       feedHotkey = settingsSnapshot.feedHotkey;
       applyShape(settingsSnapshot.cardShape);
       playHotkey = settingsSnapshot.playHotkey;
+      hideHotkey = settingsSnapshot.hideHotkey;
       refreshPet();
       showClock = settingsSnapshot.showClock;
       clockStyle = settingsSnapshot.clockStyle;
@@ -692,6 +698,7 @@
     }
     flushNativeSettingsChanged();
     settingsOpen = false;
+    applySceneClasses();
     document.body.classList.remove('settings-open');
     settingsMenu.classList.add('hidden');
     nativeSettingsClosed();
@@ -700,8 +707,9 @@
 
   function openSettings(data) {
     if (data) applyNativeSettings(data);
-    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey, cardShape };
+    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey, hideHotkey, cardShape };
     settingsOpen = true;
+    applySceneClasses();
     document.body.classList.add('settings-open');
     settingsMenu.classList.remove('hidden');
     syncSettingsFields();
@@ -714,6 +722,8 @@
     if (typeof data.hotkey === 'string' && data.hotkey) settingsHotkey = data.hotkey;
     if (typeof data.feedHotkey === 'string' && data.feedHotkey) feedHotkey = data.feedHotkey;
     if (typeof data.playHotkey === 'string' && data.playHotkey) playHotkey = data.playHotkey;
+    if (typeof data.hideHotkey === 'string' && data.hideHotkey) hideHotkey = data.hideHotkey;
+    if (typeof data.hidden === 'boolean') petHidden = data.hidden;
     if (typeof data.clock === 'boolean') showClock = data.clock;
     if (data.clockStyle === 'plate' || data.clockStyle === 'ribbon') clockStyle = data.clockStyle;
     if (Number.isFinite(data.scale)) cardScale = clampScale(data.scale);
@@ -974,6 +984,10 @@
       updateSky();
       renderScenery();
     },
+    setHidden(hidden) {
+      petHidden = Boolean(hidden);
+      applySceneClasses();
+    },
     setActive(active) {
       overlayActive = Boolean(active);
       applySceneClasses();
@@ -1197,11 +1211,12 @@
   document.querySelector('#settings-save').addEventListener('click', () => closeSettings(true));
   document.querySelector('#settings-cancel').addEventListener('click', () => closeSettings(false));
   document.querySelector('#settings-close').addEventListener('click', () => closeSettings(true));
-  const hotkeyNames = { settings: 'opening this menu', feed: 'feeding', play: 'playing' };
-  const getHotkey = which => ({ settings: settingsHotkey, feed: feedHotkey, play: playHotkey })[which];
+  const hotkeyNames = { settings: 'opening this menu', feed: 'feeding', play: 'playing', hide: 'hiding the pet' };
+  const getHotkey = which => ({ settings: settingsHotkey, feed: feedHotkey, play: playHotkey, hide: hideHotkey })[which];
   function setHotkey(which, label) {
     if (which === 'settings') settingsHotkey = label;
     else if (which === 'feed') feedHotkey = label;
+    else if (which === 'hide') hideHotkey = label;
     else playHotkey = label;
   }
   // One page-wide listener: in game, clicking a button doesn't always give it focus.

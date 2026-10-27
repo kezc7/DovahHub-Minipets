@@ -57,6 +57,8 @@ namespace
         std::string feedHotkeyName = "Shift+N";
         std::string playHotkeyName = "Shift+K";
         std::string cardShape = "square";
+        std::string hideHotkeyName = "Shift+V";
+        bool petHidden = false;
     };
 
     std::atomic_bool g_statePollerStarted = false;
@@ -71,6 +73,7 @@ namespace
     };
     PetKey g_feedKey;
     PetKey g_playKey;
+    PetKey g_hideKey;
     std::atomic_bool g_shiftDown = false;
     std::atomic_bool g_overlayHiddenForMenus = true;
     std::atomic_bool g_gameLoaded = false;
@@ -329,6 +332,12 @@ namespace
                     else if (key == "card_shape" && IsSupportedCardShape(value)) {
                         g_settings.cardShape = value;
                     }
+                    else if (key == "hide_hotkey" && ParseHotkey(value) != 0) {
+                        g_settings.hideHotkeyName = value;
+                    }
+                    else if (key == "hidden") {
+                        g_settings.petHidden = ParseFlag(value);
+                    }
                 }
                 catch (...) {
                     logger::warn("DragonbornXP ignored invalid setting '{}'", key);
@@ -358,7 +367,9 @@ namespace
                    << "raise_pet=" << (g_settings.raisePet ? 1 : 0) << '\n'
                    << "feed_hotkey=" << g_settings.feedHotkeyName << '\n'
                    << "play_hotkey=" << g_settings.playHotkeyName << '\n'
-                   << "card_shape=" << g_settings.cardShape << '\n';
+                   << "card_shape=" << g_settings.cardShape << '\n'
+                   << "hide_hotkey=" << g_settings.hideHotkeyName << '\n'
+                   << "hidden=" << (g_settings.petHidden ? 1 : 0) << '\n';
         }
         catch (const std::exception& error) {
             logger::warn("DragonbornXP settings could not be saved: {}", error.what());
@@ -377,7 +388,9 @@ namespace
                ",\"raisePet\":" + (g_settings.raisePet ? "true" : "false") +
                ",\"feedHotkey\":" + JsonString(g_settings.feedHotkeyName) +
                ",\"playHotkey\":" + JsonString(g_settings.playHotkeyName) +
-               ",\"cardShape\":" + JsonString(g_settings.cardShape) + "}";
+               ",\"cardShape\":" + JsonString(g_settings.cardShape) +
+               ",\"hideHotkey\":" + JsonString(g_settings.hideHotkeyName) +
+               ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") + "}";
     }
 
     void Invoke(const std::string& functionName, const std::string& json)
@@ -715,7 +728,7 @@ namespace
         }
     }
 
-    // x|y|hotkey|pet|clock|clockStyle|scale|raisePet|feedKey|playKey|shape, everything after pet is optional
+    // x|y|hotkey|pet|clock|clockStyle|scale|raisePet|feedKey|playKey|shape|hideKey, everything after pet is optional
     void ApplySettings(std::string_view payload)
     {
         const auto parts = Split(payload, '|');
@@ -735,6 +748,7 @@ namespace
             const auto feedKey = parts.size() > 8 && ParseHotkey(parts[8]) != 0 ? parts[8] : g_settings.feedHotkeyName;
             const auto playKey = parts.size() > 9 && ParseHotkey(parts[9]) != 0 ? parts[9] : g_settings.playHotkeyName;
             const auto cardShape = parts.size() > 10 && IsSupportedCardShape(parts[10]) ? parts[10] : g_settings.cardShape;
+            const auto hideKey = parts.size() > 11 && ParseHotkey(parts[11]) != 0 ? parts[11] : g_settings.hideHotkeyName;
             bool requiresShift = false;
             const auto hotkey = ParseHotkey(hotkeyName, &requiresShift);
             if (hotkey == 0 || x < -1 || y < -1 || !IsSupportedPet(pet)) {
@@ -754,8 +768,10 @@ namespace
             g_settings.feedHotkeyName = feedKey;
             g_settings.playHotkeyName = playKey;
             g_settings.cardShape = cardShape;
+            g_settings.hideHotkeyName = hideKey;
             StorePetKey(g_feedKey, feedKey);
             StorePetKey(g_playKey, playKey);
+            StorePetKey(g_hideKey, hideKey);
             g_settingsHotkey.store(hotkey);
             g_settingsHotkeyRequiresShift.store(requiresShift);
             SaveSettings();
@@ -975,6 +991,16 @@ namespace
                     OpenSettings();
                     return;
                 }
+                if (scanCode == g_hideKey.scan.load() && shiftDown == g_hideKey.shift.load()) {
+                    if (const auto* taskInterface = SKSE::GetTaskInterface(); taskInterface && !g_overlayHiddenForMenus.load()) {
+                        taskInterface->AddTask([]() {
+                            g_settings.petHidden = !g_settings.petHidden;
+                            SaveSettings();
+                            Invoke("dragonbornXP.setHidden", g_settings.petHidden ? "true" : "false");
+                        });
+                    }
+                    return;
+                }
                 // feed/play only while playing (not in menus) and with raise-a-pet on
                 if (!g_settings.raisePet || g_overlayHiddenForMenus.load()) {
                     return;
@@ -1002,6 +1028,7 @@ namespace
         LoadSettings();
         StorePetKey(g_feedKey, g_settings.feedHotkeyName);
         StorePetKey(g_playKey, g_settings.playHotkeyName);
+        StorePetKey(g_hideKey, g_settings.hideHotkeyName);
         g_prismaUI = PRISMA_UI_API::RequestPluginAPI<PRISMA_UI_API::IVPrismaUI1>();
         if (!g_prismaUI) {
             logger::critical("PrismaUI was not found. DragonbornXP will not display its overlay.");
