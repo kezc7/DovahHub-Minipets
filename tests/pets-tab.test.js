@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-// The Pets tab for DovahHub, run against a small fake DOM and a fake window.dovahhubModule.
+// The MiniPets tab for DovahHub, run against a small fake DOM and a fake window.dovahhubModule.
 const MODULE_DIR = path.join(__dirname, '..', 'hub', 'modules', 'pets');
 const VIEW_DIR = path.join(__dirname, '..', 'view');
 

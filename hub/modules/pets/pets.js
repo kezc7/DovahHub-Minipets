@@ -1,4 +1,4 @@
-// MiniPets' Pets tab in DovahHub. The HUD page owns the pet: this asks the plugin for the state
+// MiniPets' tab in DovahHub. The HUD page owns the pet: this asks the plugin for the state
 // through DovahHub's relay, shows it (ticked with PetLife for display only, never saved), and sends
 // Feed, Play and the companion choice back the same way. pet-life.js and pet-sprites.js here are
 // copies of view/, refreshed by the build.

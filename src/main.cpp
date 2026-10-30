@@ -1034,7 +1034,7 @@ namespace
     }
 
 
-    // --- DovahHub's Pets tab and the MiniPets API ------------------------------------------------
+    // --- DovahHub's MiniPets tab and the MiniPets API ------------------------------------------------
     //
     // The pet rules stay in the HUD page. The tab (hub/modules/pets/, shipped inside DovahHub's view
     // folder) asks for the state through DovahHub's relay, feed/play go to the page like the hotkeys
@@ -1285,27 +1285,27 @@ namespace
     {
         g_hub = DOVAHHUB_API::RequestApi();
         if (!g_hub) {
-            logger::info("DragonbornXP: DovahHub not found, no Pets tab");
+            logger::info("DragonbornXP: DovahHub not found, no MiniPets tab");
             return;
         }
         DOVAHHUB_API::ModuleDesc desc{};
         desc.size = sizeof(desc);
         desc.id = "pets";
-        desc.tab = "Pets";
-        desc.group = "Collections";
+        desc.tab = "MiniPets";
+        desc.group = nullptr;
         desc.pageDir = "modules/pets/";
         desc.version = g_pluginVersion.c_str();
         desc.onRequest = &OnHubRequest;
         desc.onEvent = &OnHubEvent;
         const auto result = g_hub->RegisterModule(&desc, &g_hubModule);
         if (result != DOVAHHUB_API::Result::Ok) {
-            logger::warn("DragonbornXP: DovahHub refused the Pets tab ({})", static_cast<int>(result));
+            logger::warn("DragonbornXP: DovahHub refused the MiniPets tab ({})", static_cast<int>(result));
             g_hub = nullptr;
             g_hubModule = 0;
             return;
         }
         (void)g_hub->AddSettings(g_hubModule, kHubSettingsSchema);
-        logger::info("DragonbornXP: Pets tab registered with DovahHub {} on {}", g_hub->hostVersion, g_hub->host);
+        logger::info("DragonbornXP: MiniPets tab registered with DovahHub {} on {}", g_hub->hostVersion, g_hub->host);
     }
 
     // the page told us how a feed/play went: on to the tab and to API listeners

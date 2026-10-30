@@ -17,7 +17,7 @@ Needs SKSE64, Address Library and Prisma UI.
 - Optional raise-a-pet mode: pick an egg, hatch it with XP, then feed it and play with it. Saved per character.
 - Optional in-game clock above the card.
 - Hides itself on loading screens, in menus and when other Prisma UI menus are open.
-- With [DovahHub](https://github.com/kezc7/DovahHub) 0.92.0 or later installed, a Pets tab under Collections shows your companion or pet with Feed and Play, and MiniPets' options appear on DovahHub's Settings tab.
+- With [DovahHub](https://github.com/kezc7/DovahHub) 0.92.1 or later installed, a MiniPets tab under Integrations shows your companion or pet with Feed and Play, and MiniPets' options appear on DovahHub's Settings tab.
 
 ## Settings
 

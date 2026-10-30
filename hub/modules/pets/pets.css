@@ -1,4 +1,4 @@
-/* MiniPets' Pets tab inside DovahHub. Everything is scoped under .pets-module; the shared
+/* MiniPets' tab inside DovahHub. Everything is scoped under .pets-module; the shared
    classes (hearth-proof-button, hearth-detail-kicker, hearth-facts) come from DovahHub. */
 .pets-module { color: var(--ink); }
 .pets-module__columns { display: grid; grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr); gap: 2.4rem; align-items: start; }
