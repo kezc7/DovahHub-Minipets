@@ -982,5 +982,22 @@
     return canvas;
   }
 
-  return Object.freeze({ PIXEL, ROLES, pets, ornaments, bounds, render, renderEgg, eggColours, renderOrnament });
+  // display names, and the species for everyone who isn't a dragon
+  const names = {
+    dovahmin: 'Dovahmin', dovahpink: 'Dovahpink', mudcrab: 'Clack', skeever: 'Nibbles',
+    fox: 'Ember', sabrecat: 'Stripes', 'frostbite-spider': 'Webber', horker: 'Waddles',
+    troll: 'Grumble', 'flame-atronach': 'Cinder', 'frost-atronach': 'Shiver',
+    spriggan: 'Moss', 'dwarven-spider': 'Tinker', chaurus: 'Skitter', netch: 'Bloop',
+    mammoth: 'Tusker', 'dragon-priest': 'Masky', wisp: 'Glowbug', 'death-hound': 'Gnasher',
+    chicken: 'Pip'
+  };
+  const species = {
+    mudcrab: 'Mudcrab', skeever: 'Skeever', fox: 'Fox', sabrecat: 'Sabre Cat',
+    'frostbite-spider': 'Frostbite Spider', horker: 'Horker', troll: 'Troll',
+    'flame-atronach': 'Flame Atronach', 'frost-atronach': 'Frost Atronach', spriggan: 'Spriggan',
+    'dwarven-spider': 'Dwarven Spider', chaurus: 'Chaurus', netch: 'Netch', mammoth: 'Mammoth',
+    'dragon-priest': 'Dragon Priest', wisp: 'Wisp', 'death-hound': 'Death Hound', chicken: 'Chicken'
+  };
+
+  return Object.freeze({ PIXEL, ROLES, pets, names, species, ornaments, bounds, render, renderEgg, eggColours, renderOrnament });
 });

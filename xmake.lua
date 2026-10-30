@@ -4,9 +4,11 @@ includes("lib/commonlibsse-ng")
 
 local PLUGIN_NAME = "DragonbornXP"
 -- bump this for releases
-local PLUGIN_VERSION = "1.6.1"
+local PLUGIN_VERSION = "1.7.0"
 local PACKAGE_NAME = "dovahhub-minipets"
 local VIEW_NAME = "DragonbornXP"
+-- the Pets tab lives inside DovahHub's view folder
+local HUB_MODULE_DIR = path.join("PrismaUI", "views", "DovahHub", "modules", "pets")
 
 set_project(PLUGIN_NAME)
 set_version(PLUGIN_VERSION)
@@ -41,6 +43,14 @@ target(PLUGIN_NAME)
         os.mkdir(plugindir)
         os.cp(path.join(os.projectdir(), "view", "*"), viewdir)
         os.cp(target:targetfile(), plugindir)
+
+        -- DovahHub's Pets tab: the shared scripts are copied from view/ so they can't drift
+        local hubsrc = path.join(os.projectdir(), "hub", "modules", "pets")
+        os.cp(path.join(os.projectdir(), "view", "pet-life.js"), hubsrc)
+        os.cp(path.join(os.projectdir(), "view", "pet-sprites.js"), hubsrc)
+        local hubdir = path.join(distdir, HUB_MODULE_DIR)
+        os.mkdir(hubdir)
+        os.cp(path.join(hubsrc, "*"), hubdir)
 
         -- licence texts go with the DLL (GPL plus the bundled libraries)
         local licensedir = path.join(plugindir, PLUGIN_NAME .. "-licenses")

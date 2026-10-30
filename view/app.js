@@ -43,21 +43,8 @@
   const cardWidth = () => CARD_SHAPES[cardShape][0];
   const cardHeight = () => CARD_SHAPES[cardShape][1];
 
-  const petNames = {
-    dovahmin: 'Dovahmin', dovahpink: 'Dovahpink', mudcrab: 'Clack', skeever: 'Nibbles',
-    fox: 'Ember', sabrecat: 'Stripes', 'frostbite-spider': 'Webber', horker: 'Waddles',
-    troll: 'Grumble', 'flame-atronach': 'Cinder', 'frost-atronach': 'Shiver',
-    spriggan: 'Moss', 'dwarven-spider': 'Tinker', chaurus: 'Skitter', netch: 'Bloop',
-    mammoth: 'Tusker', 'dragon-priest': 'Masky', wisp: 'Glowbug', 'death-hound': 'Gnasher',
-    chicken: 'Pip'
-  };
-  const petSpecies = {
-    mudcrab: 'Mudcrab', skeever: 'Skeever', fox: 'Fox', sabrecat: 'Sabre Cat',
-    'frostbite-spider': 'Frostbite Spider', horker: 'Horker', troll: 'Troll',
-    'flame-atronach': 'Flame Atronach', 'frost-atronach': 'Frost Atronach', spriggan: 'Spriggan',
-    'dwarven-spider': 'Dwarven Spider', chaurus: 'Chaurus', netch: 'Netch', mammoth: 'Mammoth',
-    'dragon-priest': 'Dragon Priest', wisp: 'Wisp', 'death-hound': 'Death Hound', chicken: 'Chicken'
-  };
+  const petNames = petSprites.names;
+  const petSpecies = petSprites.species;
   // idle = one-shot idle classes from styles.css, {name} becomes the pet name
   const profiles = {
     dovahmin: { idle: ['look', 'flap'], idleDelay: 3400, idleDuration: 1000, moving: ['Off we fly!', '{name} takes to the skies.'], combat: ['Breathing fire!', '{name} joins the fight.'] },
@@ -207,7 +194,7 @@
   }
 
   function clampScale(value) {
-    return Math.min(150, Math.max(50, Math.round(Number(value) || 100)));
+    return Math.min(200, Math.max(50, Math.round(Number(value) || 100)));
   }
 
   // Prisma ignores `inset`, so set each side
@@ -802,6 +789,15 @@
     applySceneClasses();
   }
 
+  // the plugin passes these on to DovahHub's Pets tab
+  function reportPetAction(action, ok, reason, food) {
+    if (typeof window.petActionResult !== 'function') return;
+    const result = { action, ok };
+    if (reason) result.reason = reason;
+    if (food) result.food = food;
+    window.petActionResult(JSON.stringify(result));
+  }
+
   function petCheer(title, detail) {
     controller.play('xp', { payload: { kind: 'gain', title, detail, fill: 80 } });
   }
@@ -844,17 +840,27 @@
   }
 
   function feedPet() {
-    if (!petLife) return petNotice('No egg yet', 'Pick one in settings.');
-    if (petLife.stage === 'egg') return petNotice('Eggs don\u2019t eat', 'Keep it warm with XP instead.');
-    if (petLife.hunger >= 98) return petNotice(`${petNames[petLife.species]} is full`, 'Try again later.');
+    if (!petLife) {
+      reportPetAction('feed', false, 'no pet');
+      return petNotice('No egg yet', 'Pick one in settings.');
+    }
+    if (petLife.stage === 'egg') {
+      reportPetAction('feed', false, 'egg');
+      return petNotice('Eggs don\u2019t eat', 'Keep it warm with XP instead.');
+    }
+    if (petLife.hunger >= 98) {
+      reportPetAction('feed', false, 'full');
+      return petNotice(`${petNames[petLife.species]} is full`, 'Try again later.');
+    }
     if (typeof window.feedPet === 'function') window.feedPet('');
     else window.dragonbornXP.petFed({ name: 'Sweetroll', source: 'pack' });
   }
 
   function playWithPet() {
-    if (!petLife) return;
+    if (!petLife) return reportPetAction('play', false, 'no pet');
     const result = petLifeRules.play(petLife, gameHours ?? 0);
     const name = petNames[petLife.species];
+    reportPetAction('play', result.ok, result.reason);
     if (result.reason === 'tired') return petNotice(petLife.stage === 'egg' ? 'The egg is cosy' : `${name} is tired`, petLife.stage === 'egg' ? 'Give it a little while.' : 'Let them rest for a bit.');
     petLife = result.pet;
     savePet();
@@ -944,14 +950,18 @@
       else if (data && data.action === 'play') playWithPet();
     },
     petFed(data) {
-      if (data && data.none) return petNotice('No food in your pack', 'Pick up something to eat first.');
+      if (data && data.none) {
+        reportPetAction('feed', false, 'no food');
+        return petNotice('No food in your pack', 'Pick up something to eat first.');
+      }
       if (!raisePet || !petLife) return;
       const result = petLifeRules.feed(petLife);
-      if (!result.ok) return;
+      const food = data && data.name ? data.name : 'a snack';
+      if (!result.ok) return reportPetAction('feed', false, result.reason);
+      reportPetAction('feed', true, null, food);
       petLife = result.pet;
       savePet();
       refreshPet();
-      const food = data && data.name ? data.name : 'a snack';
       petCheer(`${petNames[petLife.species]} ate ${data && data.source === 'ate' ? 'with you' : 'well'}`, `Mmm, ${food}!`);
     },
     companionState(data) {

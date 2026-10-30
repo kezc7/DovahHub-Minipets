@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0
+- A Pets tab in DovahHub (0.92.0 or later, under Collections): your companion or the pet you're raising, its bars, Feed and Play, the companion picker, and MiniPets' options on DovahHub's Settings tab. Nothing changes without DovahHub
+- An API for other SKSE plugins (`MiniPets_API.h`): state, feed, play, companion, card and clock settings, and events
+- Card size goes up to 200%
+
 ## 1.6.1
 - Feed and play hotkeys are ignored while the pet is hidden, so food doesn't vanish off screen
 - Cuddling an egg has the same cooldown as playing, so it can't be hatched by mashing the key

@@ -1,0 +1,40 @@
+/* MiniPets' Pets tab inside DovahHub. Everything is scoped under .pets-module; the shared
+   classes (hearth-proof-button, hearth-detail-kicker, hearth-facts) come from DovahHub. */
+.pets-module { color: var(--ink); }
+.pets-module__columns { display: grid; grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr); gap: 2.4rem; align-items: start; }
+.pets-module__pet { display: flex; flex-direction: column; gap: .7rem; }
+
+/* the little scene the sprite stands in */
+.pets-scene { position: relative; height: 13rem; overflow: hidden; border: 1px solid var(--line-soft); background: linear-gradient(180deg, rgba(90, 140, 200, .22), rgba(40, 60, 90, .12) 62%, rgba(46, 96, 54, .28) 62%); }
+.pets-scene__ground { position: absolute; left: 0; right: 0; bottom: 0; height: 38%; background: linear-gradient(180deg, rgba(60, 120, 70, .45), rgba(34, 70, 44, .6)); }
+.pets-sprite { position: absolute; left: 50%; bottom: 34%; transform: translateX(-50%); transform-origin: 50% 100%; image-rendering: pixelated; }
+.pets-sprite .pet-part { position: absolute; }
+.pets-sprite .pet-part canvas { display: block; image-rendering: pixelated; }
+.pets-sprite.is-sad { filter: saturate(.7) brightness(.9); }
+
+.pets-name { margin: .4rem 0 0; font: 400 1.7rem/1.1 var(--font-display); letter-spacing: .04em; }
+.pets-stage { margin: 0; color: var(--ink-soft); font-size: .92rem; }
+
+.pets-needs { display: flex; flex-direction: column; gap: .45rem; margin-top: .3rem; }
+.pets-need { display: grid; grid-template-columns: 6rem minmax(0, 1fr); align-items: center; gap: .8rem; color: var(--muted); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
+.pets-need[hidden] { display: none; }
+.pets-need__track { position: relative; display: block; height: .55rem; border: 1px solid var(--line-soft); background: rgba(0, 0, 0, .35); }
+.pets-need__track span { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(var(--accent-rgb), .7); transition: width .3s ease; }
+.pets-need__track span.is-low { background: rgba(197, 106, 93, .85); }
+
+.pets-actions { display: flex; gap: .7rem; margin-top: .5rem; }
+.pets-actions .hearth-proof-button { flex: 1 1 0; justify-content: center; }
+.pets-actions .hearth-proof-button:disabled { opacity: .4; pointer-events: none; }
+.pets-result { min-height: 1.4rem; }
+
+.pets-module__picker-kicker { margin-top: 1.6rem; }
+.pets-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.2rem, 1fr)); gap: .5rem; margin-top: .6rem; }
+.pets-picker button { display: flex; flex-direction: column; align-items: center; gap: .35rem; padding: .6rem .3rem .5rem; border: 1px solid var(--line-soft); background: rgba(0, 0, 0, .25); color: var(--ink-soft); font: inherit; font-size: .78rem; cursor: pointer; }
+.pets-picker button:hover, .pets-picker button:focus-visible { border-color: var(--accent); color: var(--ink); }
+.pets-picker button[aria-pressed="true"] { border-color: var(--accent); background: rgba(var(--accent-rgb), .16); color: var(--ink); }
+.pets-picker button:disabled { opacity: .45; pointer-events: none; }
+.pets-picker .pets-thumb { position: relative; height: 3.4rem; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.pets-picker .pets-thumb > div { position: relative; }
+.pets-picker .pet-part { position: absolute; }
+.pets-picker .pet-part canvas { display: block; image-rendering: pixelated; }
+.pets-picker[hidden] { display: none; }

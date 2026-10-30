@@ -17,6 +17,7 @@ Needs SKSE64, Address Library and Prisma UI.
 - Optional raise-a-pet mode: pick an egg, hatch it with XP, then feed it and play with it. Saved per character.
 - Optional in-game clock above the card.
 - Hides itself on loading screens, in menus and when other Prisma UI menus are open.
+- With [DovahHub](https://github.com/kezc7/DovahHub) 0.92.0 or later installed, a Pets tab under Collections shows your companion or pet with Feed and Play, and MiniPets' options appear on DovahHub's Settings tab.
 
 ## Settings
 
@@ -27,6 +28,12 @@ Setting `debug_preview_keys=1` in the INI turns on two test keys: F6 for an XP p
 ## Installing
 
 Install `dovahhub-minipets<version>.zip` with your mod manager, or copy its `SKSE` and `PrismaUI` folders into Skyrim's `Data` folder.
+
+## For other mods
+
+`src/MiniPets_API.h` is a header-only API: `MINIPETS_API::RequestApi()` finds the DLL at runtime, so including it doesn't make MiniPets a hard requirement. It gives the pet state as JSON, Feed and Play, the companion, card and clock settings, and events (hatched, fed, played, level-up, companion, visible).
+
+The DovahHub tab is `hub/modules/pets/`, shipped inside DovahHub's view folder as `PrismaUI/views/DovahHub/modules/pets/`. `pet-life.js` and `pet-sprites.js` there are copies of `view/`, refreshed by the build.
 
 ## Building
 

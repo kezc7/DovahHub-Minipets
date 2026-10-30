@@ -1,5 +1,7 @@
 #include "PrismaUI_API.h"
 #include "keyhandler.h"
+#include "DovahHub_API.h"
+#include "MiniPets_API.h"
 
 #include <RE/A/ActorValueList.h>
 #include <RE/A/AlchemyItem.h>
@@ -30,6 +32,7 @@
 #include <thread>
 #include <array>
 #include <limits>
+#include <cstring>
 #include <vector>
 
 PRISMA_UI_API::IVPrismaUI1* g_prismaUI = nullptr;
@@ -119,7 +122,7 @@ namespace
     // card size in percent
     int ClampScale(int value)
     {
-        return value < 50 ? 50 : value > 150 ? 150 : value;
+        return value < 50 ? 50 : value > 200 ? 200 : value;
     }
 
     bool IsSupportedCardShape(std::string_view shape)
@@ -151,13 +154,61 @@ namespace
         }
     }
 
+    // same order and names as pet-sprites.js
+    constexpr std::array<std::pair<std::string_view, std::string_view>, 20> kCompanions{ {
+        { "dovahmin", "Dovahmin" }, { "dovahpink", "Dovahpink" }, { "mudcrab", "Clack" }, { "skeever", "Nibbles" },
+        { "fox", "Ember" }, { "sabrecat", "Stripes" }, { "frostbite-spider", "Webber" }, { "horker", "Waddles" },
+        { "troll", "Grumble" }, { "flame-atronach", "Cinder" }, { "frost-atronach", "Shiver" }, { "spriggan", "Moss" },
+        { "dwarven-spider", "Tinker" }, { "chaurus", "Skitter" }, { "netch", "Bloop" }, { "mammoth", "Tusker" },
+        { "dragon-priest", "Masky" }, { "wisp", "Glowbug" }, { "death-hound", "Gnasher" }, { "chicken", "Pip" }
+    } };
+
     bool IsSupportedPet(std::string_view pet)
     {
-        return pet == "dovahmin" || pet == "dovahpink" || pet == "mudcrab" || pet == "skeever" ||
-               pet == "fox" || pet == "sabrecat" || pet == "frostbite-spider" || pet == "horker" ||
-               pet == "troll" || pet == "flame-atronach" || pet == "frost-atronach" || pet == "spriggan" ||
-               pet == "dwarven-spider" || pet == "chaurus" || pet == "netch" || pet == "mammoth" ||
-               pet == "dragon-priest" || pet == "wisp" || pet == "death-hound" || pet == "chicken";
+        for (const auto& [id, name] : kCompanions) {
+            if (id == pet) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // flat JSON only ({"key":"text"} / number / true), enough for the hub's payloads
+    std::string JsonField(std::string_view json, std::string_view key)
+    {
+        const auto quoted = "\"" + std::string(key) + "\"";
+        auto at = json.find(quoted);
+        if (at == std::string_view::npos) {
+            return {};
+        }
+        at = json.find(':', at + quoted.size());
+        if (at == std::string_view::npos) {
+            return {};
+        }
+        ++at;
+        while (at < json.size() && (json[at] == ' ' || json[at] == '\t')) {
+            ++at;
+        }
+        if (at >= json.size()) {
+            return {};
+        }
+        if (json[at] == '"') {
+            std::string text;
+            for (auto i = at + 1; i < json.size(); ++i) {
+                if (json[i] == '\\' && i + 1 < json.size()) {
+                    text += json[++i];
+                }
+                else if (json[i] == '"') {
+                    break;
+                }
+                else {
+                    text += json[i];
+                }
+            }
+            return text;
+        }
+        const auto end = json.find_first_of(",}", at);
+        return Trim(json.substr(at, end == std::string_view::npos ? std::string_view::npos : end - at));
     }
 
     constexpr std::array<std::string_view, 36> kBlockingMenus{
@@ -468,6 +519,8 @@ namespace
     }
 
     void CloseSettings();
+    void PushPetsState();
+    void FirePetEvent(const char* event, const std::string& json);
 
     const char* OverlayHiddenReason()
     {
@@ -781,6 +834,7 @@ namespace
                 return;
             }
 
+            const auto previousPet = g_settings.pet;
             g_settings.positionX = x;
             g_settings.positionY = y;
             g_settings.settingsHotkey = hotkey;
@@ -802,6 +856,10 @@ namespace
             g_settingsHotkeyRequiresShift.store(requiresShift);
             WarnAboutDuplicateHotkeys();
             SaveSettings();
+            PushPetsState();
+            if (pet != previousPet) {
+                FirePetEvent("companion", "{\"id\":" + JsonString(pet) + "}");
+            }
         }
         catch (const std::exception& error) {
             logger::warn("DragonbornXP ignored settings update: {}", error.what());
@@ -852,7 +910,9 @@ namespace
             RE::BSTEventSource<RE::LevelIncrease::Event>*) override
         {
             if (event && event->player == RE::PlayerCharacter::GetSingleton()) {
-                Invoke("dragonbornXP.levelUp", "{\"level\":" + std::to_string(event->newLevel) + "}");
+                const auto json = "{\"level\":" + std::to_string(event->newLevel) + "}";
+                Invoke("dragonbornXP.levelUp", json);
+                FirePetEvent("levelUp", json);
             }
             return RE::BSEventNotifyControl::kContinue;
         }
@@ -921,12 +981,15 @@ namespace
         }
     };
 
-    // Feed button: uses the cheapest food in the player's inventory.
-    void FeedFromPack()
+    // cheapest food in the player's pack, and how many food items there are
+    RE::TESBoundObject* CheapestFood(int* count = nullptr)
     {
+        if (count) {
+            *count = 0;
+        }
         auto* player = RE::PlayerCharacter::GetSingleton();
         if (!player) {
-            return;
+            return nullptr;
         }
         auto inventory = player->GetInventory([](RE::TESBoundObject& object) {
             const auto* alchemy = object.As<RE::AlchemyItem>();
@@ -935,11 +998,28 @@ namespace
         RE::TESBoundObject* cheapest = nullptr;
         auto cheapestValue = (std::numeric_limits<std::int32_t>::max)();
         for (const auto& [object, entry] : inventory) {
-            if (entry.first > 0 && object->GetGoldValue() < cheapestValue) {
+            if (entry.first <= 0) {
+                continue;
+            }
+            if (count) {
+                *count += entry.first;
+            }
+            if (object->GetGoldValue() < cheapestValue) {
                 cheapest = object;
                 cheapestValue = object->GetGoldValue();
             }
         }
+        return cheapest;
+    }
+
+    // Feed button: uses the cheapest food in the player's inventory.
+    void FeedFromPack()
+    {
+        auto* player = RE::PlayerCharacter::GetSingleton();
+        if (!player) {
+            return;
+        }
+        auto* cheapest = CheapestFood();
         if (!cheapest) {
             Invoke("dragonbornXP.petFed", "{\"none\":true}");
             return;
@@ -951,6 +1031,432 @@ namespace
     void SendPetState()
     {
         Invoke("dragonbornXP.petState", "{\"state\":" + JsonString(g_petState) + "}");
+    }
+
+
+    // --- DovahHub's Pets tab and the MiniPets API ------------------------------------------------
+    //
+    // The pet rules stay in the HUD page. The tab (hub/modules/pets/, shipped inside DovahHub's view
+    // folder) asks for the state through DovahHub's relay, feed/play go to the page like the hotkeys
+    // do, and the page's petActionResult comes back here and is pushed on to the tab.
+
+    const DOVAHHUB_API::DovahHubApi1* g_hub = nullptr;
+    DOVAHHUB_API::ModuleId g_hubModule = 0;
+    std::atomic_bool g_petsTabShown = false;
+    // onRequest's reply lives here until the host has copied it
+    std::string g_hubReply;
+    std::string g_stateJson;
+
+    struct PetListener
+    {
+        MINIPETS_API::ListenerId id;
+        MINIPETS_API::ListenerDesc desc;
+    };
+    std::vector<PetListener> g_petListeners;
+    MINIPETS_API::ListenerId g_nextPetListener = 1;
+    MINIPETS_API::MiniPetsApi1 g_miniPetsApi{};
+    std::string g_pluginVersion;
+
+    constexpr const char* kHubSettingsSchema = R"({"title":"MiniPets","settings":[
+{"key":"raise_pet","label":"Raise a pet","type":"toggle","value":false,"note":"Start from an egg, feed it and play with it"},
+{"key":"show_clock","label":"Show the clock","type":"toggle","value":false},
+{"key":"clock_style","label":"Clock style","type":"choice","options":[{"value":"plate","label":"Plate"},{"value":"ribbon","label":"Ribbon"}],"value":"plate"},
+{"key":"scale","label":"Card size","type":"range","min":50,"max":200,"step":10,"value":100,"unit":"%"},
+{"key":"card_shape","label":"Card shape","type":"choice","options":[{"value":"square","label":"Square"},{"value":"wide","label":"Wide"}],"value":"square"},
+{"key":"hidden","label":"Hide the card","type":"toggle","value":false,"note":"Shift+V toggles this in game"}]})";
+
+    bool HasPet()
+    {
+        return g_settings.raisePet && !g_petState.empty() && g_petState.front() == '{';
+    }
+
+    bool PetIsEgg()
+    {
+        return g_petState.find("\"stage\":\"egg\"") != std::string::npos;
+    }
+
+    std::string CompanionsJson()
+    {
+        std::string json = "[";
+        for (const auto& [id, name] : kCompanions) {
+            if (json.size() > 1) {
+                json += ',';
+            }
+            json += "{\"id\":" + JsonString(id) + ",\"name\":" + JsonString(name) + "}";
+        }
+        return json + "]";
+    }
+
+    // everything the tab (or another mod) needs; see MiniPets_API.h for the shape
+    const std::string& StateJson()
+    {
+        const auto* calendar = RE::Calendar::GetSingleton();
+        int food = 0;
+        CheapestFood(&food);
+        g_stateJson = "{\"companion\":" + JsonString(g_settings.pet) +
+                      ",\"companions\":" + CompanionsJson() +
+                      ",\"raisePet\":" + (g_settings.raisePet ? "true" : "false") +
+                      ",\"pet\":" + (HasPet() ? g_petState : std::string("null")) +
+                      ",\"hours\":" + std::to_string(calendar ? calendar->GetHoursPassed() : 0.0f) +
+                      ",\"food\":" + std::to_string(food) +
+                      ",\"card\":{\"x\":" + std::to_string(g_settings.positionX) +
+                      ",\"y\":" + std::to_string(g_settings.positionY) +
+                      ",\"scale\":" + std::to_string(g_settings.scale) +
+                      ",\"shape\":" + JsonString(g_settings.cardShape) +
+                      ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") + "}" +
+                      ",\"clock\":{\"enabled\":" + (g_settings.showClock ? "true" : "false") +
+                      ",\"style\":" + JsonString(g_settings.clockStyle) + "}" +
+                      ",\"hotkeys\":{\"settings\":" + JsonString(g_settings.settingsHotkeyName) +
+                      ",\"feed\":" + JsonString(g_settings.feedHotkeyName) +
+                      ",\"play\":" + JsonString(g_settings.playHotkeyName) +
+                      ",\"hide\":" + JsonString(g_settings.hideHotkeyName) + "}}";
+        return g_stateJson;
+    }
+
+    // Queued, never direct: the host must not be called back from inside its own callbacks, and
+    // the state is read on the game thread.
+    void PushPetsState()
+    {
+        if (!g_hub || !g_hubModule || !g_petsTabShown.load()) {
+            return;
+        }
+        if (const auto* taskInterface = SKSE::GetTaskInterface()) {
+            taskInterface->AddTask([]() {
+                if (g_hub && g_hubModule && g_petsTabShown.load()) {
+                    (void)g_hub->PushJson(g_hubModule, ("{\"state\":" + StateJson() + "}").c_str());
+                }
+            });
+        }
+    }
+
+    void FirePetEvent(const char* event, const std::string& json)
+    {
+        const auto listeners = g_petListeners;
+        for (const auto& listener : listeners) {
+            if (listener.desc.onEvent) {
+                listener.desc.onEvent(event, json.c_str(), listener.desc.user);
+            }
+        }
+    }
+
+    // after a setting changed from the hub or the API: save, tell the card, tell the tab
+    void SettingsChangedOutside()
+    {
+        SaveSettings();
+        Invoke("dragonbornXP.applySettings", SettingsPayload());
+        PushPetsState();
+    }
+
+    void SetPetHidden(bool hidden)
+    {
+        if (g_settings.petHidden == hidden) {
+            return;
+        }
+        g_settings.petHidden = hidden;
+        SaveSettings();
+        Invoke("dragonbornXP.setHidden", hidden ? "true" : "false");
+        PushPetsState();
+        FirePetEvent("visible", std::string("{\"visible\":") + (hidden ? "false" : "true") + "}");
+    }
+
+    // nullptr = go ahead, else why the page would refuse anyway
+    const char* PetActionBlocker(std::string_view action)
+    {
+        if (!HasPet()) {
+            return "no pet";
+        }
+        if (action == "feed") {
+            if (PetIsEgg()) {
+                return "egg";
+            }
+            if (!CheapestFood()) {
+                return "no food";
+            }
+        }
+        return nullptr;
+    }
+
+    // the same route as the hotkeys, minus the "card on screen" check: DovahHub is open
+    void SendPetAction(std::string_view action)
+    {
+        Invoke("dragonbornXP.petAction", "{\"action\":\"" + std::string(action) + "\"}");
+    }
+
+    bool SetCompanion(std::string_view id)
+    {
+        if (!IsSupportedPet(id)) {
+            return false;
+        }
+        if (g_settings.pet != id) {
+            g_settings.pet = std::string(id);
+            SettingsChangedOutside();
+            FirePetEvent("companion", "{\"id\":" + JsonString(id) + "}");
+        }
+        return true;
+    }
+
+    std::string HubSettingsJson()
+    {
+        return "{\"raise_pet\":" + std::string(g_settings.raisePet ? "true" : "false") +
+               ",\"show_clock\":" + (g_settings.showClock ? "true" : "false") +
+               ",\"clock_style\":" + JsonString(g_settings.clockStyle) +
+               ",\"scale\":" + std::to_string(g_settings.scale) +
+               ",\"card_shape\":" + JsonString(g_settings.cardShape) +
+               ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") + "}";
+    }
+
+    bool ApplyHubSetting(const std::string& key, const std::string& value)
+    {
+        if (key == "raise_pet") {
+            g_settings.raisePet = ParseFlag(value);
+        }
+        else if (key == "show_clock") {
+            g_settings.showClock = ParseFlag(value);
+        }
+        else if (key == "clock_style" && IsSupportedClockStyle(value)) {
+            g_settings.clockStyle = value;
+        }
+        else if (key == "scale") {
+            try {
+                g_settings.scale = ClampScale(std::stoi(value));
+            }
+            catch (...) {
+                return false;
+            }
+        }
+        else if (key == "card_shape" && IsSupportedCardShape(value)) {
+            g_settings.cardShape = value;
+        }
+        else if (key == "hidden") {
+            SetPetHidden(ParseFlag(value));
+            return true;
+        }
+        else {
+            return false;
+        }
+        SettingsChangedOutside();
+        return true;
+    }
+
+    const char* OnHubRequest(const char* request, const char* json, void*)
+    {
+        const std::string_view name = request ? request : "";
+        const std::string_view payload = json ? json : "";
+        if (name == "state") {
+            g_hubReply = StateJson();
+        }
+        else if (name == "feed" || name == "play") {
+            if (const char* reason = PetActionBlocker(name)) {
+                g_hubReply = std::string("{\"ok\":false,\"reason\":\"") + reason + "\"}";
+            }
+            else {
+                SendPetAction(name);
+                g_hubReply = "{\"queued\":true}";
+            }
+        }
+        else if (name == "companion") {
+            g_hubReply = SetCompanion(JsonField(payload, "pet")) ? "{\"ok\":true}" : "{\"ok\":false,\"reason\":\"unknown companion\"}";
+        }
+        else if (name == "settings") {
+            g_hubReply = HubSettingsJson();
+        }
+        else if (name == "setting") {
+            g_hubReply = ApplyHubSetting(JsonField(payload, "key"), JsonField(payload, "value")) ? "{\"ok\":true}" : "{\"ok\":false}";
+        }
+        else {
+            return nullptr;
+        }
+        return g_hubReply.c_str();
+    }
+
+    void OnHubEvent(const char* event, void*)
+    {
+        const std::string_view name = event ? event : "";
+        if (name == "tabShown") {
+            g_petsTabShown.store(true);
+            PushPetsState();
+        }
+        else if (name == "tabHidden" || name == "closed") {
+            g_petsTabShown.store(false);
+        }
+    }
+
+    void RegisterWithDovahHub()
+    {
+        g_hub = DOVAHHUB_API::RequestApi();
+        if (!g_hub) {
+            logger::info("DragonbornXP: DovahHub not found, no Pets tab");
+            return;
+        }
+        DOVAHHUB_API::ModuleDesc desc{};
+        desc.size = sizeof(desc);
+        desc.id = "pets";
+        desc.tab = "Pets";
+        desc.group = "Collections";
+        desc.pageDir = "modules/pets/";
+        desc.version = g_pluginVersion.c_str();
+        desc.onRequest = &OnHubRequest;
+        desc.onEvent = &OnHubEvent;
+        const auto result = g_hub->RegisterModule(&desc, &g_hubModule);
+        if (result != DOVAHHUB_API::Result::Ok) {
+            logger::warn("DragonbornXP: DovahHub refused the Pets tab ({})", static_cast<int>(result));
+            g_hub = nullptr;
+            g_hubModule = 0;
+            return;
+        }
+        (void)g_hub->AddSettings(g_hubModule, kHubSettingsSchema);
+        logger::info("DragonbornXP: Pets tab registered with DovahHub {} on {}", g_hub->hostVersion, g_hub->host);
+    }
+
+    // the page told us how a feed/play went: on to the tab and to API listeners
+    void OnPetActionResult(const std::string& result)
+    {
+        if (g_hub && g_hubModule && g_petsTabShown.load()) {
+            (void)g_hub->PushJson(g_hubModule, ("{\"result\":" + result + "}").c_str());
+        }
+        FirePetEvent(JsonField(result, "action") == "feed" ? "fed" : "played", result);
+    }
+
+    void OnPetStateChanged(const std::string& state)
+    {
+        const bool hatched = PetIsEgg() && state.find("\"stage\":\"hatched\"") != std::string::npos;
+        g_petState = state;
+        PushPetsState();
+        if (hatched) {
+            FirePetEvent("hatched", "{\"species\":" + JsonString(JsonField(state, "species")) + "}");
+        }
+    }
+
+    // ---- MiniPets_API.h ----
+
+    const char* ApiGetStateJson()
+    {
+        return StateJson().c_str();
+    }
+
+    MINIPETS_API::Result ApiPetAction(std::string_view action)
+    {
+        if (!g_prismaUI || !g_view || !g_prismaUI->IsValid(g_view)) {
+            return MINIPETS_API::Result::NotReady;
+        }
+        if (const char* reason = PetActionBlocker(action)) {
+            return std::strcmp(reason, "no pet") == 0 ? MINIPETS_API::Result::NoPet : MINIPETS_API::Result::Refused;
+        }
+        SendPetAction(action);
+        return MINIPETS_API::Result::Ok;
+    }
+
+    MINIPETS_API::Result ApiFeed()
+    {
+        return ApiPetAction("feed");
+    }
+
+    MINIPETS_API::Result ApiPlay()
+    {
+        return ApiPetAction("play");
+    }
+
+    MINIPETS_API::Result ApiSetCompanion(const char* id)
+    {
+        return id && SetCompanion(id) ? MINIPETS_API::Result::Ok : MINIPETS_API::Result::InvalidArgument;
+    }
+
+    MINIPETS_API::Result ApiSetRaisePet(bool enabled)
+    {
+        if (g_settings.raisePet != enabled) {
+            g_settings.raisePet = enabled;
+            SettingsChangedOutside();
+        }
+        return MINIPETS_API::Result::Ok;
+    }
+
+    MINIPETS_API::Result ApiSetVisible(bool visible)
+    {
+        SetPetHidden(!visible);
+        return MINIPETS_API::Result::Ok;
+    }
+
+    MINIPETS_API::Result ApiSetCard(std::int32_t x, std::int32_t y, std::int32_t scale, const char* shape)
+    {
+        if (shape && !IsSupportedCardShape(shape)) {
+            return MINIPETS_API::Result::InvalidArgument;
+        }
+        if (scale != 0 && (scale < 50 || scale > 200)) {
+            return MINIPETS_API::Result::InvalidArgument;
+        }
+        if (x >= 0) {
+            g_settings.positionX = x;
+        }
+        if (y >= 0) {
+            g_settings.positionY = y;
+        }
+        if (scale != 0) {
+            g_settings.scale = scale;
+        }
+        if (shape) {
+            g_settings.cardShape = shape;
+        }
+        SettingsChangedOutside();
+        return MINIPETS_API::Result::Ok;
+    }
+
+    MINIPETS_API::Result ApiSetClock(bool enabled, const char* style)
+    {
+        if (style && !IsSupportedClockStyle(style)) {
+            return MINIPETS_API::Result::InvalidArgument;
+        }
+        g_settings.showClock = enabled;
+        if (style) {
+            g_settings.clockStyle = style;
+        }
+        SettingsChangedOutside();
+        return MINIPETS_API::Result::Ok;
+    }
+
+    bool ApiIsVisible()
+    {
+        return !g_overlayHiddenForMenus.load() && !g_settings.petHidden;
+    }
+
+    MINIPETS_API::Result ApiAddListener(const MINIPETS_API::ListenerDesc* desc, MINIPETS_API::ListenerId* outListener)
+    {
+        if (!desc || !outListener || desc->size < sizeof(MINIPETS_API::ListenerDesc) || !desc->onEvent) {
+            return MINIPETS_API::Result::InvalidArgument;
+        }
+        g_petListeners.push_back({ g_nextPetListener, *desc });
+        *outListener = g_nextPetListener++;
+        return MINIPETS_API::Result::Ok;
+    }
+
+    MINIPETS_API::Result ApiRemoveListener(MINIPETS_API::ListenerId listener)
+    {
+        for (auto it = g_petListeners.begin(); it != g_petListeners.end(); ++it) {
+            if (it->id == listener) {
+                g_petListeners.erase(it);
+                return MINIPETS_API::Result::Ok;
+            }
+        }
+        return MINIPETS_API::Result::InvalidId;
+    }
+
+    void BuildMiniPetsApi()
+    {
+        const auto version = SKSE::PluginDeclaration::GetSingleton()->GetVersion();
+        g_pluginVersion = version.string(".");
+        g_miniPetsApi.apiVersion = MINIPETS_API::kApiVersion1;
+        g_miniPetsApi.hostVersion = g_pluginVersion.c_str();
+        g_miniPetsApi.hostVersionNumber = MINIPETS_API::PackVersion(version.major(), version.minor(), version.patch());
+        g_miniPetsApi.GetStateJson = &ApiGetStateJson;
+        g_miniPetsApi.Feed = &ApiFeed;
+        g_miniPetsApi.Play = &ApiPlay;
+        g_miniPetsApi.SetCompanion = &ApiSetCompanion;
+        g_miniPetsApi.SetRaisePet = &ApiSetRaisePet;
+        g_miniPetsApi.SetVisible = &ApiSetVisible;
+        g_miniPetsApi.SetCard = &ApiSetCard;
+        g_miniPetsApi.SetClock = &ApiSetClock;
+        g_miniPetsApi.IsVisible = &ApiIsVisible;
+        g_miniPetsApi.AddListener = &ApiAddListener;
+        g_miniPetsApi.RemoveListener = &ApiRemoveListener;
     }
 
     SkillIncreaseSink g_skillSink;
@@ -1021,9 +1527,7 @@ namespace
                 if (scanCode == g_hideKey.scan.load() && shiftDown == g_hideKey.shift.load()) {
                     if (const auto* taskInterface = SKSE::GetTaskInterface(); taskInterface && !g_overlayHiddenForMenus.load()) {
                         taskInterface->AddTask([]() {
-                            g_settings.petHidden = !g_settings.petHidden;
-                            SaveSettings();
-                            Invoke("dragonbornXP.setHidden", g_settings.petHidden ? "true" : "false");
+                            SetPetHidden(!g_settings.petHidden);
                         });
                     }
                     return;
@@ -1083,7 +1587,16 @@ namespace
             g_prismaUI->RegisterJSListener(view, "petStateChanged", [](const char* payload) {
                 const std::string copy(payload ? payload : "");
                 if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-                    taskInterface->AddTask([copy]() { g_petState = copy; });
+                    taskInterface->AddTask([copy]() { OnPetStateChanged(copy); });
+                }
+            });
+            g_prismaUI->RegisterJSListener(view, "petActionResult", [](const char* payload) {
+                if (!payload || *payload != '{') {
+                    return;
+                }
+                const std::string copy(payload);
+                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
+                    taskInterface->AddTask([copy]() { OnPetActionResult(copy); });
                 }
             });
             g_prismaUI->RegisterJSListener(view, "feedPet", [](const char*) {
@@ -1142,6 +1655,10 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
         return;
     }
     switch (message->type) {
+    case SKSE::MessagingInterface::kPostPostLoad:
+        BuildMiniPetsApi();
+        RegisterWithDovahHub();
+        break;
     case SKSE::MessagingInterface::kDataLoaded:
         OnDataLoaded();
         break;
@@ -1150,6 +1667,7 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
         // stay hidden until a game is loaded
         g_gameLoaded.store(true);
         SendPetState();
+        PushPetsState();
         break;
     default:
         break;
@@ -1177,4 +1695,9 @@ extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface* skse)
         serialization->SetRevertCallback(OnRevert);
     }
     return true;
+}
+
+extern "C" DLLEXPORT const void* MiniPets_RequestApi(std::uint32_t version)
+{
+    return version == MINIPETS_API::kApiVersion1 ? static_cast<const void*>(&g_miniPetsApi) : nullptr;
 }
