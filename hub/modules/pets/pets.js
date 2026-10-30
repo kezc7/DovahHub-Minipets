@@ -12,15 +12,18 @@
   const doc = root.ownerDocument;
   const slot = name => root.querySelector('[data-pets="' + name + '"]');
   const els = {
-    sprite: slot('sprite'), name: slot('name'), stage: slot('stage'), needs: slot('needs'),
+    pet: slot('pet'), sprite: slot('sprite'), name: slot('name'), stage: slot('stage'), needs: slot('needs'),
     needWarmth: slot('need-warmth'), needFood: slot('need-food'), needHappiness: slot('need-happiness'),
     barWarmth: slot('bar-warmth'), barFood: slot('bar-food'), barHappiness: slot('bar-happiness'),
+    numWarmth: slot('num-warmth'), numFood: slot('num-food'), numHappiness: slot('num-happiness'),
     feed: slot('feed'), play: slot('play'), result: slot('result'), facts: slot('facts'),
     picker: slot('picker'), pickerNote: slot('picker-note')
   };
   const MOODS = { happy: 'very happy', content: 'doing fine', hungry: 'hungry', sad: 'lonely', miserable: 'needs food and attention' };
   const STAGES = { baby: 'Baby', young: 'Young', adult: 'All grown up' };
   const ADULT_DAYS = 5;
+  // pets.css animates by these, as the HUD card does
+  const ARCHETYPES = ['light', 'heavy', 'hover', 'flyer', 'egg'];
   let state = null;
   // the companion buttons are built once, then only re-marked
   let pickerFor = '';
@@ -54,26 +57,36 @@
     return state && Number.isFinite(state.hours) ? state.hours : 0;
   }
 
+  function markArchetype(node, archetype) {
+    ARCHETYPES.forEach(name => node.classList.remove('archetype-' + name));
+    node.classList.add('archetype-' + (ARCHETYPES.includes(archetype) ? archetype : 'light'));
+  }
+
   function renderSprite(pet) {
     els.sprite.style.transform = '';
-    els.sprite.classList.remove('is-sad');
+    els.pet.classList.remove('is-sad');
     if (!state.raisePet) {
-      sprites.render(els.sprite, state.companion);
+      markArchetype(els.pet, sprites.render(els.sprite, state.companion).archetype);
       return;
     }
     if (!pet || pet.stage === 'egg') {
       sprites.renderEgg(els.sprite, pet ? pet.species : null);
+      markArchetype(els.pet, 'egg');
       return;
     }
-    sprites.render(els.sprite, pet.species);
+    markArchetype(els.pet, sprites.render(els.sprite, pet.species).archetype);
     const growth = life.GROWTH_SCALE[life.growth(pet, hours())] || 1;
-    if (growth !== 1) els.sprite.style.transform = 'translateX(-50%) scale(' + growth + ')';
-    if (['hungry', 'sad', 'miserable'].includes(life.mood(pet))) els.sprite.classList.add('is-sad');
+    if (growth !== 1) els.sprite.style.transform = 'scale(' + growth + ')';
+    if (['hungry', 'sad', 'miserable'].includes(life.mood(pet))) els.pet.classList.add('is-sad');
   }
 
-  function bar(node, value) {
-    node.style.width = Math.round(Math.min(100, Math.max(0, value))) + '%';
+  // the number sits next to the bar, so an empty bar reads as 0
+  function bar(node, number, value) {
+    const shown = Math.round(Math.min(100, Math.max(0, value)));
+    node.style.width = shown + '%';
+    number.textContent = String(shown);
     node.classList.toggle('is-low', value < 30);
+    number.classList.toggle('is-low', value < 30);
   }
 
   function renderNeeds(pet) {
@@ -83,10 +96,10 @@
     els.needFood.hidden = egg;
     els.needHappiness.hidden = egg;
     if (!pet) return;
-    if (egg) bar(els.barWarmth, life.eggProgress(pet) * 100);
+    if (egg) bar(els.barWarmth, els.numWarmth, life.eggProgress(pet) * 100);
     else {
-      bar(els.barFood, pet.hunger);
-      bar(els.barHappiness, pet.happiness);
+      bar(els.barFood, els.numFood, pet.hunger);
+      bar(els.barHappiness, els.numHappiness, pet.happiness);
     }
   }
 
@@ -141,20 +154,23 @@
         button.type = 'button';
         button.dataset.companion = id;
         const thumb = el('div', 'pets-thumb');
-        const art = el('div');
-        thumb.append(art);
+        const motion = el('div', 'pet-motion');
+        const body = el('div', 'pet-body');
+        const art = el('div', 'pet-sprite');
+        body.append(art);
+        motion.append(body);
+        thumb.append(motion);
         button.append(thumb, el('span', '', nameOf(id)));
-        sprites.render(art, id, { pixel: 2 });
+        markArchetype(thumb, sprites.render(art, id, { pixel: 2 }).archetype);
         button.addEventListener('click', () => choose(id));
         els.picker.append(button);
       });
     }
     Array.from(els.picker.children).forEach(button => {
       button.setAttribute('aria-pressed', button.dataset.companion === state.companion ? 'true' : 'false');
-      button.disabled = Boolean(state.raisePet);
     });
     els.pickerNote.textContent = state.raisePet
-      ? 'The card shows the pet you are raising. The companion picker comes back when raise-a-pet is off.'
+      ? 'The card shows the pet you are raising. Pick who sits on your HUD when raise-a-pet is off.'
       : 'Pick who sits on your HUD.';
   }
 
@@ -216,7 +232,7 @@
   }
 
   function choose(id) {
-    if (!state || state.raisePet || id === state.companion) return;
+    if (!state || id === state.companion) return;
     mod.call('companion', { pet: id }).then(reply => {
       if (reply && reply.error) els.result.textContent = 'DovahHub could not reach MiniPets (' + reply.error + ').';
     });

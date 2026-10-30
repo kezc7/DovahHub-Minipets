@@ -4,14 +4,16 @@
       <p class="hearth-detail-kicker">Your companion</p>
       <div class="pets-scene">
         <div class="pets-scene__ground"></div>
-        <div class="pets-sprite" data-pets="sprite"></div>
+        <div class="pets-sprite" data-pets="pet">
+          <div class="pet-motion"><div class="pet-body"><div class="pet-sprite" data-pets="sprite"></div></div></div>
+        </div>
       </div>
       <h2 class="pets-name" data-pets="name">&nbsp;</h2>
       <p class="pets-stage" data-pets="stage"></p>
       <div class="pets-needs" data-pets="needs">
-        <div class="pets-need" data-pets="need-warmth"><span>Warmth</span><span class="pets-need__track"><span data-pets="bar-warmth"></span></span></div>
-        <div class="pets-need" data-pets="need-food"><span>Food</span><span class="pets-need__track"><span data-pets="bar-food"></span></span></div>
-        <div class="pets-need" data-pets="need-happiness"><span>Happiness</span><span class="pets-need__track"><span data-pets="bar-happiness"></span></span></div>
+        <div class="pets-need" data-pets="need-warmth"><span>Warmth</span><span class="pets-need__track"><span data-pets="bar-warmth"></span></span><b data-pets="num-warmth"></b></div>
+        <div class="pets-need" data-pets="need-food"><span>Food</span><span class="pets-need__track"><span data-pets="bar-food"></span></span><b data-pets="num-food"></b></div>
+        <div class="pets-need" data-pets="need-happiness"><span>Happiness</span><span class="pets-need__track"><span data-pets="bar-happiness"></span></span><b data-pets="num-happiness"></b></div>
       </div>
       <div class="pets-actions">
         <button type="button" class="hearth-proof-button" data-pets="feed">Feed</button>

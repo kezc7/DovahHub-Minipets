@@ -1,5 +1,6 @@
 /* MiniPets' tab inside DovahHub. Everything is scoped under .pets-module; the shared
-   classes (hearth-proof-button, hearth-detail-kicker, hearth-facts) come from DovahHub. */
+   classes (hearth-proof-button, hearth-detail-kicker, hearth-facts) come from DovahHub,
+   the keyframes from pet-motion.css (a copy of the HUD card's). */
 .pets-module { color: var(--ink); }
 .pets-module__columns { display: grid; grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr); gap: 2.4rem; align-items: start; }
 .pets-module__pet { display: flex; flex-direction: column; gap: .7rem; }
@@ -7,20 +8,44 @@
 /* the little scene the sprite stands in */
 .pets-scene { position: relative; height: 13rem; overflow: hidden; border: 1px solid var(--line-soft); background: linear-gradient(180deg, rgba(90, 140, 200, .22), rgba(40, 60, 90, .12) 62%, rgba(46, 96, 54, .28) 62%); }
 .pets-scene__ground { position: absolute; left: 0; right: 0; bottom: 0; height: 38%; background: linear-gradient(180deg, rgba(60, 120, 70, .45), rgba(34, 70, 44, .6)); }
-.pets-sprite { position: absolute; left: 50%; bottom: 34%; transform: translateX(-50%); transform-origin: 50% 100%; image-rendering: pixelated; }
-.pets-sprite .pet-part { position: absolute; }
-.pets-sprite .pet-part canvas { display: block; image-rendering: pixelated; }
-.pets-sprite.is-sad { filter: saturate(.7) brightness(.9); }
+.pets-sprite { position: absolute; left: 50%; bottom: 34%; transform: translateX(-50%); }
+.pets-sprite.archetype-hover { bottom: 38%; }
+
+/* same layering as the HUD card: .pet-motion moves, .pet-body breathes, .pet-sprite holds the parts */
+.pets-module .pet-motion, .pets-module .pet-body { position: relative; transform-origin: 50% 100%; }
+.pets-module .pet-sprite { position: relative; transform-origin: 50% 100%; image-rendering: pixelated; }
+.pets-module .pet-part { position: absolute; }
+.pets-module .pet-part canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.pets-module .role-fx-combat { opacity: 0; }
+
+/* the HUD card's idle animation */
+.pets-module .pet-body { animation: pet-breathe 2.8s ease-in-out infinite; }
+.pets-module .archetype-hover .pet-motion { animation: pet-float 2.6s ease-in-out infinite; }
+.pets-module .archetype-egg .pet-motion { animation: egg-wobble 2.6s ease-in-out infinite; }
+.pets-sprite.is-sad .pet-body { animation: pet-droop 3.8s ease-in-out infinite; }
+.pets-module .role-eyes { animation: pet-blink 4.2s linear infinite; }
+.pets-module .role-glow-eye { animation: pet-glow 1.6s ease-in-out infinite alternate; }
+.pets-module .role-fx-glow { animation: pet-flare 1.4s ease-in-out infinite alternate; }
+.pets-module .role-tail { animation: pet-wag 1.8s ease-in-out infinite alternate; }
+.pets-module .role-sway { animation: pet-sway 2.6s ease-in-out infinite alternate; }
+.pets-module .role-ear { animation: pet-ear 3.6s ease-in-out infinite; }
+.pets-module .role-head { animation: pet-nod 3.4s ease-in-out infinite; }
+.pets-module .role-arm-a, .pets-module .role-arm-b { animation: pet-arm-rest 3s ease-in-out infinite alternate; }
+.pets-module .role-arm-b { animation-delay: -1.5s; }
+.pets-module .role-wing-a, .pets-module .role-wing-b { animation: pet-wing-rest 2.8s ease-in-out infinite alternate; }
+.pets-module .role-wing-b { animation-delay: -1.4s; }
 
 .pets-name { margin: .4rem 0 0; font: 400 1.7rem/1.1 var(--font-display); letter-spacing: .04em; }
 .pets-stage { margin: 0; color: var(--ink-soft); font-size: .92rem; }
 
 .pets-needs { display: flex; flex-direction: column; gap: .45rem; margin-top: .3rem; }
-.pets-need { display: grid; grid-template-columns: 6rem minmax(0, 1fr); align-items: center; gap: .8rem; color: var(--muted); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
+.pets-need { display: grid; grid-template-columns: 6rem minmax(0, 1fr) 2.4rem; align-items: center; gap: .8rem; color: var(--muted); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
 .pets-need[hidden] { display: none; }
 .pets-need__track { position: relative; display: block; height: .55rem; border: 1px solid var(--line-soft); background: rgba(0, 0, 0, .35); }
 .pets-need__track span { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(var(--accent-rgb), .7); transition: width .3s ease; }
 .pets-need__track span.is-low { background: rgba(197, 106, 93, .85); }
+.pets-need b { font-weight: 400; text-align: right; color: var(--ink-soft); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.pets-need b.is-low { color: rgb(197, 106, 93); }
 
 .pets-actions { display: flex; gap: .7rem; margin-top: .5rem; }
 .pets-actions .hearth-proof-button { flex: 1 1 0; justify-content: center; }
@@ -32,9 +57,18 @@
 .pets-picker button { display: flex; flex-direction: column; align-items: center; gap: .35rem; padding: .6rem .3rem .5rem; border: 1px solid var(--line-soft); background: rgba(0, 0, 0, .25); color: var(--ink-soft); font: inherit; font-size: .78rem; cursor: pointer; }
 .pets-picker button:hover, .pets-picker button:focus-visible { border-color: var(--accent); color: var(--ink); }
 .pets-picker button[aria-pressed="true"] { border-color: var(--accent); background: rgba(var(--accent-rgb), .16); color: var(--ink); }
-.pets-picker button:disabled { opacity: .45; pointer-events: none; }
 .pets-picker .pets-thumb { position: relative; height: 3.4rem; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
-.pets-picker .pets-thumb > div { position: relative; }
-.pets-picker .pet-part { position: absolute; }
-.pets-picker .pet-part canvas { display: block; image-rendering: pixelated; }
 .pets-picker[hidden] { display: none; }
+
+/* the thumbnails idle too, slower and smaller */
+.pets-picker .pet-body { animation-duration: 4.5s; }
+.pets-picker .archetype-hover .pet-motion { animation: pet-float-soft 4s ease-in-out infinite; }
+.pets-picker .role-eyes { animation-duration: 6.5s; }
+.pets-picker .role-glow-eye { animation-duration: 2.6s; }
+.pets-picker .role-fx-glow { animation-duration: 2.2s; }
+.pets-picker .role-tail { animation-duration: 3s; }
+.pets-picker .role-sway { animation-duration: 4s; }
+.pets-picker .role-ear { animation-duration: 5.5s; }
+.pets-picker .role-head { animation-duration: 5.2s; }
+.pets-picker .role-arm-a, .pets-picker .role-arm-b { animation-duration: 4.6s; }
+.pets-picker .role-wing-a, .pets-picker .role-wing-b { animation-duration: 4.4s; }

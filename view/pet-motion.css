@@ -1,0 +1,16 @@
+/* The pet's idle keyframes, shared by the HUD card and the DovahHub tab (the build copies this
+   file into the tab's folder, like pet-life.js and pet-sprites.js). Only transform and opacity. */
+@keyframes pet-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.025, .975); } }
+@keyframes pet-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes pet-blink { 0%, 93%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.15); } }
+@keyframes pet-glow { from { opacity: .6; } to { opacity: 1; } }
+@keyframes pet-flare { from { transform: scale(1, 1); opacity: .82; } to { transform: scale(1.06, 1.08); opacity: 1; } }
+@keyframes pet-wag { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes pet-sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@keyframes pet-ear { 0%, 70%, 100% { transform: rotate(0deg); } 80% { transform: rotate(-14deg); } 90% { transform: rotate(4deg); } }
+@keyframes pet-nod { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-2deg) translateY(-1px); } }
+@keyframes pet-arm-rest { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+@keyframes pet-wing-rest { from { transform: rotate(0deg); } to { transform: rotate(-6deg); } }
+@keyframes egg-wobble { 0%, 60%, 100% { transform: rotate(0deg); } 70% { transform: rotate(-6deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(-3deg); } }
+@keyframes pet-droop { 0%, 100% { transform: scale(1.03, .95); } 50% { transform: scale(1.05, .92); } }
+@keyframes pet-float-soft { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }

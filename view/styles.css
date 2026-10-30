@@ -291,8 +291,6 @@ body.timelapse .sky-body { transition: none; }
 #dragonborn-xp.state-idle.idle-sway .role-sway { animation: pet-sway .3s ease-in-out 4 alternate; }
 #dragonborn-xp.state-idle.idle-ear .role-ear { animation: pet-ear .5s ease-in-out 2; }
 
-@keyframes pet-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.025, .975); } }
-@keyframes pet-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes pet-hop { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-5px) rotate(-2deg); } }
 @keyframes pet-lumber { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-3px) rotate(2deg); } }
 @keyframes pet-drift { 0%, 100% { transform: translate(-3px, 0) rotate(-3deg); } 50% { transform: translate(3px, -6px) rotate(3deg); } }
@@ -305,13 +303,6 @@ body.timelapse .sky-body { transition: none; }
 @keyframes pet-xp { 0% { transform: translateY(0) scale(1, 1); } 20% { transform: translateY(0) scale(1.08, .9); } 50% { transform: translateY(-14px) scale(.95, 1.06); } 80% { transform: translateY(0) scale(1.05, .95); } 100% { transform: translateY(0) scale(1, 1); } }
 @keyframes pet-level-up { 0% { transform: translateY(0) rotate(0deg) scale(1, 1); } 15% { transform: translateY(0) rotate(0deg) scale(1.1, .88); } 40% { transform: translateY(-22px) rotate(-8deg) scale(1, 1); } 60% { transform: translateY(-22px) rotate(8deg) scale(1, 1); } 82% { transform: translateY(0) rotate(0deg) scale(1.08, .92); } 100% { transform: translateY(0) rotate(0deg) scale(1, 1); } }
 @keyframes pet-shadow-shrink { 0%, 100% { transform: scale(.7, .7); opacity: .6; } 50% { transform: scale(.55, .55); opacity: .4; } }
-@keyframes pet-blink { 0%, 93%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.15); } }
-@keyframes pet-glow { from { opacity: .6; } to { opacity: 1; } }
-@keyframes pet-flare { from { transform: scale(1, 1); opacity: .82; } to { transform: scale(1.06, 1.08); opacity: 1; } }
-@keyframes pet-wag { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
-@keyframes pet-sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
-@keyframes pet-ear { 0%, 70%, 100% { transform: rotate(0deg); } 80% { transform: rotate(-14deg); } 90% { transform: rotate(4deg); } }
-@keyframes pet-nod { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-2deg) translateY(-1px); } }
 @keyframes pet-head-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1px) rotate(2deg); } }
 @keyframes pet-head-thrust { 0%, 100% { transform: translateX(0) rotate(0deg); } 45% { transform: translateX(3px) rotate(-5deg); } }
 @keyframes pet-head-cheer { 0%, 100% { transform: rotate(0deg); } 40% { transform: rotate(-12deg); } 70% { transform: rotate(-6deg); } }
@@ -319,10 +310,8 @@ body.timelapse .sky-body { transition: none; }
 @keyframes pet-peck { 0%, 100% { transform: rotate(0deg); } 40% { transform: translate(2px, 3px) rotate(28deg); } 55% { transform: rotate(4deg); } 70% { transform: translate(2px, 3px) rotate(28deg); } }
 @keyframes pet-stride { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
 @keyframes pet-tuck { 0%, 100% { transform: rotate(-30deg); } 50% { transform: rotate(-20deg); } }
-@keyframes pet-arm-rest { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
 @keyframes pet-punch { 0%, 100% { transform: rotate(0deg); } 35% { transform: rotate(-70deg); } 50% { transform: rotate(-80deg); } }
 @keyframes pet-cheer { from { transform: rotate(-120deg); } to { transform: rotate(-150deg); } }
-@keyframes pet-wing-rest { from { transform: rotate(0deg); } to { transform: rotate(-6deg); } }
 @keyframes pet-flap { from { transform: rotate(8deg) scaleY(1.05); } to { transform: rotate(-14deg) scaleY(.55); } }
 @keyframes pet-wing-spread { 0%, 100% { transform: rotate(0deg); } 45% { transform: rotate(-18deg) scale(1.08); } }
 @keyframes pet-claw-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
@@ -341,8 +330,6 @@ body.settings-open.dragging-pet, body.settings-open.dragging-pet * { cursor: gra
 @keyframes scenery-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes plume-rise { 0% { opacity: 0; transform: translate(0, 0) scale(.6); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(10px, -46px) scale(2.2); } }
 @keyframes torch-flicker { 0%, 100% { opacity: 1; } 20% { opacity: .82; } 45% { opacity: .95; } 70% { opacity: .78; } 85% { opacity: .92; } }
-@keyframes egg-wobble { 0%, 60%, 100% { transform: rotate(0deg); } 70% { transform: rotate(-6deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(-3deg); } }
-@keyframes pet-droop { 0%, 100% { transform: scale(1.03, .95); } 50% { transform: scale(1.05, .92); } }
 @keyframes pet-bubble-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @keyframes sun-turn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @keyframes caption-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }

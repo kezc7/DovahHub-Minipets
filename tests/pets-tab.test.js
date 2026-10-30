@@ -153,7 +153,67 @@ test('a hatched pet shows its stage, mood and bars, ticked for display', async (
   assert.equal(tab.text('play'), 'Play');
   assert.ok(tab.text('facts').includes('4 days ago'), 'hatched 100 hours ago');
   assert.ok(tab.text('facts').includes('Food in pack3'));
-  assert.ok(tab.slot('picker').children.every(button => button.disabled), 'the picker is off while raising');
+  assert.equal(tab.text('num-food'), '50');
+  assert.equal(tab.text('num-happiness'), '70');
+  assert.ok(tab.slot('picker').children.every(button => !button.disabled), 'the picker stays live while raising');
+  assert.ok(tab.text('picker-note').includes('when raise-a-pet is off'));
+});
+
+test('empty bars read as 0 and are marked low', async () => {
+  const tab = loadTab();
+  const starving = Object.assign({}, hatchedPet, { hunger: 0, happiness: 3 });
+  tab.setAnswer(() => Object.assign({}, baseState, { raisePet: true, pet: starving, hours: 200 }));
+  tab.event('tabShown');
+  await tab.tick();
+  assert.equal(tab.text('stage'), 'Young, needs food and attention');
+  assert.equal(tab.slot('bar-food').style.width, '0%');
+  assert.equal(tab.text('num-food'), '0');
+  assert.equal(tab.text('num-happiness'), '3');
+  assert.ok(tab.slot('num-food').classList.contains('is-low'));
+  assert.ok(tab.slot('pet').classList.contains('is-sad'));
+});
+
+test('while raising, a companion click still sets the HUD companion', async () => {
+  const tab = loadTab();
+  tab.setAnswer(request => (request === 'state' ? Object.assign({}, baseState, { raisePet: true, pet: hatchedPet }) : { ok: true }));
+  tab.event('tabShown');
+  await tab.tick();
+  tab.slot('picker').children.find(button => button.dataset.companion === 'mudcrab').click();
+  await tab.tick();
+  assert.equal(JSON.stringify(tab.calls[1]), JSON.stringify({ request: 'companion', payload: { pet: 'mudcrab' } }));
+});
+
+// the HUD card's layering: .pet-motion > .pet-body > .pet-sprite, with the archetype on the outside
+function motionWrapper(node) {
+  const motion = node.children.find(child => child.classList.contains('pet-motion'));
+  const body = motion && motion.children.find(child => child.classList.contains('pet-body'));
+  const sprite = body && body.children.find(child => child.classList.contains('pet-sprite'));
+  return { motion, body, sprite };
+}
+
+test('the sprite and the thumbnails are wrapped for the idle animation, by archetype', async () => {
+  const tab = loadTab();
+  tab.setAnswer(() => Object.assign({}, baseState, { raisePet: true, pet: hatchedPet, hours: 210 }));
+  tab.event('tabShown');
+  await tab.tick();
+  const sprites = require('../view/pet-sprites.js');
+  const pet = tab.slot('pet');
+  const wrapped = motionWrapper(pet);
+  assert.ok(wrapped.sprite, 'pet-motion > pet-body > pet-sprite');
+  assert.equal(wrapped.sprite, tab.slot('sprite'));
+  assert.ok(pet.classList.contains('archetype-' + sprites.pets.fox.archetype));
+  assert.ok([...wrapped.sprite.walk()].some(part => part.classList.contains('role-eyes')), 'the parts keep their role classes');
+  // the growth scale sits on the sprite, not on the positioned wrapper
+  assert.equal(wrapped.sprite.style.transform, 'scale(' + require('../view/pet-life.js').GROWTH_SCALE.young + ')');
+  tab.slot('picker').children.forEach(button => {
+    const thumb = button.children.find(child => child.classList.contains('pets-thumb'));
+    assert.ok(motionWrapper(thumb).sprite, 'thumb ' + button.dataset.companion + ' is wrapped');
+    assert.ok(thumb.classList.contains('archetype-' + sprites.pets[button.dataset.companion].archetype));
+  });
+  // an egg wobbles instead
+  tab.push({ state: Object.assign({}, baseState, { raisePet: true, pet: eggPet }) });
+  assert.ok(pet.classList.contains('archetype-egg'));
+  assert.ok(!pet.classList.contains('archetype-light'));
 });
 
 test('an egg shows warmth and offers a cuddle', async () => {
@@ -208,10 +268,25 @@ test('a pushed state re-renders, and the picker sends the companion', async () =
   assert.equal(tab.slot('picker').children.find(button => button.dataset.companion === 'chicken').getAttribute('aria-pressed'), 'true');
 });
 
-test('the module ships the same pet-life.js and pet-sprites.js as the HUD page', () => {
-  for (const file of ['pet-life.js', 'pet-sprites.js']) {
+test('the module ships the same pet-life.js, pet-sprites.js and pet-motion.css as the HUD page', () => {
+  for (const file of ['pet-life.js', 'pet-sprites.js', 'pet-motion.css']) {
     assert.equal(fs.readFileSync(path.join(MODULE_DIR, file), 'utf8'), fs.readFileSync(path.join(VIEW_DIR, file), 'utf8'), `${file} matches view/`);
   }
+});
+
+test('the idle keyframes live in pet-motion.css only, and both pages use them', () => {
+  const motion = fs.readFileSync(path.join(VIEW_DIR, 'pet-motion.css'), 'utf8');
+  const hud = fs.readFileSync(path.join(VIEW_DIR, 'styles.css'), 'utf8');
+  const tabCss = fs.readFileSync(path.join(MODULE_DIR, 'pets.css'), 'utf8');
+  const defined = [...motion.matchAll(/@keyframes ([a-z-]+)/g)].map(match => match[1]);
+  for (const name of ['pet-breathe', 'pet-float', 'pet-blink', 'pet-wag', 'pet-sway', 'pet-ear', 'pet-nod', 'pet-arm-rest', 'pet-wing-rest', 'pet-glow', 'pet-flare', 'egg-wobble', 'pet-droop']) {
+    assert.ok(defined.includes(name), `${name} is in pet-motion.css`);
+    assert.ok(!hud.includes(`@keyframes ${name} `), `${name} is not also in styles.css`);
+    assert.ok(new RegExp(`animation(-name)?: ${name}[ ;]`).test(tabCss), `the tab animates with ${name}`);
+  }
+  const used = [...tabCss.matchAll(/animation: ([a-z-]+) /g)].map(match => match[1]);
+  used.forEach(name => assert.ok(defined.includes(name), `${name} used by the tab is defined`));
+  assert.match(fs.readFileSync(path.join(VIEW_DIR, 'index.html'), 'utf8'), /href="pet-motion\.css\?v=\d+"/);
 });
 
 test('the plugin\'s companion table matches pet-sprites.js', () => {

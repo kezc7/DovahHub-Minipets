@@ -4,7 +4,7 @@ includes("lib/commonlibsse-ng")
 
 local PLUGIN_NAME = "DragonbornXP"
 -- bump this for releases
-local PLUGIN_VERSION = "1.7.1"
+local PLUGIN_VERSION = "1.7.2"
 local PACKAGE_NAME = "dovahhub-minipets"
 local VIEW_NAME = "DragonbornXP"
 -- the MiniPets tab lives inside DovahHub's view folder
@@ -48,6 +48,7 @@ target(PLUGIN_NAME)
         local hubsrc = path.join(os.projectdir(), "hub", "modules", "pets")
         os.cp(path.join(os.projectdir(), "view", "pet-life.js"), hubsrc)
         os.cp(path.join(os.projectdir(), "view", "pet-sprites.js"), hubsrc)
+        os.cp(path.join(os.projectdir(), "view", "pet-motion.css"), hubsrc)
         local hubdir = path.join(distdir, HUB_MODULE_DIR)
         os.mkdir(hubdir)
         os.cp(path.join(hubsrc, "*"), hubdir)
