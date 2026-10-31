@@ -33,6 +33,13 @@ target(PLUGIN_NAME)
     add_includedirs("src", "keyhandler")
     set_pcxxheader("src/pch.h")
 
+    -- the version resource and plugin declaration are generated from templates; drop the copies
+    -- from the last build so a version bump always lands in the DLL
+    on_load(function (target)
+        os.tryrm(path.join(target:autogendir(), "commonlib-plugin.rc"))
+        os.tryrm(path.join(target:autogendir(), "commonlibsse-ng-plugin.cpp"))
+    end)
+
     after_build(function (target)
         local distdir = path.join(os.projectdir(), "dist", PLUGIN_NAME .. "_" .. PLUGIN_VERSION)
         local viewdir = path.join(distdir, "PrismaUI", "views", VIEW_NAME)
