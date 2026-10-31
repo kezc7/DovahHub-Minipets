@@ -6,11 +6,11 @@
 // Same loader pattern, Result enum, size field and version rules as DovahMenu_API.h.
 //
 // MiniPets is the HUD pixel-art companion (20 companions, raise-a-pet mode with an egg that hatches
-// on XP, then hunger and happiness). Its DLL is still called DragonbornXP.dll and its INI
-// Data/SKSE/Plugins/DragonbornXP.ini: the folder and DLL names are historical, the mod is MiniPets.
+// on XP, then hunger and happiness). Its DLL is MiniPets.dll and its INI Data/SKSE/Plugins/MiniPets.ini;
+// before 1.8.0 both were named DragonbornXP.
 //
 // What this API is for:
-// - DovahHub's "Pets" tab (Collections group): the gallery, the current companion, the raise-a-pet
+// - DovahHub's "MiniPets" tab (Integrations group): the gallery, the current companion, the raise-a-pet
 //   state, Feed and Play, and MiniPets' options on DovahHub's Settings tab. MiniPets ships
 //   modules/pets/ for it (so DovahHub never carries the sprites) and talks to the tab through
 //   DovahHub_API.h; this header is what the module's onRequest calls, and what any other mod may call.
@@ -130,9 +130,9 @@ namespace MINIPETS_API
     }
 
 #ifndef MINIPETS_API_NO_LOADER
-    // nullptr when MiniPets is not installed or does not serve this version. The DLL keeps its
-    // historical name, DragonbornXP.dll (xmake.lua: PLUGIN_NAME); if it is ever renamed, this loader
-    // tries the new name first and the old one second so consumers need no change.
+    // nullptr when MiniPets is not installed or does not serve this version. The DLL is MiniPets.dll
+    // from 1.8.0 (xmake.lua: PLUGIN_NAME); DragonbornXP.dll is still tried so a mod built against this
+    // header also finds 1.7.x.
     inline const void* RequestApiRaw(std::uint32_t version)
     {
         HMODULE mod = GetModuleHandleW(L"MiniPets.dll");
