@@ -12,7 +12,7 @@ local HUB_MODULE_DIR = path.join("PrismaUI", "views", "DovahHub", "modules", "pe
 
 set_project(PLUGIN_NAME)
 set_version(PLUGIN_VERSION)
-set_license("GPL-3.0")
+set_license("GPL-3.0-or-later")
 set_languages("c++23")
 set_warnings("allextra")
 add_defines("UNICODE", "_UNICODE")

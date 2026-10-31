@@ -74,4 +74,4 @@ The version is `PLUGIN_VERSION` in `xmake.lua`. Bump it, add a line to `CHANGELO
 
 ## License
 
-GPL-3.0, see `LICENSE`. The plugin is built with CommonLibSSE-NG (GPL-3.0-or-later with modding exceptions) and a few MIT/BSD libraries; see `THIRD-PARTY-NOTICES.md`.
+GPL-3.0-or-later, see `LICENSE`. The plugin is built with CommonLibSSE-NG (GPL-3.0-or-later with modding exceptions) and a few MIT/BSD libraries; see `THIRD-PARTY-NOTICES.md`.
