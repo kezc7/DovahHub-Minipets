@@ -156,7 +156,14 @@ test('a hatched pet shows its stage, mood and bars, ticked for display', async (
   assert.equal(tab.text('num-food'), '50');
   assert.equal(tab.text('num-happiness'), '70');
   assert.ok(tab.slot('picker').children.every(button => !button.disabled), 'the picker stays live while raising');
-  assert.ok(tab.text('picker-note').includes('when raise-a-pet is off'));
+  // while raising the grid waits behind a button, and the line under it says what a click does
+  assert.equal(tab.slot('picker').hidden, true);
+  assert.equal(tab.slot('picker-toggle').hidden, false);
+  assert.equal(tab.text('picker-toggle'), 'Change HUD companion (Ember)');
+  assert.equal(tab.text('picker-current'), 'On your HUD when raise-a-pet is off: Ember the Fox');
+  tab.slot('picker-toggle').click();
+  assert.equal(tab.slot('picker').hidden, false);
+  assert.equal(tab.text('picker-toggle'), 'Hide companions');
 });
 
 test('empty bars read as 0 and are marked low', async () => {
@@ -173,14 +180,37 @@ test('empty bars read as 0 and are marked low', async () => {
   assert.ok(tab.slot('pet').classList.contains('is-sad'));
 });
 
-test('while raising, a companion click still sets the HUD companion', async () => {
+test('while raising, a companion click sets the HUD companion and says so', async () => {
   const tab = loadTab();
   tab.setAnswer(request => (request === 'state' ? Object.assign({}, baseState, { raisePet: true, pet: hatchedPet }) : { ok: true }));
   tab.event('tabShown');
   await tab.tick();
+  tab.slot('picker-toggle').click();
   tab.slot('picker').children.find(button => button.dataset.companion === 'mudcrab').click();
   await tab.tick();
   assert.equal(JSON.stringify(tab.calls[1]), JSON.stringify({ request: 'companion', payload: { pet: 'mudcrab' } }));
+  assert.equal(tab.text('result'), 'Clack will sit on your HUD when raise-a-pet is off.');
+  assert.equal(tab.text('picker-current'), 'On your HUD when raise-a-pet is off: Clack the Mudcrab');
+  assert.equal(tab.slot('picker').children.find(button => button.dataset.companion === 'mudcrab').getAttribute('aria-pressed'), 'true');
+  // the grid stays open until it is closed again, and the button then names the new choice
+  assert.equal(tab.slot('picker').hidden, false);
+  tab.slot('picker-toggle').click();
+  assert.equal(tab.slot('picker').hidden, true);
+  assert.equal(tab.text('picker-toggle'), 'Change HUD companion (Clack)');
+});
+
+test('with raise-a-pet off the grid is open and a click says the HUD changed', async () => {
+  const tab = loadTab();
+  tab.setAnswer(request => (request === 'state' ? baseState : { ok: true }));
+  tab.event('tabShown');
+  await tab.tick();
+  assert.equal(tab.slot('picker').hidden, false);
+  assert.equal(tab.slot('picker-toggle').hidden, true);
+  assert.equal(tab.text('picker-current'), 'On your HUD: Ember the Fox');
+  tab.slot('picker').children.find(button => button.dataset.companion === 'chicken').click();
+  await tab.tick();
+  assert.equal(tab.text('result'), 'Pip is on your HUD now.');
+  assert.equal(tab.text('picker-current'), 'On your HUD: Pip the Chicken');
 });
 
 // the HUD card's layering: .pet-motion > .pet-body > .pet-sprite, with the archetype on the outside

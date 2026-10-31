@@ -59,6 +59,11 @@
 .pets-picker button[aria-pressed="true"] { border-color: var(--accent); background: rgba(var(--accent-rgb), .16); color: var(--ink); }
 .pets-picker .pets-thumb { position: relative; height: 3.4rem; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
 .pets-picker[hidden] { display: none; }
+.pets-picker-toggle { margin-top: .6rem; }
+.pets-picker-toggle[hidden] { display: none; }
+/* what the click did, in words */
+.pets-picker-current { margin: .6rem 0 0; color: var(--ink-soft); font-size: .92rem; }
+.pets-picker-current b { color: var(--ink); font-weight: 400; }
 
 /* the thumbnails idle too, slower and smaller */
 .pets-picker .pet-body { animation-duration: 4.5s; }

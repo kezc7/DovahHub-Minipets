@@ -1,10 +1,10 @@
 # Changelog
 
-## 1.7.2
+## 1.7.3
 - A MiniPets tab in DovahHub (0.92.1 or later, under Integrations): your companion or the pet you're raising, its bars, Feed and Play, the companion picker, and MiniPets' options on DovahHub's Settings tab. Nothing changes without DovahHub
 - An API for other SKSE plugins (`MiniPets_API.h`): state, feed, play, companion, card and clock settings, and events
 - Card size goes up to 200%
-- In the DovahHub tab the pet and the companion thumbnails idle like the HUD card, the companion grid stays in colour while raising a pet, and the bars show their numbers
+- In the DovahHub tab the pet and the companion thumbnails idle like the HUD card, the companion grid stays in colour while raising a pet (behind a "Change HUD companion" button, with a line saying who sits on the HUD when raise-a-pet is off), and the bars show their numbers
 
 ## 1.6.1
 - Feed and play hotkeys are ignored while the pet is hidden, so food doesn't vanish off screen

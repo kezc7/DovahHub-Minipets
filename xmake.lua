@@ -4,7 +4,7 @@ includes("lib/commonlibsse-ng")
 
 local PLUGIN_NAME = "DragonbornXP"
 -- bump this for releases
-local PLUGIN_VERSION = "1.7.2"
+local PLUGIN_VERSION = "1.7.3"
 local PACKAGE_NAME = "dovahhub-minipets"
 local VIEW_NAME = "DragonbornXP"
 -- the MiniPets tab lives inside DovahHub's view folder

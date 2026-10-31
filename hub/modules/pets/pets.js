@@ -17,7 +17,8 @@
     barWarmth: slot('bar-warmth'), barFood: slot('bar-food'), barHappiness: slot('bar-happiness'),
     numWarmth: slot('num-warmth'), numFood: slot('num-food'), numHappiness: slot('num-happiness'),
     feed: slot('feed'), play: slot('play'), result: slot('result'), facts: slot('facts'),
-    picker: slot('picker'), pickerNote: slot('picker-note')
+    picker: slot('picker'), pickerNote: slot('picker-note'), pickerToggle: slot('picker-toggle'),
+    pickerCurrent: slot('picker-current')
   };
   const MOODS = { happy: 'very happy', content: 'doing fine', hungry: 'hungry', sad: 'lonely', miserable: 'needs food and attention' };
   const STAGES = { baby: 'Baby', young: 'Young', adult: 'All grown up' };
@@ -27,6 +28,8 @@
   let state = null;
   // the companion buttons are built once, then only re-marked
   let pickerFor = '';
+  // while raising a pet the grid sits behind "Change HUD companion", so Feed and Play lead
+  let pickerOpen = false;
 
   function el(tag, className, text) {
     const node = doc.createElement(tag);
@@ -170,8 +173,16 @@
       button.setAttribute('aria-pressed', button.dataset.companion === state.companion ? 'true' : 'false');
     });
     els.pickerNote.textContent = state.raisePet
-      ? 'The card shows the pet you are raising. Pick who sits on your HUD when raise-a-pet is off.'
+      ? 'The card shows the pet you are raising.'
       : 'Pick who sits on your HUD.';
+    els.pickerToggle.hidden = !state.raisePet;
+    els.pickerToggle.textContent = pickerOpen ? 'Hide companions' : 'Change HUD companion (' + nameOf(state.companion) + ')';
+    els.picker.hidden = Boolean(state.raisePet) && !pickerOpen;
+    els.pickerCurrent.textContent = '';
+    els.pickerCurrent.append(
+      el('span', '', state.raisePet ? 'On your HUD when raise-a-pet is off: ' : 'On your HUD: '),
+      el('b', '', fullName(state.companion))
+    );
   }
 
   function render() {
@@ -234,7 +245,20 @@
   function choose(id) {
     if (!state || id === state.companion) return;
     mod.call('companion', { pet: id }).then(reply => {
-      if (reply && reply.error) els.result.textContent = 'DovahHub could not reach MiniPets (' + reply.error + ').';
+      if (reply && reply.error) {
+        els.result.textContent = 'DovahHub could not reach MiniPets (' + reply.error + ').';
+        return;
+      }
+      if (!reply || reply.ok === false) {
+        els.result.textContent = 'MiniPets does not know that companion.';
+        return;
+      }
+      // the plugin pushes the new state too; show the change straight away
+      state = Object.assign({}, state, { companion: id });
+      renderPicker();
+      els.result.textContent = state.raisePet
+        ? nameOf(id) + ' will sit on your HUD when raise-a-pet is off.'
+        : nameOf(id) + ' is on your HUD now.';
     });
   }
 
@@ -251,6 +275,10 @@
   }
 
   els.feed.addEventListener('click', () => act('feed'));
+  els.pickerToggle.addEventListener('click', () => {
+    pickerOpen = !pickerOpen;
+    if (state) renderPicker();
+  });
   els.play.addEventListener('click', () => act('play'));
   mod.onEvent(name => { if (name === 'tabShown') refresh(); });
   mod.onPush(json => {
