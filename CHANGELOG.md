@@ -1,6 +1,7 @@
 # Changelog
 
-## 1.8.0
+## 1.8.0-beta
+- Upgrading from 1.7.3: install this zip over the old one in your mod manager and let it replace the files, then start the game. Your pet, settings and hotkeys are kept. A clean install needs nothing extra. Do not keep 1.7.3 enabled next to it
 - The files are named after the mod: `MiniPets.dll`, `MiniPets.log`, `MiniPets.ini` and `PrismaUI/views/MiniPets`. Mod managers replace them on upgrade; hand-copied installs should delete `SKSE/Plugins/DragonbornXP.dll` and `PrismaUI/views/DragonbornXP` first (the game shows a reminder if the old DLL is still loaded)
 - Pets carry over: the save record is unchanged, and `DragonbornXP.ini` is copied to `MiniPets.ini` on the first load
 - `dovahmenu.json` ships with the view, so DovahMenu lists the mod as MiniPets with its Shift+B key

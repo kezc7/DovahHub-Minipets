@@ -1,7 +1,7 @@
 {
   "name": "MiniPets",
   "description": "Pixel-art HUD companion that celebrates your XP and level-ups; raise a pet, feed it and play with it",
-  "version": "1.8.0",
+  "version": "1.8.0-beta",
   "hotkey": "Shift+B",
   "hidden": false
 }
