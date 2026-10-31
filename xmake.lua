@@ -2,11 +2,11 @@ set_xmakever("3.0.0")
 
 includes("lib/commonlibsse-ng")
 
-local PLUGIN_NAME = "DragonbornXP"
+local PLUGIN_NAME = "MiniPets"
 -- bump this for releases
-local PLUGIN_VERSION = "1.7.3"
+local PLUGIN_VERSION = "1.8.0"
 local PACKAGE_NAME = "dovahhub-minipets"
-local VIEW_NAME = "DragonbornXP"
+local VIEW_NAME = "MiniPets"
 -- the MiniPets tab lives inside DovahHub's view folder
 local HUB_MODULE_DIR = path.join("PrismaUI", "views", "DovahHub", "modules", "pets")
 
@@ -25,7 +25,7 @@ target(PLUGIN_NAME)
     add_deps("commonlibsse-ng")
     add_rules("commonlibsse-ng.plugin", {
         name = PLUGIN_NAME,
-        author = "DragonbornXP contributors",
+        author = "KezC7",
         description = "Pixel-art HUD companions that celebrate your XP and level-ups"
     })
     add_files("src/**.cpp", "keyhandler/**.cpp")
@@ -75,3 +75,10 @@ target(PLUGIN_NAME)
         archive.archive(zipfile, {"SKSE", "PrismaUI"}, {curdir = distdir, recurse = true})
         cprint("${bright green}created MO2 package: ${clear}%s", zipname)
     end)
+
+-- the settings-file migration, run without the game: xmake build MiniPets_tests && xmake run MiniPets_tests
+target("MiniPets_tests")
+    set_kind("binary")
+    set_default(false)
+    add_files("tests/cpp/settings_migration.cpp")
+    add_includedirs("src")

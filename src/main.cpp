@@ -20,6 +20,8 @@
 #include <RE/T/TESWorldSpace.h>
 #include <RE/U/UI.h>
 #include <REX/W32/KERNEL32.h>
+#include <REX/W32/USER32.h>
+#include "SettingsFile.h"
 
 #include <atomic>
 #include <chrono>
@@ -42,7 +44,9 @@ namespace
 {
     constexpr std::uint32_t kDefaultSettingsHotkey = 0x30;  // B
     constexpr bool kDefaultSettingsHotkeyRequiresShift = true;
-    const std::filesystem::path kSettingsPath = L"Data/SKSE/Plugins/DragonbornXP.ini";
+    const std::filesystem::path kSettingsPath = L"Data/SKSE/Plugins/MiniPets.ini";
+    // before 1.8.0; copied to kSettingsPath on the first run, see SettingsFile.h
+    const std::filesystem::path kLegacySettingsPath = L"Data/SKSE/Plugins/DragonbornXP.ini";
 
     struct DragonbornSettings
     {
@@ -333,7 +337,7 @@ namespace
         for (std::size_t i = 0; i < std::size(keys); ++i) {
             for (std::size_t j = i + 1; j < std::size(keys); ++j) {
                 if (SameHotkey(*keys[i].second, *keys[j].second)) {
-                    logger::warn("DragonbornXP: {} and {} are both bound to {}, {} wins", keys[i].first, keys[j].first, *keys[i].second, keys[i].first);
+                    logger::warn("MiniPets: {} and {} are both bound to {}, {} wins", keys[i].first, keys[j].first, *keys[i].second, keys[i].first);
                 }
             }
         }
@@ -349,11 +353,15 @@ namespace
     void LoadSettings()
     {
         try {
-            if (!std::filesystem::exists(kSettingsPath)) {
+            const auto file = SettingsFile::Prepare(kSettingsPath, kLegacySettingsPath);
+            if (file.migrated) {
+                logger::info("MiniPets: settings migrated from DragonbornXP.ini");
+            }
+            if (!std::filesystem::exists(file.read)) {
                 return;
             }
 
-            std::ifstream input(kSettingsPath);
+            std::ifstream input(file.read);
             std::string line;
             while (std::getline(input, line)) {
                 const auto separator = line.find('=');
@@ -414,7 +422,7 @@ namespace
                     }
                 }
                 catch (...) {
-                    logger::warn("DragonbornXP ignored invalid setting '{}'", key);
+                    logger::warn("MiniPets ignored invalid setting '{}'", key);
                 }
             }
             g_settingsHotkey.store(g_settings.settingsHotkey);
@@ -422,7 +430,7 @@ namespace
             WarnAboutDuplicateHotkeys();
         }
         catch (const std::exception& error) {
-            logger::warn("DragonbornXP settings could not be loaded: {}", error.what());
+            logger::warn("MiniPets settings could not be loaded: {}", error.what());
         }
     }
 
@@ -447,7 +455,7 @@ namespace
                    << "hidden=" << (g_settings.petHidden ? 1 : 0) << '\n';
         }
         catch (const std::exception& error) {
-            logger::warn("DragonbornXP settings could not be saved: {}", error.what());
+            logger::warn("MiniPets settings could not be saved: {}", error.what());
         }
     }
 
@@ -566,7 +574,7 @@ namespace
 
         if (changed) {
             Invoke("dragonbornXP.setActive", shouldHide ? "false" : "true");
-            logger::info("DragonbornXP overlay {}", shouldHide ? std::string("hidden: ") + reason : std::string("shown"));
+            logger::info("MiniPets overlay {}", shouldHide ? std::string("hidden: ") + reason : std::string("shown"));
         }
 
         if (shouldHide) {
@@ -862,7 +870,7 @@ namespace
             }
         }
         catch (const std::exception& error) {
-            logger::warn("DragonbornXP ignored settings update: {}", error.what());
+            logger::warn("MiniPets ignored settings update: {}", error.what());
         }
     }
 
@@ -1285,7 +1293,7 @@ namespace
     {
         g_hub = DOVAHHUB_API::RequestApi();
         if (!g_hub) {
-            logger::info("DragonbornXP: DovahHub not found, no MiniPets tab");
+            logger::info("MiniPets: DovahHub not found, no MiniPets tab");
             return;
         }
         DOVAHHUB_API::ModuleDesc desc{};
@@ -1299,13 +1307,13 @@ namespace
         desc.onEvent = &OnHubEvent;
         const auto result = g_hub->RegisterModule(&desc, &g_hubModule);
         if (result != DOVAHHUB_API::Result::Ok) {
-            logger::warn("DragonbornXP: DovahHub refused the MiniPets tab ({})", static_cast<int>(result));
+            logger::warn("MiniPets: DovahHub refused the MiniPets tab ({})", static_cast<int>(result));
             g_hub = nullptr;
             g_hubModule = 0;
             return;
         }
         (void)g_hub->AddSettings(g_hubModule, kHubSettingsSchema);
-        logger::info("DragonbornXP: MiniPets tab registered with DovahHub {} on {}", g_hub->hostVersion, g_hub->host);
+        logger::info("MiniPets: MiniPets tab registered with DovahHub {} on {}", g_hub->hostVersion, g_hub->host);
     }
 
     // the page told us how a feed/play went: on to the tab and to API listeners
@@ -1520,7 +1528,7 @@ namespace
                     return;
                 }
                 if (scanCode == g_settingsHotkey.load() && shiftDown == g_settingsHotkeyRequiresShift.load()) {
-                    logger::info("DragonbornXP settings hotkey pressed: {}", g_settings.settingsHotkeyName);
+                    logger::info("MiniPets settings hotkey pressed: {}", g_settings.settingsHotkeyName);
                     OpenSettings();
                     return;
                 }
@@ -1562,12 +1570,12 @@ namespace
         StorePetKey(g_hideKey, g_settings.hideHotkeyName);
         g_prismaUI = PRISMA_UI_API::RequestPluginAPI<PRISMA_UI_API::IVPrismaUI1>();
         if (!g_prismaUI) {
-            logger::critical("PrismaUI was not found. DragonbornXP will not display its overlay.");
+            logger::critical("PrismaUI was not found. MiniPets will not display its overlay.");
             return;
         }
 
-        g_view = g_prismaUI->CreateView("DragonbornXP/index.html", [](PrismaView view) {
-            logger::info("DragonbornXP Prisma UI view ready: {}", view);
+        g_view = g_prismaUI->CreateView("MiniPets/index.html", [](PrismaView view) {
+            logger::info("MiniPets Prisma UI view ready: {}", view);
             g_prismaUI->Hide(view);
             g_overlayHiddenForMenus.store(true);
             g_prismaUI->RegisterJSListener(view, "settingsChanged", [](const char* payload) {
@@ -1617,7 +1625,7 @@ namespace
         RegisterGameEvents();
         RegisterPreviewKeys();
         StartCompanionStatePoller();
-        logger::info("DragonbornXP initialized. Preview keys {}.", g_settings.debugPreviewKeys ? "enabled (F6 XP, F7 level-up)" : "disabled");
+        logger::info("MiniPets initialized. Preview keys {}.", g_settings.debugPreviewKeys ? "enabled (F6 XP, F7 level-up)" : "disabled");
     }
 }
 
@@ -1674,6 +1682,23 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
     }
 }
 
+// A manual install that kept the 1.7 files has two copies of the plugin running. Mod managers
+// replace the folder, so only hand-copied installs can get here.
+static void WarnAboutLeftoverDll()
+{
+    if (!REX::W32::GetModuleHandleW(L"DragonbornXP.dll")) {
+        return;
+    }
+    logger::warn("MiniPets: the old DragonbornXP.dll is still installed next to MiniPets.dll");
+    REX::W32::MessageBoxW(nullptr,
+        L"MiniPets 1.8 replaced DragonbornXP.dll, but the old file is still installed.\n\n"
+        L"Delete these from Skyrim's Data folder, then start the game again:\n"
+        L"    SKSE\\Plugins\\DragonbornXP.dll\n"
+        L"    PrismaUI\\views\\DragonbornXP\n\n"
+        L"Your pet, settings and hotkeys are kept.",
+        L"MiniPets", 0x00000030);  // MB_ICONWARNING
+}
+
 extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface* skse)
 {
     REL::Module::reset();
@@ -1687,7 +1712,9 @@ extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface* skse)
     }
 
     messaging->RegisterListener("SKSE", SKSEMessageHandler);
+    WarnAboutLeftoverDll();
 
+    // 'DBXP' is the co-save record from before the rename; every player's pet is stored under it
     if (auto* serialization = SKSE::GetSerializationInterface()) {
         serialization->SetUniqueID('DBXP');
         serialization->SetSaveCallback(OnGameSaved);

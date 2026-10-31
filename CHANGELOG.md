@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.0
+- The files are named after the mod: `MiniPets.dll`, `MiniPets.log`, `MiniPets.ini` and `PrismaUI/views/MiniPets`. Mod managers replace them on upgrade; hand-copied installs should delete `SKSE/Plugins/DragonbornXP.dll` and `PrismaUI/views/DragonbornXP` first (the game shows a reminder if the old DLL is still loaded)
+- Pets carry over: the save record is unchanged, and `DragonbornXP.ini` is copied to `MiniPets.ini` on the first load
+- `dovahmenu.json` ships with the view, so DovahMenu lists the mod as MiniPets with its Shift+B key
+
 ## 1.7.3
 - A MiniPets tab in DovahHub (0.92.1 or later, under Integrations): your companion or the pet you're raising, its bars, Feed and Play, the companion picker, and MiniPets' options on DovahHub's Settings tab. Nothing changes without DovahHub
 - An API for other SKSE plugins (`MiniPets_API.h`): state, feed, play, companion, card and clock settings, and events

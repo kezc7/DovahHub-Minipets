@@ -21,13 +21,17 @@ Needs SKSE64, Address Library and Prisma UI.
 
 ## Settings
 
-Press **Shift+B** in game. You can pick your companion, drag the card wherever you like (or use the sliders), make it bigger or smaller or switch it to a wide card, switch on raise-a-pet mode and look after your pet (Shift+N to feed, Shift+K to play), hide or show the pet with Shift+V, turn the clock on and pick its style, and change any of the hotkeys. Settings are saved to `Data/SKSE/Plugins/DragonbornXP.ini`.
+Press **Shift+B** in game. You can pick your companion, drag the card wherever you like (or use the sliders), make it bigger or smaller or switch it to a wide card, switch on raise-a-pet mode and look after your pet (Shift+N to feed, Shift+K to play), hide or show the pet with Shift+V, turn the clock on and pick its style, and change any of the hotkeys. Settings are saved to `Data/SKSE/Plugins/MiniPets.ini`.
 
 Setting `debug_preview_keys=1` in the INI turns on two test keys: F6 for an XP popup and F7 for a level-up.
 
 ## Installing
 
-Install `dovahhub-minipets<version>.zip` with your mod manager, or copy its `SKSE` and `PrismaUI` folders into Skyrim's `Data` folder.
+Install `dovahhub-minipets<version>.zip` with your mod manager, or copy its `SKSE` and `PrismaUI` folders into Skyrim's `Data` folder. It contains `SKSE/Plugins/MiniPets.dll`, `PrismaUI/views/MiniPets/` and the DovahHub tab under `PrismaUI/views/DovahHub/modules/pets/`.
+
+### Upgrading from 1.7.x
+
+1.8.0 renamed the files from DragonbornXP to MiniPets. Let your mod manager replace the mod and nothing else is needed: your pet is kept in the save, the settings are copied from `DragonbornXP.ini` to `MiniPets.ini` on the first load, and the hotkeys stay as they were. If you copied the files by hand, delete `SKSE/Plugins/DragonbornXP.dll` and the `PrismaUI/views/DragonbornXP` folder first; the game shows a reminder if the old DLL is still there.
 
 ## For other mods
 
@@ -44,7 +48,7 @@ xmake f -m release
 xmake build
 ```
 
-The build puts the files in `dist/DragonbornXP_<version>/` and makes the MO2 zip in the repo root.
+The build puts the files in `dist/MiniPets_<version>/` and makes the MO2 zip in the repo root.
 
 Tests:
 
