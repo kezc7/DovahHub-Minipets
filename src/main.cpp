@@ -65,6 +65,7 @@ namespace
         std::string playHotkeyName = "Shift+K";
         std::string cardShape = "square";
         std::string hideHotkeyName = "Shift+V";
+        std::string language = "en";
         bool petHidden = false;
     };
 
@@ -137,6 +138,12 @@ namespace
     bool IsSupportedClockStyle(std::string_view style)
     {
         return style == "plate" || style == "ribbon";
+    }
+
+    bool IsSupportedLanguage(std::string_view language)
+    {
+        return language == "en" || language == "fr" || language == "de" || language == "it" || language == "es" ||
+               language == "pl" || language == "tr" || language == "zh-CN" || language == "ja" || language == "ko";
     }
 
     bool ParseFlag(std::string_view value)
@@ -417,6 +424,9 @@ namespace
                     else if (key == "hide_hotkey" && ParseHotkey(value) != 0) {
                         g_settings.hideHotkeyName = value;
                     }
+                    else if (key == "language" && IsSupportedLanguage(value)) {
+                        g_settings.language = value;
+                    }
                     else if (key == "hidden") {
                         g_settings.petHidden = ParseFlag(value);
                     }
@@ -452,6 +462,7 @@ namespace
                    << "play_hotkey=" << g_settings.playHotkeyName << '\n'
                    << "card_shape=" << g_settings.cardShape << '\n'
                    << "hide_hotkey=" << g_settings.hideHotkeyName << '\n'
+                   << "language=" << g_settings.language << '\n'
                    << "hidden=" << (g_settings.petHidden ? 1 : 0) << '\n';
         }
         catch (const std::exception& error) {
@@ -473,6 +484,7 @@ namespace
                ",\"playHotkey\":" + JsonString(g_settings.playHotkeyName) +
                ",\"cardShape\":" + JsonString(g_settings.cardShape) +
                ",\"hideHotkey\":" + JsonString(g_settings.hideHotkeyName) +
+               ",\"language\":" + JsonString(g_settings.language) +
                ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") + "}";
     }
 
@@ -815,7 +827,7 @@ namespace
         }
     }
 
-    // x|y|hotkey|pet|clock|clockStyle|scale|raisePet|feedKey|playKey|shape|hideKey, everything after pet is optional
+    // x|y|hotkey|pet|clock|clockStyle|scale|raisePet|feedKey|playKey|shape|hideKey|language, everything after pet is optional
     void ApplySettings(std::string_view payload)
     {
         const auto parts = Split(payload, '|');
@@ -836,6 +848,7 @@ namespace
             const auto playKey = parts.size() > 9 && ParseHotkey(parts[9]) != 0 ? parts[9] : g_settings.playHotkeyName;
             const auto cardShape = parts.size() > 10 && IsSupportedCardShape(parts[10]) ? parts[10] : g_settings.cardShape;
             const auto hideKey = parts.size() > 11 && ParseHotkey(parts[11]) != 0 ? parts[11] : g_settings.hideHotkeyName;
+            const auto language = parts.size() > 12 && IsSupportedLanguage(parts[12]) ? parts[12] : g_settings.language;
             bool requiresShift = false;
             const auto hotkey = ParseHotkey(hotkeyName, &requiresShift);
             if (hotkey == 0 || x < -1 || y < -1 || !IsSupportedPet(pet)) {
@@ -857,6 +870,7 @@ namespace
             g_settings.playHotkeyName = playKey;
             g_settings.cardShape = cardShape;
             g_settings.hideHotkeyName = hideKey;
+            g_settings.language = language;
             StorePetKey(g_feedKey, feedKey);
             StorePetKey(g_playKey, playKey);
             StorePetKey(g_hideKey, hideKey);
@@ -1071,7 +1085,8 @@ namespace
 {"key":"clock_style","label":"Clock style","type":"choice","options":[{"value":"plate","label":"Plate"},{"value":"ribbon","label":"Ribbon"}],"value":"plate"},
 {"key":"scale","label":"Card size","type":"range","min":50,"max":200,"step":10,"value":100,"unit":"%"},
 {"key":"card_shape","label":"Card shape","type":"choice","options":[{"value":"square","label":"Square"},{"value":"wide","label":"Wide"}],"value":"square"},
-{"key":"hidden","label":"Hide the card","type":"toggle","value":false,"note":"Shift+V toggles this in game"}]})";
+{"key":"hidden","label":"Hide the card","type":"toggle","value":false,"note":"Shift+V toggles this in game"},
+{"key":"language","label":"Language","type":"choice","options":[{"value":"en","label":"English"},{"value":"fr","label":"Français"},{"value":"de","label":"Deutsch"},{"value":"it","label":"Italiano"},{"value":"es","label":"Español"},{"value":"pl","label":"Polski"},{"value":"tr","label":"Türkçe"},{"value":"zh-CN","label":"简体中文"},{"value":"ja","label":"日本語"},{"value":"ko","label":"한국어"}],"value":"en"}]})";
 
     bool HasPet()
     {
@@ -1114,6 +1129,7 @@ namespace
                       ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") + "}" +
                       ",\"clock\":{\"enabled\":" + (g_settings.showClock ? "true" : "false") +
                       ",\"style\":" + JsonString(g_settings.clockStyle) + "}" +
+                      ",\"language\":" + JsonString(g_settings.language) +
                       ",\"hotkeys\":{\"settings\":" + JsonString(g_settings.settingsHotkeyName) +
                       ",\"feed\":" + JsonString(g_settings.feedHotkeyName) +
                       ",\"play\":" + JsonString(g_settings.playHotkeyName) +
@@ -1210,6 +1226,7 @@ namespace
                ",\"clock_style\":" + JsonString(g_settings.clockStyle) +
                ",\"scale\":" + std::to_string(g_settings.scale) +
                ",\"card_shape\":" + JsonString(g_settings.cardShape) +
+               ",\"language\":" + JsonString(g_settings.language) +
                ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") + "}";
     }
 
@@ -1234,6 +1251,9 @@ namespace
         }
         else if (key == "card_shape" && IsSupportedCardShape(value)) {
             g_settings.cardShape = value;
+        }
+        else if (key == "language" && IsSupportedLanguage(value)) {
+            g_settings.language = value;
         }
         else if (key == "hidden") {
             SetPetHidden(ParseFlag(value));
