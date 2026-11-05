@@ -1612,6 +1612,11 @@ namespace
             g_prismaUI->RegisterJSListener(view, "settingsClosed", [](const char*) {
                 CloseSettings();
             });
+            // one-line reports from the page (language, whether i18n.js loaded)
+            g_prismaUI->RegisterJSListener(view, "viewLog", [](const char* payload) {
+                const std::string_view line = payload ? payload : "";
+                logger::info("MiniPets page: {}", line.substr(0, 200));
+            });
             g_prismaUI->RegisterJSListener(view, "petStateChanged", [](const char* payload) {
                 const std::string copy(payload ? payload : "");
                 if (const auto* taskInterface = SKSE::GetTaskInterface()) {

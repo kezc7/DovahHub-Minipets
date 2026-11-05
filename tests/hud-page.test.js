@@ -41,6 +41,7 @@ function loadPage({ skip = [] } = {}) {
   const element = makeElements();
   const document = element('document');
   const errors = [];
+  const logged = [];
   const sandbox = {
     document,
     console: { log() {}, warn() {}, info() {}, error: (...args) => errors.push(args.join(' ')) },
@@ -52,6 +53,7 @@ function loadPage({ skip = [] } = {}) {
     Option: function Option(text, value) { return { text, value, textContent: text }; },
     URLSearchParams, Math, Date, JSON, Object, Array, String, Number, Boolean, Map, Set, Promise, Symbol, Error
   };
+  sandbox.viewLog = line => logged.push(line);
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
   sandbox.addEventListener = () => {};
@@ -61,7 +63,7 @@ function loadPage({ skip = [] } = {}) {
     if (skip.includes(file)) continue;
     vm.runInContext(fs.readFileSync(path.join(VIEW_DIR, file), 'utf8'), sandbox, { filename: file });
   }
-  return { sandbox, element, errors };
+  return { sandbox, element, errors, logged };
 }
 
 test('the HUD page starts with every script present', () => {
@@ -108,4 +110,13 @@ test('the card and the settings panel name the egg in the chosen language', () =
   assert.equal(page.element('#pet-life-name').textContent, 'Ei von Ember (Fuchs)');
   const english = eggPage('en');
   assert.equal(english.element('#pet-life-name').textContent, "Ember's egg (Fox)");
+});
+
+test('the page reports its language and catalogue to MiniPets.log', () => {
+  const page = loadPage();
+  page.sandbox.dragonbornXP.initialize({ language: 'de', x: -1, y: -1 });
+  assert.equal(page.logged.at(-1), 'language de, catalogue loaded');
+  const bare = loadPage({ skip: ['i18n.js'] });
+  bare.sandbox.dragonbornXP.initialize({ language: 'de', x: -1, y: -1 });
+  assert.equal(bare.logged.at(-1), 'language en, i18n.js missing, English fallback');
 });

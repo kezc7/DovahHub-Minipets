@@ -706,6 +706,17 @@
     if (captionFull) updateCopy();
     else title.textContent = petName();
     if (persist) queueNativeSettingsChanged();
+    reportLanguage();
+  }
+
+  // to MiniPets.log, once per change, so a log shows which language and catalogue the page used
+  let reportedLanguage = '';
+  function reportLanguage() {
+    if (typeof window.viewLog !== 'function') return;
+    const line = `language ${language}, ${window.PetI18n ? 'catalogue loaded' : 'i18n.js missing, English fallback'}`;
+    if (line === reportedLanguage) return;
+    reportedLanguage = line;
+    window.viewLog(line);
   }
 
   function syncSettingsFields() {
@@ -1003,6 +1014,7 @@
   window.dragonbornXP = {
     initialize(data) {
       applyNativeSettings(data);
+      reportLanguage();
     },
     skillGain(data) {
       const skill = data && data.skill ? data.skill : 'Skill';
