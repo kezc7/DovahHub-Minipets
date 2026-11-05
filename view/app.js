@@ -51,26 +51,26 @@
   const petSpecies = petSprites.species;
   // idle = one-shot idle classes from styles.css, {name} becomes the pet name
   const profiles = {
-    dovahmin: { idle: ['look', 'flap'], idleDelay: 3400, idleDuration: 1000, moving: ['Off we fly!', '{name} takes to the skies.'], combat: ['Breathing fire!', '{name} joins the fight.'] },
-    dovahpink: { idle: ['look', 'flap'], idleDelay: 3200, idleDuration: 1000, moving: ['Off we fly!', '{name} takes to the skies.'], combat: ['Breathing fire!', '{name} joins the fight.'] },
-    mudcrab: { idle: ['snap', 'hop'], idleDelay: 2600, idleDuration: 760, moving: ['Scuttle scuttle!', '{name} hurries along sideways.'], combat: ['Snap snap!', '{name} raises both claws.'] },
-    skeever: { idle: ['look', 'hop'], idleDelay: 2200, idleDuration: 900, moving: ['Scurrying along', '{name} darts between your feet.'], combat: ['Squeak!', '{name} bares its teeth.'] },
-    fox: { idle: ['wag', 'look'], idleDelay: 3000, idleDuration: 920, moving: ['Off you run!', '{name} trots beside you.'], combat: ['Pounce!', '{name} leaps into the fray.'] },
-    sabrecat: { idle: ['stretch', 'wag'], idleDelay: 3700, idleDuration: 1000, moving: ['On the prowl', '{name} pads along silently.'], combat: ['Roar!', '{name} bares its sabres.'] },
-    'frostbite-spider': { idle: ['hop', 'look'], idleDelay: 2800, idleDuration: 900, moving: ['Skittering', '{name} follows on eight legs.'], combat: ['Venom ready', '{name} strikes with frosty fangs.'] },
-    horker: { idle: ['look', 'stretch'], idleDelay: 4200, idleDuration: 1000, moving: ['Waddle waddle', '{name} flops along behind you.'], combat: ['Tusks out!', '{name} charges in. Slowly.'] },
-    troll: { idle: ['stretch', 'look'], idleDelay: 4300, idleDuration: 1000, moving: ['Lumbering on', '{name} stomps after you.'], combat: ['Rrraagh!', '{name} pounds the ground.'] },
-    'flame-atronach': { idle: ['flare', 'look'], idleDelay: 1800, idleDuration: 800, moving: ['Drifting flame', '{name} floats along beside you.'], combat: ['Fireball!', '{name} hurls a ball of flame.'] },
-    'frost-atronach': { idle: ['stretch', 'look'], idleDelay: 3900, idleDuration: 1000, moving: ['Crunch, crunch', '{name} marches through the cold.'], combat: ['Ice fists!', '{name} wades into battle.'] },
-    spriggan: { idle: ['sway', 'look'], idleDelay: 3200, idleDuration: 1200, moving: ['Rustling along', '{name} walks with the forest.'], combat: ['Nature’s wrath', '{name} calls on the wilds.'] },
-    'dwarven-spider': { idle: ['look', 'hop'], idleDelay: 2300, idleDuration: 900, moving: ['Clockwork march', '{name} clicks along on brass legs.'], combat: ['Zap!', '{name} crackles with Dwemer power.'] },
-    chaurus: { idle: ['look', 'sway'], idleDelay: 2500, idleDuration: 1200, moving: ['Creeping on', '{name} clicks along the path.'], combat: ['Spit attack!', '{name} hisses at your foes.'] },
-    netch: { idle: ['flare', 'sway'], idleDelay: 3000, idleDuration: 800, moving: ['Floating by', '{name} bobs along on the breeze.'], combat: ['Sting!', '{name} lashes out with tentacles.'] },
-    mammoth: { idle: ['look', 'ear'], idleDelay: 4700, idleDuration: 1000, moving: ['Stomp, stomp', '{name} plods along beside you.'], combat: ['Trumpet!', '{name} charges tusks first.'] },
-    'dragon-priest': { idle: ['look', 'flare'], idleDelay: 3800, idleDuration: 900, moving: ['Hovering on', '{name} glides silently after you.'], combat: ['Ancient magic', '{name} channels the old powers.'] },
-    wisp: { idle: ['flare', 'hop'], idleDelay: 1700, idleDuration: 800, moving: ['Glimmering along', '{name} lights the way.'], combat: ['Spark!', '{name} flares with blinding light.'] },
-    'death-hound': { idle: ['look', 'wag'], idleDelay: 2800, idleDuration: 920, moving: ['On the hunt', '{name} lopes at your side.'], combat: ['Snarl!', '{name} lunges with a growl.'] },
-    chicken: { idle: ['peck', 'hop'], idleDelay: 2100, idleDuration: 720, moving: ['Cluck cluck!', '{name} hurries to keep up.'], combat: ['Bawk!', '{name} flaps furiously at your foes.'] }
+    dovahmin: { idle: ['look', 'flap'], idleDelay: 3400, idleDuration: 1000 },
+    dovahpink: { idle: ['look', 'flap'], idleDelay: 3200, idleDuration: 1000 },
+    mudcrab: { idle: ['snap', 'hop'], idleDelay: 2600, idleDuration: 760 },
+    skeever: { idle: ['look', 'hop'], idleDelay: 2200, idleDuration: 900 },
+    fox: { idle: ['wag', 'look'], idleDelay: 3000, idleDuration: 920 },
+    sabrecat: { idle: ['stretch', 'wag'], idleDelay: 3700, idleDuration: 1000 },
+    'frostbite-spider': { idle: ['hop', 'look'], idleDelay: 2800, idleDuration: 900 },
+    horker: { idle: ['look', 'stretch'], idleDelay: 4200, idleDuration: 1000 },
+    troll: { idle: ['stretch', 'look'], idleDelay: 4300, idleDuration: 1000 },
+    'flame-atronach': { idle: ['flare', 'look'], idleDelay: 1800, idleDuration: 800 },
+    'frost-atronach': { idle: ['stretch', 'look'], idleDelay: 3900, idleDuration: 1000 },
+    spriggan: { idle: ['sway', 'look'], idleDelay: 3200, idleDuration: 1200 },
+    'dwarven-spider': { idle: ['look', 'hop'], idleDelay: 2300, idleDuration: 900 },
+    chaurus: { idle: ['look', 'sway'], idleDelay: 2500, idleDuration: 1200 },
+    netch: { idle: ['flare', 'sway'], idleDelay: 3000, idleDuration: 800 },
+    mammoth: { idle: ['look', 'ear'], idleDelay: 4700, idleDuration: 1000 },
+    'dragon-priest': { idle: ['look', 'flare'], idleDelay: 3800, idleDuration: 900 },
+    wisp: { idle: ['flare', 'hop'], idleDelay: 1700, idleDuration: 800 },
+    'death-hound': { idle: ['look', 'wag'], idleDelay: 2800, idleDuration: 920 },
+    chicken: { idle: ['peck', 'hop'], idleDelay: 2100, idleDuration: 720 }
   };
 
   const previewMode = new URLSearchParams(window.location.search).get('preview');
@@ -106,7 +106,7 @@
   let lastClockData = null;
   let shownPetKey = '';
   let resetArmed = false;
-  const eggProfile = { idle: ['hop'], idleDelay: 4200, idleDuration: 700, moving: ['Rolling along', 'The egg wobbles along with you.'], combat: ['Hide the egg!', 'The egg huddles out of harm\u2019s way.'] };
+  const eggProfile = { idle: ['hop'], idleDelay: 4200, idleDuration: 700 };
   let showClock = false;
   // in-game hour (fractional) and the per-day scenery seed
   let skyHours = 12.5;
@@ -148,7 +148,7 @@
 
   function englishOnlyI18n() {
     const english = {
-      celebrating: 'Celebrating', celebratingDetail: '{name} is delighted.',
+      celebrating: 'Celebrating!', celebratingDetail: '{name} is delighted.',
       chooseEgg: 'Choose an egg', chooseEggHint: 'Pick the companion you want to raise.',
       combatTitle: 'Ready for battle', combatDetail: '{name} joins the fight.',
       movingTitle: 'On the move', movingDetail: '{name} is travelling with you.',
@@ -158,7 +158,8 @@
       dragonSoulOne: '+1 soul.', dragonSoulMany: '+{amount} souls.',
       pressKey: 'Press a key', hotkeyAllowed: 'Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.',
       hotkeyAlreadyUsed: '{key} is already used for {action}.', saveHotkeyHint: 'Press Save settings to keep this key.',
-      skyrim: 'Skyrim', eggName: "{name}'s egg"
+      skyrim: 'Skyrim', eggName: "{name}'s egg", skillGrows: '{skill} grows stronger.', levelNumber: 'Level {level}!',
+      eggGlows: 'The egg glows with warmth!', feedAfterHatching: 'Feed (after hatching)', startOverConfirm: 'Click again to start over'
     };
     const fill = (template, vars = {}) => String(template).replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) => vars[name] === undefined ? match : vars[name]);
     return {
@@ -167,6 +168,8 @@
       // index.html is written in English already
       apply() {},
       t: (key, vars) => fill(english[key] === undefined ? key : english[key], vars),
+      // the companions' own lines live in i18n.js; without it every companion uses the shared line
+      caption: () => null,
       petName: id => (petSprites.names || {})[id] || id,
       species: id => (petSprites.species || {})[id] || ''
     };
@@ -364,9 +367,14 @@
     } else if ((state === 'moving' || state === 'combat') && state !== announcedBase) {
       // only announce a state change once
       announcedBase = state;
-      const copy = state === 'combat'
-        ? [t('combatTitle'), t('combatDetail', { name: petName() }), 92]
-        : [t('movingTitle'), t('movingDetail', { name: petName() }), 42];
+      // the companion's own line where the language has one, else the shared line
+      const own = petI18n.caption(isEgg() ? 'egg' : shownSpecies(), state);
+      const fill = state === 'combat' ? 92 : 42;
+      const copy = own
+        ? [fillName(own[0]), fillName(own[1]), fill]
+        : state === 'combat'
+          ? [t('combatTitle'), t('combatDetail', { name: petName() }), fill]
+          : [t('movingTitle'), t('movingDetail', { name: petName() }), fill];
       showCaption(copy, CAPTION_HOLD_MS);
     } else if (state === 'idle' || state === 'landing') {
       announcedBase = 'idle';
@@ -1002,8 +1010,8 @@
     document.querySelector('#need-happiness').style.width = `${Math.round(petLife.happiness)}%`;
     document.querySelector('#pet-feed').disabled = egg;
     // eggs can't eat, say so rather than looking like the key is taken
-    document.querySelector('#pet-feed').textContent = egg ? t('feed') : `${t('feed')} (${feedHotkey})`;
-    document.querySelector('#pet-reset').textContent = resetArmed ? t('startOver') : t('startOver');
+    document.querySelector('#pet-feed').textContent = egg ? t('feedAfterHatching') : `${t('feed')} (${feedHotkey})`;
+    document.querySelector('#pet-reset').textContent = resetArmed ? t('startOverConfirm') : t('startOver');
     petLifeHint.textContent = egg
       ? 'XP, level-ups and time keep the egg warm.'
       : { hungry: `${name} is hungry.`, sad: `${name} feels lonely.`, miserable: `${name} needs food and attention.`, happy: `${name} is very happy!`, content: `${name} is doing fine.` }[petLifeRules.mood(petLife)];
@@ -1018,12 +1026,12 @@
     },
     skillGain(data) {
       const skill = data && data.skill ? data.skill : 'Skill';
-      showToast('gain', t('xpTitle'), isEgg() && petLife ? t('eggWarm') : t('celebratingDetail', { name: skill }), 68);
+      showToast('gain', t('xpTitle'), isEgg() && petLife ? t('eggWarm') : t('skillGrows', { skill }), 68);
       petXp(1);
     },
     levelUp(data) {
       const level = data && data.level ? data.level : '?';
-      showToast('level-up', `${t('levelTitle').replace('!', '')} ${level}!`, isEgg() && petLife ? t('eggWarm') : t('dragonbornMighty'), 100);
+      showToast('level-up', t('levelNumber', { level }), isEgg() && petLife ? t('eggGlows') : t('dragonbornMighty'), 100);
       petXp('level');
     },
     dragonSoul(data) {

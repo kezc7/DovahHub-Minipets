@@ -15,9 +15,13 @@ function makeElements() {
   function element(name) {
     if (elements.has(name)) return elements.get(name);
     const store = { dataset: {}, textContent: '', value: '' };
+    const listeners = {};
     const self = new Proxy(function () {}, {
       get(target, prop) {
         if (prop in store) return store[prop];
+        if (prop === 'addEventListener') return (type, fn) => { (listeners[type] = listeners[type] || []).push(fn); };
+        // test helper: run the listeners app.js added
+        if (prop === 'fire') return type => (listeners[type] || []).forEach(fn => fn({ preventDefault() {}, stopPropagation() {}, target: self }));
         if (prop === Symbol.iterator) return function* () {};
         if (prop === Symbol.toPrimitive) return () => '';
         if (prop === 'then') return undefined;
@@ -119,4 +123,51 @@ test('the page reports its language and catalogue to MiniPets.log', () => {
   const bare = loadPage({ skip: ['i18n.js'] });
   bare.sandbox.dragonbornXP.initialize({ language: 'de', x: -1, y: -1 });
   assert.equal(bare.logged.at(-1), 'language en, i18n.js missing, English fallback');
+});
+
+// The English the card showed in 1.8.0, before the language work; English must not change.
+function card(page) {
+  return `${page.element('#title').textContent} | ${page.element('#detail').textContent}`;
+}
+
+function freshPage(settings = {}) {
+  const page = loadPage();
+  page.sandbox.dragonbornXP.initialize(Object.assign({ language: 'en', x: -1, y: -1, pet: 'fox' }, settings));
+  return page;
+}
+
+test('English popups read as they did in 1.8.0', () => {
+  let page = freshPage();
+  page.sandbox.dragonbornXP.skillGain({ skill: 'Smithing' });
+  assert.equal(card(page), 'XP gained | Smithing grows stronger.');
+  page = freshPage();
+  page.sandbox.dragonbornXP.levelUp({ level: 3 });
+  assert.equal(card(page), 'Level 3! | The Dragonborn grows mighty.');
+  page = freshPage();
+  page.sandbox.dragonbornXP.companionState({ state: 'flying' });
+  assert.equal(card(page), 'Off you run! | Ember trots beside you.');
+  page.sandbox.dragonbornXP.companionState({ state: 'combat' });
+  assert.equal(card(page), 'Pounce! | Ember leaps into the fray.');
+  page = freshPage({ pet: 'mudcrab' });
+  page.sandbox.dragonbornXP.companionState({ state: 'combat' });
+  assert.equal(card(page), 'Snap snap! | Clack raises both claws.');
+});
+
+test('English egg texts read as they did in 1.8.0', () => {
+  const page = eggPage('en');
+  assert.equal(page.element('#pet-feed').textContent, 'Feed (after hatching)');
+  assert.equal(page.element('#pet-reset').textContent, 'Start over');
+  page.element('#pet-reset').fire('click');
+  assert.equal(page.element('#pet-reset').textContent, 'Click again to start over');
+  page.sandbox.dragonbornXP.levelUp({ level: 4 });
+  assert.equal(card(page), 'Level 4! | The egg glows with warmth!');
+});
+
+test('a language without a companion line uses its own shared line, not English', () => {
+  const page = freshPage({ language: 'de' });
+  page.sandbox.dragonbornXP.companionState({ state: 'combat' });
+  const i18n = require('../view/i18n.js');
+  i18n.setLanguage('de');
+  assert.equal(card(page), `${i18n.t('combatTitle')} | ${i18n.t('combatDetail', { name: 'Ember' })}`);
+  i18n.setLanguage('en');
 });
