@@ -158,7 +158,7 @@
       dragonSoulOne: '+1 soul.', dragonSoulMany: '+{amount} souls.',
       pressKey: 'Press a key', hotkeyAllowed: 'Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.',
       hotkeyAlreadyUsed: '{key} is already used for {action}.', saveHotkeyHint: 'Press Save settings to keep this key.',
-      skyrim: 'Skyrim'
+      skyrim: 'Skyrim', eggName: "{name}'s egg"
     };
     const fill = (template, vars = {}) => String(template).replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) => vars[name] === undefined ? match : vars[name]);
     return {
@@ -175,7 +175,7 @@
   function petName() {
     if (raisePet && !petLife) return 'No egg yet';
     const name = petI18n.petName(shownSpecies()) || 'Dovahmin';
-    return isEgg() ? `${name}'s egg` : name;
+    return isEgg() ? t('eggName', { name }) : name;
   }
 
   function t(key, vars) {
@@ -909,7 +909,7 @@
     petLife = petLifeRules.create(species, gameHours ?? 0);
     savePet();
     refreshPet(true);
-    petNotice(`${petNames[species]}'s egg`, 'Earn XP to help it hatch.');
+    petNotice(t('eggName', { name: petI18n.petName(species) }), 'Earn XP to help it hatch.');
   }
 
   function startOver() {
@@ -985,7 +985,7 @@
     const name = petNames[petLife.species];
     const species = localizedSpecies(petLife.species);
     const stage = petLifeRules.growth(petLife, gameHours ?? petLife.laidAt);
-    petLifeName.textContent = egg ? `${name}'s egg${species ? ` (${species})` : ''}` : `${name}, ${{ baby: 'baby', young: 'young', adult: 'all grown up' }[stage]}`;
+    petLifeName.textContent = egg ? `${t('eggName', { name })}${species ? ` (${species})` : ''}` : `${name}, ${{ baby: 'baby', young: 'young', adult: 'all grown up' }[stage]}`;
     document.querySelector('#need-warmth').style.width = `${Math.round(petLifeRules.eggProgress(petLife) * 100)}%`;
     document.querySelector('#need-food').style.width = `${Math.round(petLife.hunger)}%`;
     document.querySelector('#need-happiness').style.width = `${Math.round(petLife.happiness)}%`;

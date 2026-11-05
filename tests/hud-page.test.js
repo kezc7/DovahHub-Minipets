@@ -81,3 +81,31 @@ test('without i18n.js the popups use the English fallback text', () => {
   assert.equal(page.element('#title').textContent, 'Dragon soul absorbed');
   assert.equal(page.element('#detail').textContent, '+2 souls.');
 });
+
+function eggPage(language) {
+  const page = loadPage();
+  const life = require('../view/pet-life.js');
+  page.sandbox.dragonbornXP.initialize({ language, raisePet: true, x: -1, y: -1 });
+  page.sandbox.dragonbornXP.petState({ state: life.serialize(life.create('fox', 0)) });
+  page.sandbox.dragonbornXP.openSettings({ language, raisePet: true, x: -1, y: -1 });
+  return page;
+}
+
+test('the egg label comes from the catalogue in every language', () => {
+  const i18n = require('../view/i18n.js');
+  for (const language of i18n.languages) {
+    i18n.setLanguage(language);
+    const label = i18n.t('eggName', { name: 'Ember' });
+    assert.notEqual(label, 'eggName', `${language} has an eggName entry`);
+    assert.ok(label.includes('Ember'), `${language} eggName places {name}: ${label}`);
+    if (language !== 'en') assert.ok(!label.includes("'s"), `${language} eggName has no English possessive: ${label}`);
+  }
+  i18n.setLanguage('en');
+});
+
+test('the card and the settings panel name the egg in the chosen language', () => {
+  const page = eggPage('de');
+  assert.equal(page.element('#pet-life-name').textContent, 'Ei von Ember (Fuchs)');
+  const english = eggPage('en');
+  assert.equal(english.element('#pet-life-name').textContent, "Ember's egg (Fox)");
+});
