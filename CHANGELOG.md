@@ -2,6 +2,9 @@
 
 ## 1.8.1-beta
 - A Language setting with ten languages. Translations other than English are machine translations, and the setting says so; corrections welcome
+- The egg is named in the chosen language ("Ei von Ember" rather than "Ember's egg")
+- If `i18n.js` is missing from the view folder the card stays in English instead of stopping; `MiniPets.log` says which language and catalogue the page used
+- Upgrading from 1.8.0-beta: install over it in your mod manager; nothing else changes
 
 ## 1.8.0-beta
 - Upgrading from 1.7.3: install this zip over the old one in your mod manager and let it replace the files, then start the game. Your pet, settings and hotkeys are kept. A clean install needs nothing extra. Do not keep 1.7.3 enabled next to it
