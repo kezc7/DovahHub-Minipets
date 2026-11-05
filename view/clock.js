@@ -1,8 +1,8 @@
 (function (root, factory) {
-  const api = factory();
+  const api = factory(root);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.PetClock = api;
-})(typeof window !== 'undefined' ? window : globalThis, function () {
+})(typeof window !== 'undefined' ? window : globalThis, function (root) {
   // 8:42 PM / Morndas, 17th of Last Seed
   function formatTime(hour, minute) {
     const safeHour = ((Math.floor(Number(hour)) % 24) + 24) % 24 || 0;
@@ -19,6 +19,8 @@
   }
 
   function formatDate(data) {
+    const i18n = root.PetI18n;
+    if (i18n && typeof i18n.formatDate === 'function') return i18n.formatDate(data);
     const parts = [];
     if (data && data.weekday) parts.push(`${data.weekday}, `);
     parts.push(ordinal(data && data.day));

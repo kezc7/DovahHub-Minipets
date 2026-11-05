@@ -30,6 +30,8 @@
   const clockTime = document.querySelector('#clock-time');
   const clockDate = document.querySelector('#clock-date');
   const petClock = window.PetClock;
+  const petI18n = window.PetI18n;
+  const languageSelect = document.querySelector('#language-select');
   const petSky = window.PetSky;
   const petRegions = window.PetRegions;
   // room the clock needs above the card and the pet bars need below it, for clamping
@@ -78,6 +80,7 @@
   let archetype = 'flyer';
   let timeOfDay = 'day';
   let weather = 'clear';
+  let language = 'en';
   // set by the plugin, see regions.js
   let region = 'skyrim';
 
@@ -98,6 +101,7 @@
   let petHidden = false;
   let petLife = null;
   let gameHours = null;
+  let lastClockData = null;
   let shownPetKey = '';
   let resetArmed = false;
   const eggProfile = { idle: ['hop'], idleDelay: 4200, idleDuration: 700, moving: ['Rolling along', 'The egg wobbles along with you.'], combat: ['Hide the egg!', 'The egg huddles out of harm\u2019s way.'] };
@@ -142,8 +146,16 @@
 
   function petName() {
     if (raisePet && !petLife) return 'No egg yet';
-    const name = petNames[shownSpecies()] || 'Dovahmin';
+    const name = petI18n.petName(shownSpecies()) || 'Dovahmin';
     return isEgg() ? `${name}'s egg` : name;
+  }
+
+  function t(key, vars) {
+    return petI18n.t(key, vars);
+  }
+
+  function localizedSpecies(id) {
+    return petI18n.species(id) || petSpecies[id] || '';
   }
 
   function profile() {
@@ -320,11 +332,14 @@
     if (payload) {
       showCaption([payload.title, payload.detail, payload.fill], 0);
     } else if (state === 'celebrating') {
-      showCaption(['Celebrating!', `${petName()} is delighted.`, 76], 0);
+      showCaption([t('celebrating'), t('celebratingDetail', { name: petName() }), 76], 0);
     } else if ((state === 'moving' || state === 'combat') && state !== announcedBase) {
       // only announce a state change once
       announcedBase = state;
-      showCaption([...profile()[state].map(fillName), state === 'combat' ? 92 : 42], CAPTION_HOLD_MS);
+      const copy = state === 'combat'
+        ? [t('combatTitle'), t('combatDetail', { name: petName() }), 92]
+        : [t('movingTitle'), t('movingDetail', { name: petName() }), 42];
+      showCaption(copy, CAPTION_HOLD_MS);
     } else if (state === 'idle' || state === 'landing') {
       announcedBase = 'idle';
       collapseCaption();
@@ -609,7 +624,7 @@
     if (typeof window.settingsChanged !== 'function') return;
     const x = hasCustomPosition() ? positionX : -1;
     const y = hasCustomPosition() ? positionY : -1;
-    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}|${cardShape}|${hideHotkey}`);
+    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}|${cardShape}|${hideHotkey}|${language}`);
   }
 
   function queueNativeSettingsChanged() {
@@ -631,10 +646,45 @@
     if (typeof window.settingsClosed === 'function') window.settingsClosed('');
   }
 
+  function companionOptionLabel(id) {
+    const name = petI18n.petName(id);
+    const species = localizedSpecies(id);
+    return species ? `${name} — ${species}` : name;
+  }
+
+  function localizeCompanionOptions() {
+    if (petSelect) {
+      Array.from(petSelect.options).forEach(option => { option.textContent = companionOptionLabel(option.value); });
+    }
+    const labPet = document.querySelector('#animation-lab-pet');
+    if (labPet && labPet.options.length) {
+      Array.from(labPet.options).forEach(option => { option.textContent = companionOptionLabel(option.value); });
+    }
+    document.querySelectorAll('[data-pet-label]').forEach(label => {
+      label.textContent = companionOptionLabel(label.dataset.petLabel);
+    });
+  }
+
+  function setLanguage(next, persist = true) {
+    language = petI18n.setLanguage(next);
+    petI18n.apply(document);
+    localizeCompanionOptions();
+    if (languageSelect) languageSelect.value = language;
+    renderPetPanel();
+    if (lastClockData) {
+      clockTime.textContent = petClock.formatTime(lastClockData.hour, lastClockData.minute);
+      clockDate.textContent = petClock.formatDate(lastClockData);
+    }
+    if (captionFull) updateCopy();
+    else title.textContent = petName();
+    if (persist) queueNativeSettingsChanged();
+  }
+
   function syncSettingsFields() {
     syncPositionFields();
     settingsHotkeyButton.textContent = settingsHotkey;
     petSelect.value = pet;
+    languageSelect.value = language;
     document.querySelector('#feed-hotkey').textContent = feedHotkey;
     document.querySelector('#play-hotkey').textContent = playHotkey;
     document.querySelector('#hide-hotkey').textContent = hideHotkey;
@@ -653,6 +703,7 @@
       positionX = settingsSnapshot.x;
       positionY = settingsSnapshot.y;
       settingsHotkey = settingsSnapshot.hotkey;
+      setLanguage(settingsSnapshot.language, false);
       cardScale = settingsSnapshot.cardScale;
       raisePet = settingsSnapshot.raisePet;
       feedHotkey = settingsSnapshot.feedHotkey;
@@ -676,7 +727,7 @@
 
   function openSettings(data) {
     if (data) applyNativeSettings(data);
-    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey, hideHotkey, cardShape };
+    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey, hideHotkey, cardShape, language };
     settingsOpen = true;
     applySceneClasses();
     document.body.classList.add('settings-open');
@@ -692,6 +743,7 @@
     if (typeof data.feedHotkey === 'string' && data.feedHotkey) feedHotkey = data.feedHotkey;
     if (typeof data.playHotkey === 'string' && data.playHotkey) playHotkey = data.playHotkey;
     if (typeof data.hideHotkey === 'string' && data.hideHotkey) hideHotkey = data.hideHotkey;
+    if (typeof data.language === 'string') setLanguage(data.language, false);
     if (typeof data.hidden === 'boolean') petHidden = data.hidden;
     if (typeof data.clock === 'boolean') showClock = data.clock;
     if (data.clockStyle === 'plate' || data.clockStyle === 'ribbon') clockStyle = data.clockStyle;
@@ -879,11 +931,11 @@
     petLifeNeeds.classList.toggle('hidden', !petLife);
     petLifePanel.classList.toggle('is-egg', egg);
     // same key either way, cuddling is what play does for an egg
-    document.querySelector('#play-hotkey-label').textContent = petLife && egg ? 'Cuddle your egg' : 'Play with your pet';
-    document.querySelector('#pet-play').textContent = `${egg ? 'Cuddle' : 'Play'} (${playHotkey})`;
+    document.querySelector('#play-hotkey-label').textContent = petLife && egg ? t('cuddleEgg') : t('playPet');
+    document.querySelector('#pet-play').textContent = `${egg ? t('cuddle') : t('play')} (${playHotkey})`;
     if (!petLife) {
-      petLifeName.textContent = 'Choose an egg';
-      petLifeHint.textContent = 'Pick the companion you want to raise.';
+      petLifeName.textContent = t('chooseEgg');
+      petLifeHint.textContent = t('chooseEggHint');
       if (!petLifeEggs.childElementCount) {
         Object.entries(petNames).forEach(([id, name]) => {
           const button = document.createElement('button');
@@ -892,7 +944,8 @@
           button.type = 'button';
           button.className = 'egg-choice';
           art.className = 'pet-sprite';
-          label.textContent = name;
+          label.dataset.petLabel = id;
+          label.textContent = companionOptionLabel(id);
           button.append(art, label);
           button.addEventListener('click', () => pickEgg(id));
           petLifeEggs.append(button);
@@ -902,7 +955,7 @@
       return;
     }
     const name = petNames[petLife.species];
-    const species = petSpecies[petLife.species];
+    const species = localizedSpecies(petLife.species);
     const stage = petLifeRules.growth(petLife, gameHours ?? petLife.laidAt);
     petLifeName.textContent = egg ? `${name}'s egg${species ? ` (${species})` : ''}` : `${name}, ${{ baby: 'baby', young: 'young', adult: 'all grown up' }[stage]}`;
     document.querySelector('#need-warmth').style.width = `${Math.round(petLifeRules.eggProgress(petLife) * 100)}%`;
@@ -910,8 +963,8 @@
     document.querySelector('#need-happiness').style.width = `${Math.round(petLife.happiness)}%`;
     document.querySelector('#pet-feed').disabled = egg;
     // eggs can't eat, say so rather than looking like the key is taken
-    document.querySelector('#pet-feed').textContent = egg ? 'Feed (after hatching)' : `Feed (${feedHotkey})`;
-    document.querySelector('#pet-reset').textContent = resetArmed ? 'Click again to start over' : 'Start over';
+    document.querySelector('#pet-feed').textContent = egg ? t('feed') : `${t('feed')} (${feedHotkey})`;
+    document.querySelector('#pet-reset').textContent = resetArmed ? t('startOver') : t('startOver');
     petLifeHint.textContent = egg
       ? 'XP, level-ups and time keep the egg warm.'
       : { hungry: `${name} is hungry.`, sad: `${name} feels lonely.`, miserable: `${name} needs food and attention.`, happy: `${name} is very happy!`, content: `${name} is doing fine.` }[petLifeRules.mood(petLife)];
@@ -925,17 +978,17 @@
     },
     skillGain(data) {
       const skill = data && data.skill ? data.skill : 'Skill';
-      showToast('gain', 'XP gained', isEgg() && petLife ? 'The egg feels warmer.' : `${skill} grows stronger.`, 68);
+      showToast('gain', t('xpTitle'), isEgg() && petLife ? t('eggWarm') : t('celebratingDetail', { name: skill }), 68);
       petXp(1);
     },
     levelUp(data) {
       const level = data && data.level ? data.level : '?';
-      showToast('level-up', `Level ${level}!`, isEgg() && petLife ? 'The egg glows with warmth!' : 'The Dragonborn grows mighty.', 100);
+      showToast('level-up', `${t('levelTitle').replace('!', '')} ${level}!`, isEgg() && petLife ? t('eggWarm') : t('dragonbornMighty'), 100);
       petXp('level');
     },
     dragonSoul(data) {
       const amount = Math.max(1, Math.round(Number(data && data.amount) || 1));
-      showToast('gain', 'Dragon soul absorbed', `+${amount} soul${amount === 1 ? '' : 's'}.`, 82);
+      showToast('gain', t('dragonSoulTitle'), amount === 1 ? t('dragonSoulOne') : t('dragonSoulMany', { amount }), 82);
       petXp(2);
     },
     // saved pet from the co-save ('' = none yet)
@@ -968,6 +1021,7 @@
       controller.setBase(data && data.state ? data.state : 'idle');
     },
     clock(data) {
+      lastClockData = data || {};
       clockTime.textContent = petClock.formatTime(data && data.hour, data && data.minute);
       clockDate.textContent = petClock.formatDate(data);
       skyHours = (Number(data && data.hour) || 0) + (Number(data && data.minute) || 0) / 60;
@@ -1075,11 +1129,11 @@
     if (!lab || !labPet || !labState || !labSpeedInput || !labSpeedValue) return;
 
     lab.classList.remove('hidden');
-    Object.entries(petNames).forEach(([id, name]) => labPet.append(new Option(`${name}${petSpecies[id] ? ` — ${petSpecies[id]}` : ''}`, id)));
+    Object.keys(petNames).forEach(id => labPet.append(new Option(companionOptionLabel(id), id)));
     labPet.value = pet;
     const labRegion = document.querySelector('#animation-lab-region');
     if (labRegion && petRegions) {
-      labRegion.append(new Option('Skyrim', 'skyrim'));
+      labRegion.append(new Option(t('skyrim'), 'skyrim'));
       petRegions.names.forEach(name => labRegion.append(new Option(petRegions.info[name].label, name)));
       labRegion.addEventListener('change', event => window.previewRegion(event.target.value));
     }
@@ -1112,7 +1166,8 @@
       const label = document.createElement('p');
       cell.className = 'sheet-cell';
       sprite.className = 'pet-sprite';
-      label.textContent = petSpecies[id] ? `${name} — ${petSpecies[id]}` : name;
+      label.dataset.petLabel = id;
+      label.textContent = companionOptionLabel(id);
       cell.append(sprite, label);
       sheet.append(cell);
       petSprites.render(sprite, id);
@@ -1148,6 +1203,7 @@
     }
   }
   clockEnabledInput.addEventListener('change', event => setClock(event.target.checked, clockStyle));
+  languageSelect.addEventListener('change', event => setLanguage(event.target.value));
 
   // resize the card, then redraw everything that's drawn to its size
   function applyShape(shape) {
@@ -1227,8 +1283,8 @@
       captureButton = button;
       capturingHotkey = true;
       button.classList.add('capturing');
-      button.textContent = 'Press a key';
-      hotkeyHint.textContent = 'Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.';
+      button.textContent = t('pressKey');
+      hotkeyHint.textContent = t('hotkeyAllowed');
     });
   });
   document.addEventListener('keyup', event => { if (isShift(event)) shiftHeld = false; }, true);
@@ -1247,12 +1303,12 @@
     const which = captureButton.dataset.hotkey;
     const clash = Object.keys(hotkeyNames).find(other => other !== which && getHotkey(other).toUpperCase() === label.toUpperCase());
     if (clash) {
-      hotkeyHint.textContent = `${label} is already used for ${hotkeyNames[clash]}.`;
+      hotkeyHint.textContent = t('hotkeyAlreadyUsed', { key: label, action: hotkeyNames[clash] });
       return;
     }
     setHotkey(which, label);
     stopCapture();
-    hotkeyHint.textContent = 'Press Save settings to keep this key.';
+    hotkeyHint.textContent = t('saveHotkeyHint');
     renderPetPanel();
     queueNativeSettingsChanged();
   }, true);
@@ -1265,6 +1321,7 @@
 
   document.addEventListener('visibilitychange', () => applySceneClasses());
 
+  setLanguage(language, false);
   renderFrame();
   ['iconFood', 'iconHeart'].forEach(name => {
     const icon = petSprites.renderOrnament(document, name);

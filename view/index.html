@@ -42,16 +42,16 @@
     <div class="settings-card">
       <header class="settings-header">
         <div>
-          <p class="settings-kicker">DRAGONBORN XP</p>
-          <h1 id="settings-title">Companion settings</h1>
+          <p class="settings-kicker" data-i18n="settingsKicker">DRAGONBORN XP</p>
+          <h1 id="settings-title" data-i18n="settingsTitle">Companion settings</h1>
         </div>
-        <button id="settings-close" class="settings-close" type="button" aria-label="Close settings">×</button>
+        <button id="settings-close" class="settings-close" type="button" aria-label="Close settings" data-i18n-attr="aria-label" data-i18n-attr-key="close">×</button>
       </header>
-      <p class="settings-help">Drag your companion anywhere on screen, or fine-tune its position below.</p>
+      <p class="settings-help" data-i18n="settingsHelp">Drag your companion anywhere on screen, or fine-tune its position below.</p>
       <div class="settings-group">
-        <h2>Pet</h2>
+        <h2 data-i18n="pet">Pet</h2>
         <label class="settings-row" for="raise-pet">
-          <span>Raise a pet <small>Start from an egg, feed it and play with it</small></span>
+          <span><span data-i18n="raisePet">Raise a pet</span> <small data-i18n="raisePetHint">Start from an egg, feed it and play with it</small></span>
           <input id="raise-pet" class="settings-toggle" type="checkbox">
         </label>
         <div id="pet-life" class="pet-life hidden">
@@ -70,7 +70,7 @@
           <p id="pet-life-hint" class="settings-hint"></p>
         </div>
         <label id="pet-select-row" class="settings-row" for="pet-select">
-          <span>Choose your companion <small>Switches your companion</small></span>
+          <span><span data-i18n="chooseCompanion">Choose your companion</span> <small data-i18n="chooseCompanionHint">Switches your companion</small></span>
           <select id="pet-select">
             <option value="dovahmin">Dovahmin</option>
             <option value="dovahpink">Dovahpink</option>
@@ -96,53 +96,71 @@
         </label>
       </div>
       <div class="settings-group">
-        <h2>Position</h2>
+        <h2 data-i18n="position">Position</h2>
         <label class="settings-row" for="position-x">
-          <span>X position <small>left edge</small></span>
+          <span><span data-i18n="xPosition">X position</span> <small data-i18n="leftEdge">left edge</small></span>
           <span class="position-control"><input id="position-x" type="range" min="0" max="3000" step="1"><input id="position-x-value" type="number" min="0" max="3000" step="1"></span>
         </label>
         <label class="settings-row" for="position-y">
-          <span>Y position <small>top edge</small></span>
+          <span><span data-i18n="yPosition">Y position</span> <small data-i18n="topEdge">top edge</small></span>
           <span class="position-control"><input id="position-y" type="range" min="0" max="2000" step="1"><input id="position-y-value" type="number" min="0" max="2000" step="1"></span>
         </label>
         <label class="settings-row" for="card-shape">
-          <span>Shape</span>
+          <span data-i18n="shape">Shape</span>
           <select id="card-shape">
-            <option value="square">Square</option>
-            <option value="wide">Wide</option>
+            <option value="square" data-i18n="square">Square</option>
+            <option value="wide" data-i18n="wide">Wide</option>
           </select>
         </label>
         <label class="settings-row" for="size-range">
-          <span>Size <small>percent</small></span>
+          <span><span data-i18n="size">Size</span> <small data-i18n="percent">percent</small></span>
           <span class="position-control"><input id="size-range" type="range" min="50" max="200" step="5"><input id="size-value" type="number" min="50" max="200" step="1"></span>
         </label>
-        <button id="reset-position" class="settings-secondary" type="button">Reset to top-right</button>
+        <button id="reset-position" class="settings-secondary" type="button" data-i18n="resetPosition">Reset to top-right</button>
       </div>
       <div class="settings-group">
-        <h2>Clock</h2>
+        <h2 data-i18n="clock">Clock</h2>
         <label class="settings-row" for="clock-enabled">
-          <span>Show clock <small>In-game time and date above the card</small></span>
+          <span><span data-i18n="showClock">Show clock</span> <small data-i18n="showClockHint">In-game time and date above the card</small></span>
           <input id="clock-enabled" class="settings-toggle" type="checkbox">
         </label>
         <label class="settings-row" for="clock-style">
-          <span>Clock style</span>
+          <span data-i18n="clockStyle">Clock style</span>
           <select id="clock-style">
-            <option value="plate">Plate</option>
-            <option value="ribbon">Ribbon</option>
+            <option value="plate" data-i18n="plate">Plate</option>
+            <option value="ribbon" data-i18n="ribbon">Ribbon</option>
           </select>
         </label>
       </div>
       <div class="settings-group">
-        <h2>Hotkeys</h2>
-        <div class="settings-row hotkey-row"><span>Open this menu</span><button id="settings-hotkey" class="hotkey-capture" type="button" data-hotkey="settings">Shift+B</button></div>
-        <div class="settings-row hotkey-row"><span>Hide or show the pet</span><button id="hide-hotkey" class="hotkey-capture" type="button" data-hotkey="hide">Shift+V</button></div>
-        <div class="settings-row hotkey-row pet-hotkey"><span>Feed your pet</span><button id="feed-hotkey" class="hotkey-capture" type="button" data-hotkey="feed">Shift+N</button></div>
-        <div class="settings-row hotkey-row pet-hotkey"><span id="play-hotkey-label">Play with your pet</span><button id="play-hotkey" class="hotkey-capture" type="button" data-hotkey="play">Shift+K</button></div>
-        <p id="hotkey-hint" class="settings-hint">Click a key box, then press a key (Shift optional).</p>
+        <h2 data-i18n="language">Language</h2>
+        <label class="settings-row" for="language-select">
+          <span data-i18n="language">Language</span>
+          <select id="language-select" aria-label="Language">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="it">Italiano</option>
+            <option value="es">Español</option>
+            <option value="pl">Polski</option>
+            <option value="tr">Türkçe</option>
+            <option value="zh-CN">简体中文</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+          </select>
+        </label>
+      </div>
+      <div class="settings-group">
+        <h2 data-i18n="hotkeys">Hotkeys</h2>
+        <div class="settings-row hotkey-row"><span data-i18n="openMenu">Open this menu</span><button id="settings-hotkey" class="hotkey-capture" type="button" data-hotkey="settings">Shift+B</button></div>
+        <div class="settings-row hotkey-row"><span data-i18n="hidePet">Hide or show the pet</span><button id="hide-hotkey" class="hotkey-capture" type="button" data-hotkey="hide">Shift+V</button></div>
+        <div class="settings-row hotkey-row pet-hotkey"><span data-i18n="feedPet">Feed your pet</span><button id="feed-hotkey" class="hotkey-capture" type="button" data-hotkey="feed">Shift+N</button></div>
+        <div class="settings-row hotkey-row pet-hotkey"><span id="play-hotkey-label" data-i18n="playPet">Play with your pet</span><button id="play-hotkey" class="hotkey-capture" type="button" data-hotkey="play">Shift+K</button></div>
+        <p id="hotkey-hint" class="settings-hint" data-i18n="hotkeyHint">Click a key box, then press a key (Shift optional).</p>
       </div>
       <footer class="settings-footer">
-        <button id="settings-cancel" class="settings-secondary" type="button">Cancel</button>
-        <button id="settings-save" class="settings-primary" type="button">Save settings</button>
+        <button id="settings-cancel" class="settings-secondary" type="button" data-i18n="cancel">Cancel</button>
+        <button id="settings-save" class="settings-primary" type="button" data-i18n="save">Save settings</button>
       </footer>
     </div>
   </section>
@@ -150,31 +168,32 @@
     <div class="animation-lab-card">
       <div class="animation-lab-header">
         <div>
-          <p class="settings-kicker">DEVELOPMENT PREVIEW</p>
-          <h2>Animation lab</h2>
+          <p class="settings-kicker" data-i18n="animationKicker">DEVELOPMENT PREVIEW</p>
+          <h2 data-i18n="animationTitle">Animation lab</h2>
         </div>
         <button id="animation-lab-close" type="button" aria-label="Close animation preview">×</button>
       </div>
-      <label>Pet <select id="animation-lab-pet"></select></label>
-      <label>Place <select id="animation-lab-region"></select></label>
-      <label>State <select id="animation-lab-state">
-        <option value="idle">Idle</option>
-        <option value="moving">Moving</option>
-        <option value="combat">Combat</option>
-        <option value="landing">Landing</option>
-        <option value="xp">XP gain</option>
-        <option value="celebrating">Celebrating</option>
-        <option value="level-up">Level up</option>
+      <label><span data-i18n="animationPet">Pet</span> <select id="animation-lab-pet"></select></label>
+      <label><span data-i18n="animationPlace">Place</span> <select id="animation-lab-region"></select></label>
+      <label><span data-i18n="animationState">State</span> <select id="animation-lab-state">
+        <option value="idle" data-i18n="idle">Idle</option>
+        <option value="moving" data-i18n="moving">Moving</option>
+        <option value="combat" data-i18n="combat">Combat</option>
+        <option value="landing" data-i18n="landing">Landing</option>
+        <option value="xp" data-i18n="xpGain">XP gain</option>
+        <option value="celebrating" data-i18n="celebrating">Celebrating</option>
+        <option value="level-up" data-i18n="levelUp">Level up</option>
       </select></label>
-      <label>Speed <input id="animation-lab-speed" type="range" min="0.5" max="2" step="0.1" value="1"><output id="animation-lab-speed-value">1×</output></label>
+      <label><span data-i18n="animationSpeed">Speed</span> <input id="animation-lab-speed" type="range" min="0.5" max="2" step="0.1" value="1"><output id="animation-lab-speed-value">1×</output></label>
       <div class="animation-lab-actions">
-        <button id="animation-lab-play" type="button">Play state</button>
-        <button id="animation-lab-transition" type="button">Move → combat → idle</button>
+        <button id="animation-lab-play" type="button" data-i18n="playState">Play state</button>
+        <button id="animation-lab-transition" type="button" data-i18n="transition">Move → combat → idle</button>
       </div>
     </div>
   </section>
   <section id="pet-sheet" class="hidden" aria-label="All companions"></section>
   <script src="animation-state.js?v=57"></script>
+  <script src="i18n.js?v=58"></script>
   <script src="pet-sprites.js?v=57"></script>
   <script src="clock.js?v=57"></script>
   <script src="pet-life.js?v=57"></script>
