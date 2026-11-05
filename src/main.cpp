@@ -1086,7 +1086,7 @@ namespace
 {"key":"scale","label":"Card size","type":"range","min":50,"max":200,"step":10,"value":100,"unit":"%"},
 {"key":"card_shape","label":"Card shape","type":"choice","options":[{"value":"square","label":"Square"},{"value":"wide","label":"Wide"}],"value":"square"},
 {"key":"hidden","label":"Hide the card","type":"toggle","value":false,"note":"Shift+V toggles this in game"},
-{"key":"language","label":"Language","type":"choice","options":[{"value":"en","label":"English"},{"value":"fr","label":"Français"},{"value":"de","label":"Deutsch"},{"value":"it","label":"Italiano"},{"value":"es","label":"Español"},{"value":"pl","label":"Polski"},{"value":"tr","label":"Türkçe"},{"value":"zh-CN","label":"简体中文"},{"value":"ja","label":"日本語"},{"value":"ko","label":"한국어"}],"value":"en"}]})";
+{"key":"language","label":"Language","type":"choice","options":[{"value":"en","label":"English"},{"value":"fr","label":"Français"},{"value":"de","label":"Deutsch"},{"value":"it","label":"Italiano"},{"value":"es","label":"Español"},{"value":"pl","label":"Polski"},{"value":"tr","label":"Türkçe"},{"value":"zh-CN","label":"简体中文"},{"value":"ja","label":"日本語"},{"value":"ko","label":"한국어"}],"value":"en","note":"Translations other than English are machine translations; corrections welcome."}]})";
 
     bool HasPet()
     {
