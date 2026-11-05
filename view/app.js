@@ -30,7 +30,9 @@
   const clockTime = document.querySelector('#clock-time');
   const clockDate = document.querySelector('#clock-date');
   const petClock = window.PetClock;
-  const petI18n = window.PetI18n;
+  // i18n.js can be missing (a hand-copied install that kept an older view folder); the card then
+  // stays in English instead of stopping on the first missing call
+  const petI18n = window.PetI18n || englishOnlyI18n();
   const languageSelect = document.querySelector('#language-select');
   const petSky = window.PetSky;
   const petRegions = window.PetRegions;
@@ -142,6 +144,32 @@
 
   function isEgg() {
     return raisePet && (!petLife || petLife.stage === 'egg');
+  }
+
+  function englishOnlyI18n() {
+    const english = {
+      celebrating: 'Celebrating', celebratingDetail: '{name} is delighted.',
+      chooseEgg: 'Choose an egg', chooseEggHint: 'Pick the companion you want to raise.',
+      combatTitle: 'Ready for battle', combatDetail: '{name} joins the fight.',
+      movingTitle: 'On the move', movingDetail: '{name} is travelling with you.',
+      cuddle: 'Cuddle', cuddleEgg: 'Cuddle your egg', feed: 'Feed', play: 'Play', playPet: 'Play with your pet',
+      startOver: 'Start over', xpTitle: 'XP gained', levelTitle: 'Level up!', eggWarm: 'The egg feels warmer.',
+      dragonbornMighty: 'The Dragonborn grows mighty.', dragonSoulTitle: 'Dragon soul absorbed',
+      dragonSoulOne: '+1 soul.', dragonSoulMany: '+{amount} souls.',
+      pressKey: 'Press a key', hotkeyAllowed: 'Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.',
+      hotkeyAlreadyUsed: '{key} is already used for {action}.', saveHotkeyHint: 'Press Save settings to keep this key.',
+      skyrim: 'Skyrim'
+    };
+    const fill = (template, vars = {}) => String(template).replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) => vars[name] === undefined ? match : vars[name]);
+    return {
+      current: 'en',
+      setLanguage: () => 'en',
+      // index.html is written in English already
+      apply() {},
+      t: (key, vars) => fill(english[key] === undefined ? key : english[key], vars),
+      petName: id => (petSprites.names || {})[id] || id,
+      species: id => (petSprites.species || {})[id] || ''
+    };
   }
 
   function petName() {
