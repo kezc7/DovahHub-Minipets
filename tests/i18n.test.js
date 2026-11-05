@@ -27,3 +27,25 @@ test('the settings page shows the machine translation note under Language', () =
   i18n.setLanguage('en');
   assert.equal(i18n.t('machineTranslationNote'), 'Translations other than English are machine translations; corrections welcome.');
 });
+
+test('no shipped text uses the old name Dragonborn XP', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const dirs = [path.join(__dirname, '..', 'view'), path.join(__dirname, '..', 'hub', 'modules', 'pets')];
+  const hits = [];
+  for (const dir of dirs) {
+    for (const name of fs.readdirSync(dir)) {
+      if (!/\.(js|html|css|json)$/.test(name)) continue;
+      // the bridge names (dragonbornXP.*) and element ids stay; the words a player reads don't
+      fs.readFileSync(path.join(dir, name), 'utf8').split(/\r?\n/).forEach((line, index) => {
+        if (/dragonborn\s+xp/i.test(line)) hits.push(`${name}:${index + 1}`);
+      });
+    }
+  }
+  assert.deepEqual(hits, []);
+  for (const language of i18n.languages) {
+    i18n.setLanguage(language);
+    assert.equal(i18n.t('settingsKicker'), 'MINIPETS', `${language} heading`);
+  }
+  i18n.setLanguage('en');
+});
