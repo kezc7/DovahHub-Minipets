@@ -300,7 +300,7 @@ test('a pushed state re-renders, and the picker sends the companion', async () =
 
 test('the module ships the same pet-life.js, pet-sprites.js and pet-motion.css as the HUD page', () => {
   for (const file of ['pet-life.js', 'pet-sprites.js', 'pet-motion.css']) {
-    assert.equal(fs.readFileSync(path.join(MODULE_DIR, file), 'utf8'), fs.readFileSync(path.join(VIEW_DIR, file), 'utf8'), `${file} matches view/`);
+    assert.equal(fs.readFileSync(path.join(MODULE_DIR, file), 'utf8').replace(/\r\n/g, '\n'), fs.readFileSync(path.join(VIEW_DIR, file), 'utf8').replace(/\r\n/g, '\n'), `${file} matches view/`);
   }
 });
 
