@@ -148,18 +148,77 @@
 
   function englishOnlyI18n() {
     const english = {
-      celebrating: 'Celebrating!', celebratingDetail: '{name} is delighted.',
-      chooseEgg: 'Choose an egg', chooseEggHint: 'Pick the companion you want to raise.',
-      combatTitle: 'Ready for battle', combatDetail: '{name} joins the fight.',
-      movingTitle: 'On the move', movingDetail: '{name} is travelling with you.',
-      cuddle: 'Cuddle', cuddleEgg: 'Cuddle your egg', feed: 'Feed', play: 'Play', playPet: 'Play with your pet',
-      startOver: 'Start over', xpTitle: 'XP gained', levelTitle: 'Level up!', eggWarm: 'The egg feels warmer.',
-      dragonbornMighty: 'The Dragonborn grows mighty.', dragonSoulTitle: 'Dragon soul absorbed',
-      dragonSoulOne: '+1 soul.', dragonSoulMany: '+{amount} souls.',
-      pressKey: 'Press a key', hotkeyAllowed: 'Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.',
-      hotkeyAlreadyUsed: '{key} is already used for {action}.', saveHotkeyHint: 'Press Save settings to keep this key.',
-      skyrim: 'Skyrim', eggName: "{name}'s egg", skillGrows: '{skill} grows stronger.', levelNumber: 'Level {level}!',
-      eggGlows: 'The egg glows with warmth!', feedAfterHatching: 'Feed (after hatching)', startOverConfirm: 'Click again to start over'
+      actionFeed: "feeding",
+      actionHide: "hiding the pet",
+      actionPlay: "playing",
+      actionSettings: "opening this menu",
+      celebrating: "Celebrating!",
+      celebratingDetail: "{name} is delighted.",
+      chooseEgg: "Choose an egg",
+      chooseEggHint: "Pick the companion you want to raise.",
+      combatDetail: "{name} joins the fight.",
+      combatTitle: "Ready for battle",
+      cuddle: "Cuddle",
+      cuddleDetail: "It feels a little warmer.",
+      cuddleEgg: "Cuddle your egg",
+      cuddleTitle: "You cuddle the egg",
+      dragonSoulMany: "+{amount} souls.",
+      dragonSoulOne: "+1 soul.",
+      dragonSoulTitle: "Dragon soul absorbed",
+      dragonbornMighty: "The Dragonborn grows mighty.",
+      eggCosyDetail: "Give it a little while.",
+      eggCosyTitle: "The egg is cosy",
+      eggGlows: "The egg glows with warmth!",
+      eggHint: "XP, level-ups and time keep the egg warm.",
+      eggName: "{name}'s egg",
+      eggNoFoodDetail: "Keep it warm with XP instead.",
+      eggNoFoodTitle: "Eggs don’t eat",
+      eggPickedDetail: "Earn XP to help it hatch.",
+      eggWarm: "The egg feels warmer.",
+      feed: "Feed",
+      feedAfterHatching: "Feed (after hatching)",
+      food: "Food",
+      fullDetail: "Try again later.",
+      fullTitle: "{name} is full",
+      hintContent: "{name} is doing fine.",
+      hintHappy: "{name} is very happy!",
+      hintHungry: "{name} is hungry.",
+      hintMiserable: "{name} needs food and attention.",
+      hintSad: "{name} feels lonely.",
+      hotkeyAllowed: "Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.",
+      hotkeyAlreadyUsed: "{key} is already used for {action}.",
+      levelDetail: "A mighty little celebration.",
+      levelNumber: "Level {level}!",
+      levelTitle: "Level up!",
+      movingDetail: "{name} is travelling with you.",
+      movingTitle: "On the move",
+      noEggDetail: "Pick one in settings.",
+      noEggTitle: "No egg yet",
+      noFoodDetail: "Pick up something to eat first.",
+      noFoodTitle: "No food in your pack",
+      noticeHungryDetail: "Eat something, or press {key}.",
+      noticeHungryTitle: "{name} is hungry",
+      noticeLonelyDetail: "Press {key} to play.",
+      noticeLonelyTitle: "{name} feels lonely",
+      noticeMiserableDetail: "They need food and some attention.",
+      noticeMiserableTitle: "{name} is miserable",
+      petStage: "{name}, {stage}",
+      play: "Play",
+      playPet: "Play with your pet",
+      pressKey: "Press a key",
+      saveHotkeyHint: "Press Save settings to keep this key.",
+      skillGrows: "{skill} grows stronger.",
+      skyrim: "Skyrim",
+      stageAdult: "all grown up",
+      stageBaby: "baby",
+      stageYoung: "young",
+      startOver: "Start over",
+      startOverConfirm: "Click again to start over",
+      tiredDetail: "Let them rest for a bit.",
+      tiredTitle: "{name} is tired",
+      warmth: "Warmth",
+      xpDetail: "{name} is celebrating.",
+      xpTitle: "XP gained"
     };
     const fill = (template, vars = {}) => String(template).replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) => vars[name] === undefined ? match : vars[name]);
     return {
@@ -910,9 +969,9 @@
     result.events.forEach(event => {
       if (event === 'hatched') {
         controller.play('celebrating', { payload: { kind: 'level-up', title: `${name} hatched!`, detail: `Feed (${feedHotkey}) and play (${playHotkey}) with them.`, fill: 100 } });
-      } else if (event === 'mood:hungry') petNotice(`${name} is hungry`, `Eat something, or press ${feedHotkey}.`);
-      else if (event === 'mood:sad') petNotice(`${name} feels lonely`, `Press ${playHotkey} to play.`);
-      else if (event === 'mood:miserable') petNotice(`${name} is miserable`, 'They need food and some attention.');
+      } else if (event === 'mood:hungry') petNotice(t('noticeHungryTitle', { name }), t('noticeHungryDetail', { key: feedHotkey }));
+      else if (event === 'mood:sad') petNotice(t('noticeLonelyTitle', { name }), t('noticeLonelyDetail', { key: playHotkey }));
+      else if (event === 'mood:miserable') petNotice(t('noticeMiserableTitle', { name }), t('noticeMiserableDetail'));
     });
     savePet();
   }
@@ -928,7 +987,7 @@
     petLife = petLifeRules.create(species, gameHours ?? 0);
     savePet();
     refreshPet(true);
-    petNotice(t('eggName', { name: petI18n.petName(species) }), 'Earn XP to help it hatch.');
+    petNotice(t('eggName', { name: petI18n.petName(species) }), t('eggPickedDetail'));
   }
 
   function startOver() {
@@ -941,15 +1000,15 @@
   function feedPet() {
     if (!petLife) {
       reportPetAction('feed', false, 'no pet');
-      return petNotice('No egg yet', 'Pick one in settings.');
+      return petNotice(t('noEggTitle'), t('noEggDetail'));
     }
     if (petLife.stage === 'egg') {
       reportPetAction('feed', false, 'egg');
-      return petNotice('Eggs don\u2019t eat', 'Keep it warm with XP instead.');
+      return petNotice(t('eggNoFoodTitle'), t('eggNoFoodDetail'));
     }
     if (petLife.hunger >= 98) {
       reportPetAction('feed', false, 'full');
-      return petNotice(`${petNames[petLife.species]} is full`, 'Try again later.');
+      return petNotice(t('fullTitle', { name: petNames[petLife.species] }), t('fullDetail'));
     }
     if (typeof window.feedPet === 'function') window.feedPet('');
     else window.dragonbornXP.petFed({ name: 'Sweetroll', source: 'pack' });
@@ -960,11 +1019,11 @@
     const result = petLifeRules.play(petLife, gameHours ?? 0);
     const name = petNames[petLife.species];
     reportPetAction('play', result.ok, result.reason);
-    if (result.reason === 'tired') return petNotice(petLife.stage === 'egg' ? 'The egg is cosy' : `${name} is tired`, petLife.stage === 'egg' ? 'Give it a little while.' : 'Let them rest for a bit.');
+    if (result.reason === 'tired') return petLife.stage === 'egg' ? petNotice(t('eggCosyTitle'), t('eggCosyDetail')) : petNotice(t('tiredTitle', { name }), t('tiredDetail'));
     petLife = result.pet;
     savePet();
     refreshPet();
-    if (result.reason === 'egg') petNotice('You cuddle the egg', 'It feels a little warmer.');
+    if (result.reason === 'egg') petNotice(t('cuddleTitle'), t('cuddleDetail'));
     else controller.play('celebrating', { payload: { kind: 'gain', title: `${name} loves playing!`, detail: 'Happiness is up.', fill: 90 } });
   }
 
@@ -1004,7 +1063,7 @@
     const name = petNames[petLife.species];
     const species = localizedSpecies(petLife.species);
     const stage = petLifeRules.growth(petLife, gameHours ?? petLife.laidAt);
-    petLifeName.textContent = egg ? `${t('eggName', { name })}${species ? ` (${species})` : ''}` : `${name}, ${{ baby: 'baby', young: 'young', adult: 'all grown up' }[stage]}`;
+    petLifeName.textContent = egg ? `${t('eggName', { name })}${species ? ` (${species})` : ''}` : t('petStage', { name, stage: t({ baby: 'stageBaby', young: 'stageYoung', adult: 'stageAdult' }[stage]) });
     document.querySelector('#need-warmth').style.width = `${Math.round(petLifeRules.eggProgress(petLife) * 100)}%`;
     document.querySelector('#need-food').style.width = `${Math.round(petLife.hunger)}%`;
     document.querySelector('#need-happiness').style.width = `${Math.round(petLife.happiness)}%`;
@@ -1013,8 +1072,8 @@
     document.querySelector('#pet-feed').textContent = egg ? t('feedAfterHatching') : `${t('feed')} (${feedHotkey})`;
     document.querySelector('#pet-reset').textContent = resetArmed ? t('startOverConfirm') : t('startOver');
     petLifeHint.textContent = egg
-      ? 'XP, level-ups and time keep the egg warm.'
-      : { hungry: `${name} is hungry.`, sad: `${name} feels lonely.`, miserable: `${name} needs food and attention.`, happy: `${name} is very happy!`, content: `${name} is doing fine.` }[petLifeRules.mood(petLife)];
+      ? t('eggHint')
+      : t({ hungry: 'hintHungry', sad: 'hintSad', miserable: 'hintMiserable', happy: 'hintHappy', content: 'hintContent' }[petLifeRules.mood(petLife)], { name });
   }
 
   // --- Native bridge ------------------------------------------------------
@@ -1053,7 +1112,7 @@
     petFed(data) {
       if (data && data.none) {
         reportPetAction('feed', false, 'no food');
-        return petNotice('No food in your pack', 'Pick up something to eat first.');
+        return petNotice(t('noFoodTitle'), t('noFoodDetail'));
       }
       if (!raisePet || !petLife) return;
       const result = petLifeRules.feed(petLife);
@@ -1144,7 +1203,7 @@
     let index = 0;
     const next = () => {
       window.previewRegion(places[index % places.length]);
-      title.textContent = places[index % places.length] === 'skyrim' ? 'Skyrim' : petRegions.info[places[index % places.length]].label;
+      title.textContent = places[index % places.length] === 'skyrim' ? t('skyrim') : petRegions.info[places[index % places.length]].label;
       index += 1;
     };
     next();
@@ -1160,8 +1219,8 @@
 
   function playLabState(rawState) {
     const state = animationStates.normalizeState(rawState);
-    if (state === 'xp') showToast('gain', 'XP gained', `${petName()} is celebrating.`, 68);
-    else if (state === 'level-up') showToast('level-up', 'Level up!', 'A mighty little celebration.', 100);
+    if (state === 'xp') showToast('gain', t('xpTitle'), t('xpDetail', { name: petName() }), 68);
+    else if (state === 'level-up') showToast('level-up', t('levelTitle'), t('levelDetail'), 100);
     else if (state === 'landing') controller.setBase('landed');
     else if (state === 'celebrating') controller.play('celebrating');
     else controller.setBase(state);
@@ -1308,7 +1367,8 @@
   document.querySelector('#settings-save').addEventListener('click', () => closeSettings(true));
   document.querySelector('#settings-cancel').addEventListener('click', () => closeSettings(false));
   document.querySelector('#settings-close').addEventListener('click', () => closeSettings(true));
-  const hotkeyNames = { settings: 'opening this menu', feed: 'feeding', play: 'playing', hide: 'hiding the pet' };
+  // catalogue keys for the action each hotkey does, read when a clash is shown
+  const hotkeyActions = { settings: 'actionSettings', feed: 'actionFeed', play: 'actionPlay', hide: 'actionHide' };
   const getHotkey = which => ({ settings: settingsHotkey, feed: feedHotkey, play: playHotkey, hide: hideHotkey })[which];
   function setHotkey(which, label) {
     if (which === 'settings') settingsHotkey = label;
@@ -1349,9 +1409,9 @@
     const label = displayKey(event);
     if (!label) return;
     const which = captureButton.dataset.hotkey;
-    const clash = Object.keys(hotkeyNames).find(other => other !== which && getHotkey(other).toUpperCase() === label.toUpperCase());
+    const clash = Object.keys(hotkeyActions).find(other => other !== which && getHotkey(other).toUpperCase() === label.toUpperCase());
     if (clash) {
-      hotkeyHint.textContent = t('hotkeyAlreadyUsed', { key: label, action: hotkeyNames[clash] });
+      hotkeyHint.textContent = t('hotkeyAlreadyUsed', { key: label, action: t(hotkeyActions[clash]) });
       return;
     }
     setHotkey(which, label);

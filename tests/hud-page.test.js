@@ -171,3 +171,24 @@ test('a language without a companion line uses its own shared line, not English'
   assert.equal(card(page), `${i18n.t('combatTitle')} | ${i18n.t('combatDetail', { name: 'Ember' })}`);
   i18n.setLanguage('en');
 });
+
+test('the English fallback in app.js matches the catalogue for every entry app.js uses', () => {
+  const i18n = require('../view/i18n.js');
+  i18n.setLanguage('en');
+  const source = fs.readFileSync(path.join(VIEW_DIR, 'app.js'), 'utf8').replace(/\r\n/g, '\n');
+  const start = source.indexOf('    const english = {');
+  const end = source.indexOf('\n    };\n', start);
+  const english = vm.runInNewContext(`(${source.slice(start + '    const english = '.length, end + 6)})`);
+  const rest = source.slice(0, start) + source.slice(end);
+  // keys passed to t() directly, through a t({ ... }[...]) table, or through hotkeyActions
+  const keys = new Set([...rest.matchAll(/\bt\(\s*'(\w+)'/g)].map(m => m[1]).filter(Boolean));
+  const tables = [...rest.matchAll(/\bt\(\s*\{([^}]*)\}/g), ...rest.matchAll(/hotkeyActions = \{([^}]*)\}/g)];
+  for (const table of tables) for (const m of table[1].matchAll(/:\s*'(\w+)'/g)) keys.add(m[1]);
+  assert.ok(keys.size > 50, `found ${keys.size} keys`);
+  for (const key of keys) {
+    const value = i18n.value(key);
+    assert.equal(typeof value === 'string' && value !== key, true, `${key} is in the catalogue`);
+    assert.equal(english[key], value, `fallback for ${key}`);
+  }
+  for (const [key, value] of Object.entries(english)) assert.equal(value, i18n.value(key), `fallback ${key} matches i18n.js`);
+});
