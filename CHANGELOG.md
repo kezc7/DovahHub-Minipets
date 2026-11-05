@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.2-beta
+- English reads as it did in 1.8.0 again: each companion's own moving and fighting lines, "Smithing grows stronger.", "Level 3!", the egg's level-up line, "Feed (after hatching)" and "Click again to start over". Other languages use a shared line for moving and fighting until the companions' own lines are translated
+- The rest of the card is translated too: growth stages, mood hints, egg hints, the hungry, lonely, full, tired and no-food notices, and the hotkey names in the settings hint
+- The settings heading reads MINIPETS instead of the old name
+- Upgrading from 1.8.1-beta: install over it in your mod manager; nothing else changes
+
 ## 1.8.1-beta
 - A Language setting with ten languages. Translations other than English are machine translations, and the setting says so; corrections welcome
 - The egg is named in the chosen language ("Ei von Ember" rather than "Ember's egg")
