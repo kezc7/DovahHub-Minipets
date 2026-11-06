@@ -66,10 +66,11 @@ const SAME_AS_ENGLISH = {
 const SHARED_WORDS = {
   // the creature names Skyrim keeps in every language, and the atronachs' official name
   '*': ['skeever', 'horker', 'troll', 'spriggan', 'chaurus', 'netch', 'atronach', 'mmm'],
-  fr: ['menu', 'dragon', 'position', 'combat', 'date', 'style', 'corrections', 'gain', 'sabre', 'change', 'file'],
+  // "pixel art" is the usual term in French, Italian and Spanish
+  fr: ['menu', 'dragon', 'position', 'combat', 'date', 'style', 'corrections', 'gain', 'sabre', 'change', 'file', 'pixel', 'art'],
   de: ['position', 'optional', 'warm', 'baby', 'in'],
-  it: ['file', 'menu'],
-  es: [], pl: ['menu'], tr: [], 'zh-CN': [], ja: [], ko: [],
+  it: ['file', 'menu', 'pixel', 'art'],
+  es: ['pixel', 'art'], pl: ['menu'], tr: [], 'zh-CN': [], ja: [], ko: [],
 };
 
 function matchesRule(rules, key) {

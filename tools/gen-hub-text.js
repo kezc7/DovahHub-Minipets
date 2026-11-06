@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// Writes src/HubText.h from view/i18n.js: the plugin's own text (DovahHub's Settings labels and the
-// leftover-DLL message) in every language, so the C++ reads the same catalogue as the pages.
+// Writes the text that lives outside the pages from view/i18n.js, in every language:
+//   src/HubText.h         the plugin's own text (DovahHub's Settings labels, the leftover-DLL message)
+//   view/dovahmenu.json   DovahMenu's entry; its description per language (menuDescription)
 //
-//   node tools/gen-hub-text.js           rewrite src/HubText.h
-//   node tools/gen-hub-text.js --check   exit 1 if src/HubText.h is out of date
+//   node tools/gen-hub-text.js           rewrite both
+//   node tools/gen-hub-text.js --check   exit 1 if either is out of date
 //
 // Non-ASCII bytes are written as octal escapes, so the header compiles the same whatever code page
 // the compiler reads the source in. tests/translation-coverage.test.js runs the check.
@@ -72,19 +73,39 @@ function render() {
   ].join('\n');
 }
 
-module.exports = { render, HEADER, FIELDS };
+const MENU = path.join(ROOT, 'view', 'dovahmenu.json');
+
+// dovahmenu.json with its description in every language; name, version, hotkey and hidden are kept
+function renderMenu() {
+  const i18n = require(path.join(ROOT, 'view', 'i18n.js'));
+  const current = JSON.parse(fs.readFileSync(MENU, 'utf8'));
+  const description = {};
+  for (const id of i18n.languages) {
+    i18n.setLanguage(id);
+    description[id] = i18n.t('menuDescription');
+  }
+  i18n.setLanguage('en');
+  return JSON.stringify(Object.assign({}, current, { description }), null, 2) + '\n';
+}
+
+module.exports = { render, renderMenu, HEADER, MENU, FIELDS };
 
 if (require.main === module) {
-  const text = render();
-  if (process.argv.includes('--check')) {
-    const current = fs.existsSync(HEADER) ? fs.readFileSync(HEADER, 'utf8').replace(/\r\n/g, '\n') : '';
-    if (current !== text) {
-      console.error('src/HubText.h is out of date: run node tools/gen-hub-text.js');
-      process.exit(1);
+  const outputs = [[HEADER, render()], [MENU, renderMenu()]];
+  const check = process.argv.includes('--check');
+  let stale = false;
+  for (const [file, text] of outputs) {
+    const name = path.relative(ROOT, file).replace(/\\/g, '/');
+    if (check) {
+      const current = fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n') : '';
+      if (current !== text) {
+        console.error(`${name} is out of date: run node tools/gen-hub-text.js`);
+        stale = true;
+      } else console.log(`${name} is up to date`);
+    } else {
+      fs.writeFileSync(file, text);
+      console.log(`wrote ${name}`);
     }
-    console.log('src/HubText.h is up to date');
-  } else {
-    fs.writeFileSync(HEADER, text);
-    console.log('wrote src/HubText.h');
   }
+  if (stale) process.exit(1);
 }

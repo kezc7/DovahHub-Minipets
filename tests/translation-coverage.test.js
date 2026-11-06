@@ -54,3 +54,20 @@ test('main.cpp builds DovahHub settings from HubText.h and sends them again when
   const apply = source.slice(source.indexOf('bool ApplyHubSetting('), source.indexOf('const char* OnHubRequest('));
   assert.match(apply, /RefreshHubSettings\(\);/);
 });
+
+// DovahMenu 0.3.5 reads a description per language; a plain string shows English in every language
+test('dovahmenu.json describes MiniPets in every language, from the catalogue', () => {
+  const fs = require('node:fs');
+  const { renderMenu, MENU } = require('../tools/gen-hub-text.js');
+  const menu = JSON.parse(fs.readFileSync(MENU, 'utf8'));
+  assert.equal(menu.name, 'MiniPets');
+  assert.equal(typeof menu.description, 'object', 'description is per language, not one English string');
+  const i18n = require('../view/i18n.js');
+  assert.deepEqual(Object.keys(menu.description), [...i18n.languages]);
+  for (const language of i18n.languages) {
+    const text = menu.description[language];
+    assert.ok(typeof text === 'string' && text.trim(), `${language} has a description`);
+    if (language !== 'en') assert.notEqual(text, menu.description.en, `${language} is not the English text`);
+  }
+  assert.equal(fs.readFileSync(MENU, 'utf8').replace(/\r\n/g, '\n'), renderMenu(), 'run node tools/gen-hub-text.js');
+});
