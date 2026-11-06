@@ -47,8 +47,9 @@
 .pets-need b { font-weight: 400; text-align: right; color: var(--ink-soft); letter-spacing: 0; font-variant-numeric: tabular-nums; }
 .pets-need b.is-low { color: rgb(197, 106, 93); }
 
-.pets-actions { display: flex; gap: .7rem; margin-top: .5rem; }
-.pets-actions .hearth-proof-button { flex: 1 1 0; justify-content: center; }
+.pets-actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: .5rem; }
+/* one line per label; a long one (French and German egg Feed) takes its own row */
+.pets-actions .hearth-proof-button { flex: 1 1 auto; justify-content: center; white-space: nowrap; }
 .pets-actions .hearth-proof-button:disabled { opacity: .4; pointer-events: none; }
 .pets-result { min-height: 1.4rem; }
 

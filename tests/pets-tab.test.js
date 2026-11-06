@@ -351,7 +351,7 @@ test('the tab shows MiniPets in the language MiniPets is set to', async () => {
   tab.push({ result: { action: 'feed', ok: false, reason: 'no food' } });
   assert.equal(tab.text('result'), 'Nichts zu essen im Gepäck. Heb zuerst etwas Essbares auf.');
   tab.push({ state: Object.assign({}, baseState, { raisePet: true, pet: hatchedPet, hours: 210, language: 'ja' }) });
-  assert.equal(tab.text('name'), 'Ember（キツネ）');
+  assert.equal(tab.text('name'), 'Ember（フォックス）');
   assert.equal(tab.text('feed'), '餌をあげる');
   for (const word of ['Feed', 'Play', 'Companion', 'Your companion', 'Hatched', 'Keys']) {
     assert.ok(!tab.root.textContent.includes(word), `no "${word}" in Japanese: ${tab.root.textContent}`);

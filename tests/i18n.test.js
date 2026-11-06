@@ -49,3 +49,54 @@ test('no shipped text uses the old name Dragonborn XP', () => {
   }
   i18n.setLanguage('en');
 });
+
+// DMP-9: Kev's French clock read "Morndas 1 Heartfire". The game's English month is "Heartfire",
+// which the catalogue spelled "Hearthfire", and a game in another language sends its own names; the
+// plugin now sends the month and weekday by number too.
+test('the clock words the month in the chosen language, by number and by the game\'s English name', () => {
+  i18n.setLanguage('fr');
+  assert.equal(i18n.formatDate({ weekday: 'Morndas', weekdayIndex: 1, day: 1, month: 'Heartfire', monthIndex: 8 }), 'Morndas 1 Atrefeu');
+  assert.equal(i18n.formatDate({ weekday: 'Morndas', day: 1, month: 'Heartfire' }), 'Morndas 1 Atrefeu');
+  assert.equal(i18n.formatDate({ weekday: 'Morndas', day: 1, month: 'Hearthfire' }), 'Morndas 1 Atrefeu');
+  assert.equal(i18n.formatDate({ weekday: 'Morndas', day: 3, month: 'Mid Year' }), 'Morndas 3 Mi-l’An');
+  // a German game sends German names; the numbers still give French
+  assert.equal(i18n.formatDate({ weekday: 'Morndas', weekdayIndex: 1, day: 1, month: 'Herzfeuer', monthIndex: 8 }), 'Morndas 1 Atrefeu');
+  i18n.setLanguage('ja');
+  assert.equal(i18n.formatDate({ weekday: 'Morndas', weekdayIndex: 1, day: 1, month: 'Heartfire', monthIndex: 8 }), '薪木の月1日（月）');
+  i18n.setLanguage('zh-CN');
+  assert.equal(i18n.formatDate({ weekday: 'Sundas', weekdayIndex: 0, day: 2, month: 'Last Seed', monthIndex: 7 }), '末种月2日 周日');
+  i18n.setLanguage('en');
+  assert.equal(i18n.formatDate({ weekday: 'Morndas', weekdayIndex: 1, day: 1, month: 'Heartfire', monthIndex: 8 }), 'Morndas, 1st of Heartfire');
+});
+
+test('every language names all twelve months and seven days', () => {
+  for (const language of expectedLanguages) {
+    i18n.setLanguage(language);
+    for (let month = 0; month < 12; month++) {
+      const text = i18n.formatDate({ day: 1, monthIndex: month, month: 'x' });
+      assert.doesNotMatch(text, /\bx\b|undefined/, `${language} month ${month}: ${text}`);
+    }
+    for (let day = 0; day < 7; day++) assert.doesNotMatch(i18n.formatDate({ day: 1, weekdayIndex: day, weekday: 'x' }), /\bx\b|undefined/, `${language} day ${day}`);
+  }
+  i18n.setLanguage('en');
+});
+
+test('the plugin sends the month and weekday by number', () => {
+  const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src', 'main.cpp'), 'utf8');
+  assert.match(source, /"weekdayIndex\\":" \+ std::to_string\(calendar->GetDayOfWeek\(\)\)/);
+  assert.match(source, /"monthIndex\\":" \+ std::to_string\(month\)/);
+});
+
+// DMP-9: French egg buttons ("Nourrir (après l'éclosion)", "Câliner (Shift+K)") wrapped onto two
+// cramped lines; the buttons now keep one line each and wrap as whole buttons
+test('long button labels wrap as whole buttons, and the clock plate wraps a long date', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'view', 'styles.css'), 'utf8');
+  assert.match(css, /\.pet-life-actions \{[^}]*flex-wrap: wrap/);
+  assert.match(css, /\.pet-life-actions button \{[^}]*white-space: nowrap/);
+  assert.match(css, /\.clock-plate \.clock-date \{[^}]*white-space: normal/);
+  const tab = fs.readFileSync(path.join(__dirname, '..', 'hub', 'modules', 'pets', 'pets.css'), 'utf8');
+  assert.match(tab, /\.pets-actions \{[^}]*flex-wrap: wrap/);
+  assert.match(tab, /\.pets-actions \.hearth-proof-button \{[^}]*white-space: nowrap/);
+});

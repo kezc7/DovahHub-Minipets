@@ -155,7 +155,9 @@ body.timelapse .sky-body { transition: none; }
 #need-warmth { background: #f0a050; }
 #need-happiness { background: #e78aa8; }
 .pet-life.is-egg .need-food, .pet-life.is-egg .need-happiness, .pet-life:not(.is-egg) .need-warmth { display: none; }
-.pet-life-actions { display: flex; gap: 6px; margin-top: 8px; }
+/* the buttons keep their labels on one line and wrap as whole buttons; French and German egg labels are long */
+.pet-life-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pet-life-actions button { flex: 1 1 auto; white-space: nowrap; }
 .pet-life-actions button:disabled { opacity: .4; cursor: default; }
 .hidden { display: none !important; }
 
@@ -166,7 +168,8 @@ body.timelapse .sky-body { transition: none; }
 #dragonborn-xp.clock-plate .clock-banner::before { content: ""; position: absolute; bottom: -14px; left: 50%; width: 2px; height: 9px; margin-left: -1px; background: #c9c3b1; box-shadow: 0 0 0 1px #14130f; }
 #dragonborn-xp.clock-plate .clock-time { display: block; font: 700 20px/1 Georgia, serif; letter-spacing: .04em; }
 #dragonborn-xp.clock-plate .clock-separator { display: none; }
-#dragonborn-xp.clock-plate .clock-date { display: block; margin-top: 4px; color: #d9d3c3; font: 11px/1.2 Georgia, serif; letter-spacing: .03em; }
+/* the plate is a fixed width, so a long month name wraps instead of running past the frame */
+#dragonborn-xp.clock-plate .clock-date { display: block; margin-top: 4px; color: #d9d3c3; font: 11px/1.2 Georgia, serif; letter-spacing: .03em; white-space: normal; overflow-wrap: anywhere; }
 #dragonborn-xp.clock-ribbon .clock-banner { padding: 4px 18px; background: linear-gradient(to right, rgba(14, 13, 11, 0), rgba(14, 13, 11, .85) 14%, rgba(14, 13, 11, .85) 86%, rgba(14, 13, 11, 0)); font: 700 11px/1.3 Georgia, serif; letter-spacing: .05em; }
 #dragonborn-xp.clock-ribbon .clock-separator { margin: 0 6px; color: #b9b3a3; }
 #dragonborn-xp.clock-ribbon .clock-date { color: #d9d3c3; font-weight: 400; letter-spacing: .02em; }
