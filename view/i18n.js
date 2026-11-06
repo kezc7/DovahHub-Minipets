@@ -214,7 +214,7 @@
       skillUnknown: "Skill",
       menuDescription: "Pixel-art HUD companion that celebrates your XP and level-ups; raise a pet, feed it and play with it",
       days: { one: "{count} day", other: "{count} days" },
-      months: { "Morning Star": "Morning Star", "Sun's Dawn": "Sun's Dawn", "First Seed": "First Seed", "Rain's Hand": "Rain's Hand", "Second Seed": "Second Seed", Midyear: "Midyear", "Sun's Height": "Sun's Height", "Last Seed": "Last Seed", Hearthfire: "Hearthfire", Frostfall: "Frostfall", "Sun's Dusk": "Sun's Dusk", "Evening Star": "Evening Star" },
+      months: { "Morning Star": "Morning Star", "Sun's Dawn": "Sun's Dawn", "First Seed": "First Seed", "Rain's Hand": "Rain's Hand", "Second Seed": "Second Seed", "Mid Year": "Mid Year", "Sun's Height": "Sun's Height", "Last Seed": "Last Seed", Heartfire: "Heartfire", Frostfall: "Frostfall", "Sun's Dusk": "Sun's Dusk", "Evening Star": "Evening Star" },
       weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
       // the companions' own lines while moving and in combat: [title, detail]
       captions: {
@@ -304,7 +304,7 @@
       levelUp: "Niveau supérieur",
       playState: "Lire l’état",
       transition: "Mouvement → combat → repos",
-      skyrim: "Skyrim",
+      skyrim: "Bordeciel",
       pressKey: "Appuyez sur une touche",
       hotkeyAllowed: "Appuyez sur une lettre, un chiffre, Entrée, Espace, Tab ou F1–F12, avec Maj facultative.",
       saveHotkeyHint: "Appuyez sur Enregistrer pour garder cette touche.",
@@ -438,8 +438,8 @@
       skillUnknown: "Compétence",
       menuDescription: "Compagnon en pixel art sur l’ATH qui fête votre XP et vos niveaux ; élevez un compagnon, nourrissez-le et jouez avec lui",
       days: { one: "{count} jour", other: "{count} jours" },
-      species: { mudcrab: "Crabe de vase", skeever: "Ragnard", fox: "Renard", sabrecat: "Smilodon", "frostbite-spider": "Araignée de givre", horker: "Horqueur", troll: "Troll", "flame-atronach": "Atronach de feu", "frost-atronach": "Atronach de givre", spriggan: "Spriggan", "dwarven-spider": "Araignée dwemer", chaurus: "Chaurus", netch: "Netch", mammoth: "Mammouth", "dragon-priest": "Prêtre-dragon", wisp: "Feu follet", "death-hound": "Molosse de la mort", chicken: "Poule" },
-      months: { "Morning Star": "Primétoile", "Sun's Dawn": "Clairciel", "First Seed": "Semailles", "Rain's Hand": "Ondepluie", "Second Seed": "Plantaisons", Midyear: "Mi-l’an", "Sun's Height": "Hautzénith", "Last Seed": "Vifazur", Hearthfire: "Âtrefeu", Frostfall: "Soufflegivre", "Sun's Dusk": "Sombreciel", "Evening Star": "Soirétoile" },
+      species: { mudcrab: "Vasard", skeever: "Ragnard", fox: "Renard", sabrecat: "Smilodon", "frostbite-spider": "Givrépeire", horker: "Horqueur", troll: "Troll", "flame-atronach": "Atronach de feu", "frost-atronach": "Atronach de glace", spriggan: "Spriggan", "dwarven-spider": "Araignée dwemer", chaurus: "Chaurus", netch: "Netch", mammoth: "Mammouth", "dragon-priest": "Prêtre-dragon", wisp: "Feu follet", "death-hound": "Chien de la mort", chicken: "Poulet" },
+      months: { "Morning Star": "Primétoile", "Sun's Dawn": "Clairciel", "First Seed": "Semailles", "Rain's Hand": "Ondepluie", "Second Seed": "Plantaisons", "Mid Year": "Mi-l’An", "Sun's Height": "Hautzénith", "Last Seed": "Vifazur", Heartfire: "Atrefeu", Frostfall: "Soufflegivre", "Sun's Dusk": "Sombreciel", "Evening Star": "Soirétoile" },
       weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
       captions: {
         dovahmin: { moving: ["En plein vol !", "{name} s’élance dans les cieux."], combat: ["Souffle de feu !", "{name} rejoint le combat."] },
@@ -528,7 +528,7 @@
       levelUp: "Stufenaufstieg",
       playState: "Zustand abspielen",
       transition: "Bewegen → kämpfen → warten",
-      skyrim: "Skyrim",
+      skyrim: "Himmelsrand",
       pressKey: "Taste drücken",
       hotkeyAllowed: "Drücke einen Buchstaben, eine Zahl, Enter, Leertaste, Tab oder F1–F12, optional mit Umschalt.",
       saveHotkeyHint: "Drücke „Einstellungen speichern“, um diese Taste zu behalten.",
@@ -542,7 +542,7 @@
       xpDetail: "{name} feiert.",
       levelTitle: "Stufenaufstieg!",
       levelDetail: "Eine kleine, mächtige Feier.",
-      dragonSoulTitle: "Drachenseele absorbiert",
+      dragonSoulTitle: "Drachenseele aufgenommen",
       dragonSoulOne: "+1 Seele.",
       dragonSoulMany: "+{amount} Seelen.",
       eggWarm: "Das Ei wird wärmer.",
@@ -662,8 +662,8 @@
       skillUnknown: "Fertigkeit",
       menuDescription: "Pixelart-Begleiter im HUD, der deine EP und Stufenaufstiege feiert; zieh einen Begleiter auf, füttere ihn und spiel mit ihm",
       days: { one: "{count} Tag", other: "{count} Tagen" },
-      species: { mudcrab: "Schlammkrabbe", skeever: "Skeever", fox: "Fuchs", sabrecat: "Säbelzahnkatze", "frostbite-spider": "Frostbissspinne", horker: "Horker", troll: "Troll", "flame-atronach": "Flammenatronach", "frost-atronach": "Frostatronach", spriggan: "Spriggan", "dwarven-spider": "Dwemerspinne", chaurus: "Chaurus", netch: "Netch", mammoth: "Mammut", "dragon-priest": "Drachenpriester", wisp: "Irrlicht", "death-hound": "Todeshund", chicken: "Huhn" },
-      months: { "Morning Star": "Morgenstern", "Sun's Dawn": "Morgenröte", "First Seed": "Erste Saat", "Rain's Hand": "Regenhand", "Second Seed": "Zweite Saat", Midyear: "Jahresmitte", "Sun's Height": "Sonnenhöhe", "Last Seed": "Letzte Saat", Hearthfire: "Herdfeuer", Frostfall: "Eisherbst", "Sun's Dusk": "Abenddämmerung", "Evening Star": "Abendstern" },
+      species: { mudcrab: "Schlammkrabbe", skeever: "Skeever", fox: "Fuchs", sabrecat: "Säbelzahntiger", "frostbite-spider": "Frostbissspinne", horker: "Horker", troll: "Troll", "flame-atronach": "Feuer-Atronach", "frost-atronach": "Frost-Atronach", spriggan: "Zweigling", "dwarven-spider": "Zwergenspinne", chaurus: "Chaurus", netch: "Netch", mammoth: "Mammut", "dragon-priest": "Drachenpriester", wisp: "Irrlicht", "death-hound": "Todeshund", chicken: "Huhn" },
+      months: { "Morning Star": "Morgenstern", "Sun's Dawn": "Sonnenaufgang", "First Seed": "Erste Saat", "Rain's Hand": "Regenhand", "Second Seed": "Zweite Saat", "Mid Year": "Jahresmitte", "Sun's Height": "Sonnenhöhe", "Last Seed": "Letzte Saat", Heartfire: "Herzfeuer", Frostfall: "Eisherbst", "Sun's Dusk": "Sonnenuntergang", "Evening Star": "Abendstern" },
       weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
       captions: {
         dovahmin: { moving: ["Ab in die Lüfte!", "{name} erhebt sich in den Himmel."], combat: ["Feueratem!", "{name} stürzt sich in den Kampf."] },
@@ -886,8 +886,8 @@
       skillUnknown: "Abilità",
       menuDescription: "Compagno in pixel art sull’HUD che festeggia i tuoi XP e i livelli; alleva un compagno, nutrilo e gioca con lui",
       days: { one: "{count} giorno", other: "{count} giorni" },
-      species: { mudcrab: "Granchio del fango", skeever: "Skeever", fox: "Volpe", sabrecat: "Tigre dai denti a sciabola", "frostbite-spider": "Ragno del gelo", horker: "Horker", troll: "Troll", "flame-atronach": "Atronach del fuoco", "frost-atronach": "Atronach del gelo", spriggan: "Spriggan", "dwarven-spider": "Ragno dwemer", chaurus: "Chaurus", netch: "Netch", mammoth: "Mammut", "dragon-priest": "Sacerdote del drago", wisp: "Fuoco fatuo", "death-hound": "Segugio della morte", chicken: "Gallina" },
-      months: { "Morning Star": "Stella del Mattino", "Sun's Dawn": "Alba del Sole", "First Seed": "Primo Seme", "Rain's Hand": "Mano della Pioggia", "Second Seed": "Secondo Seme", Midyear: "Metà Anno", "Sun's Height": "Culmine del Sole", "Last Seed": "Ultimo Seme", Hearthfire: "Focolare", Frostfall: "Cadere del Gelo", "Sun's Dusk": "Tramonto del Sole", "Evening Star": "Stella della Sera" },
+      species: { mudcrab: "Granchio del fango", skeever: "Skeever", fox: "Volpe", sabrecat: "Tigre dai denti a sciabola", "frostbite-spider": "Ragno congelante", horker: "Horker", troll: "Troll", "flame-atronach": "Atronach della fiamma", "frost-atronach": "Atronach del gelo", spriggan: "Spriggan", "dwarven-spider": "Ragno nanico", chaurus: "Chaurus", netch: "Netch", mammoth: "Mammut", "dragon-priest": "Sacerdote del Drago", wisp: "Fuoco fatuo", "death-hound": "Segugio della morte", chicken: "Pollo" },
+      months: { "Morning Star": "Stella del Mattino", "Sun's Dawn": "Luce dell’Alba", "First Seed": "Primo Seme", "Rain's Hand": "Mano della Pioggia", "Second Seed": "Secondo Seme", "Mid Year": "Metà Annata", "Sun's Height": "Luce del Cielo", "Last Seed": "Ultimo Seme", Heartfire: "Focolare", Frostfall: "Gelata", "Sun's Dusk": "Luce del Crepuscolo", "Evening Star": "Stella della Sera" },
       weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
       captions: {
         dovahmin: { moving: ["Si vola!", "{name} si alza nel cielo."], combat: ["Soffio di fuoco!", "{name} si unisce alla battaglia."] },
@@ -1110,8 +1110,8 @@
       skillUnknown: "Habilidad",
       menuDescription: "Compañero en pixel art en el HUD que celebra tu XP y tus subidas de nivel; cría un compañero, aliméntalo y juega con él",
       days: { one: "{count} día", other: "{count} días" },
-      species: { mudcrab: "Cangrejo del fango", skeever: "Skeever", fox: "Zorro", sabrecat: "Tigre dientes de sable", "frostbite-spider": "Araña de escarcha", horker: "Horker", troll: "Troll", "flame-atronach": "Atronach de fuego", "frost-atronach": "Atronach de escarcha", spriggan: "Spriggan", "dwarven-spider": "Araña dwemer", chaurus: "Chaurus", netch: "Netch", mammoth: "Mamut", "dragon-priest": "Sacerdote dragón", wisp: "Fuego fatuo", "death-hound": "Sabueso de la muerte", chicken: "Gallina" },
-      months: { "Morning Star": "Estrella de la Mañana", "Sun's Dawn": "Amanecer del Sol", "First Seed": "Primera Semilla", "Rain's Hand": "Mano de la Lluvia", "Second Seed": "Segunda Semilla", Midyear: "Mitad del Año", "Sun's Height": "Altura del Sol", "Last Seed": "Última Semilla", Hearthfire: "Fuego del Hogar", Frostfall: "Caída de la Escarcha", "Sun's Dusk": "Ocaso del Sol", "Evening Star": "Estrella Vespertina" },
+      species: { mudcrab: "Cangrejo del barro", skeever: "Skeever", fox: "Zorro", sabrecat: "Gato sable", "frostbite-spider": "Araña congeladora", horker: "Horker", troll: "Trol", "flame-atronach": "Atronach de las llamas", "frost-atronach": "Atronach de la escarcha", spriggan: "Spriggan", "dwarven-spider": "Araña enana", chaurus: "Cauro", netch: "Netch", mammoth: "Mamut", "dragon-priest": "Sacerdote dragón", wisp: "Fuego fatuo", "death-hound": "Mastín de la muerte", chicken: "Pollo" },
+      months: { "Morning Star": "Estrella del alba", "Sun's Dawn": "Amanecer", "First Seed": "Primera semilla", "Rain's Hand": "Mano de lluvia", "Second Seed": "Segunda semilla", "Mid Year": "Mitad de año", "Sun's Height": "Culminación solar", "Last Seed": "Última semilla", Heartfire: "Fuego hogar", Frostfall: "Otoño de escarcha", "Sun's Dusk": "Ocaso", "Evening Star": "Estrella vespertina" },
       weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
       captions: {
         dovahmin: { moving: ["¡A volar!", "{name} se eleva hacia el cielo."], combat: ["¡Aliento de fuego!", "{name} se une al combate."] },
@@ -1334,8 +1334,8 @@
       skillUnknown: "Umiejętność",
       menuDescription: "Pikselowy towarzysz na HUD, który świętuje twoje PD i awanse; wychowuj towarzysza, karm go i baw się z nim",
       days: { one: "{count} dzień", other: "{count} dni" },
-      species: { mudcrab: "Błotny krab", skeever: "Skeever", fox: "Lis", sabrecat: "Tygrys szablozębny", "frostbite-spider": "Mroźny pająk", horker: "Horker", troll: "Troll", "flame-atronach": "Ognisty atronach", "frost-atronach": "Mroźny atronach", spriggan: "Spriggan", "dwarven-spider": "Krasnoludzki pająk", chaurus: "Chaurus", netch: "Netch", mammoth: "Mamut", "dragon-priest": "Smoczy kapłan", wisp: "Błędny ognik", "death-hound": "Ogar śmierci", chicken: "Kura" },
-      months: { "Morning Star": "Gwiazda Poranna", "Sun's Dawn": "Wschód Słońca", "First Seed": "Pierwszy Siew", "Rain's Hand": "Dłoń Deszczu", "Second Seed": "Drugi Siew", Midyear: "Połowa Roku", "Sun's Height": "Pełnia Słońca", "Last Seed": "Ostatni Siew", Hearthfire: "Domowe Ognisko", Frostfall: "Pierwszy Mróz", "Sun's Dusk": "Zmierzch Słońca", "Evening Star": "Gwiazda Wieczorna" },
+      species: { mudcrab: "Krab błotny", skeever: "Ślizgacz", fox: "Lis", sabrecat: "Kot szablozębny", "frostbite-spider": "Pająk śnieżny", horker: "Horker", troll: "Troll", "flame-atronach": "Atronach ognia", "frost-atronach": "Atronach mrozu", spriggan: "Wiła", "dwarven-spider": "Krasnoludzki pająk", chaurus: "Chaurus", netch: "Parzydłak", mammoth: "Mamut", "dragon-priest": "Smoczy kapłan", wisp: "Ognik", "death-hound": "Ogar śmierci", chicken: "Kurczak" },
+      months: { "Morning Star": "Gwiazda Poranna", "Sun's Dawn": "Wschodzące Słońce", "First Seed": "Pierwszy Siew", "Rain's Hand": "Deszczowa Dłoń", "Second Seed": "Drugi Siew", "Mid Year": "Śródrocze", "Sun's Height": "Pełnia Słońca", "Last Seed": "Ostatni Siew", Heartfire: "Domowe Ognisko", Frostfall: "Pierwsze Mrozy", "Sun's Dusk": "Zachodzące Słońce", "Evening Star": "Gwiazda Wieczorna" },
       weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
       captions: {
         dovahmin: { moving: ["Lecimy!", "{name} wzbija się w niebo."], combat: ["Ognisty oddech!", "{name} dołącza do walki."] },
@@ -1559,7 +1559,7 @@
       menuDescription: "TP’ni ve seviye atlamalarını kutlayan piksel sanatı HUD yoldaşı; bir yoldaş yetiştir, onu besle ve onunla oyna",
       days: { one: "{count} gün", other: "{count} gün" },
       species: { mudcrab: "Çamur yengeci", skeever: "Skeever", fox: "Tilki", sabrecat: "Kılıçdişli kaplan", "frostbite-spider": "Ayaz örümceği", horker: "Horker", troll: "Trol", "flame-atronach": "Alev atronakı", "frost-atronach": "Ayaz atronakı", spriggan: "Spriggan", "dwarven-spider": "Dwemer örümceği", chaurus: "Chaurus", netch: "Netch", mammoth: "Mamut", "dragon-priest": "Ejderha rahibi", wisp: "Işık perisi", "death-hound": "Ölüm tazısı", chicken: "Tavuk" },
-      months: { "Morning Star": "Sabah Yıldızı", "Sun's Dawn": "Güneşin Doğuşu", "First Seed": "İlk Tohum", "Rain's Hand": "Yağmurun Eli", "Second Seed": "İkinci Tohum", Midyear: "Yıl Ortası", "Sun's Height": "Güneşin Doruğu", "Last Seed": "Son Tohum", Hearthfire: "Ocak Ateşi", Frostfall: "Ayaz Düşüşü", "Sun's Dusk": "Güneşin Batışı", "Evening Star": "Akşam Yıldızı" },
+      months: { "Morning Star": "Sabah Yıldızı", "Sun's Dawn": "Güneşin Doğuşu", "First Seed": "İlk Tohum", "Rain's Hand": "Yağmurun Eli", "Second Seed": "İkinci Tohum", "Mid Year": "Yıl Ortası", "Sun's Height": "Güneşin Doruğu", "Last Seed": "Son Tohum", Heartfire: "Ocak Ateşi", Frostfall: "Ayaz Düşüşü", "Sun's Dusk": "Güneşin Batışı", "Evening Star": "Akşam Yıldızı" },
       weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
       captions: {
         dovahmin: { moving: ["Uçuyoruz!", "{name} gökyüzüne yükseliyor."], combat: ["Ateş nefesi!", "{name} savaşa katılıyor."] },
@@ -1662,7 +1662,7 @@
       xpDetail: "{name} 正在庆祝。",
       levelTitle: "升级了！",
       levelDetail: "小小的，却很隆重的庆祝。",
-      dragonSoulTitle: "吸收龙魂",
+      dragonSoulTitle: "已吸收龙魂",
       dragonSoulOne: "+1 龙魂。",
       dragonSoulMany: "+{amount} 龙魂。",
       eggWarm: "蛋变得更温暖了。",
@@ -1782,9 +1782,9 @@
       skillUnknown: "技能",
       menuDescription: "为你的经验和升级欢呼的像素风 HUD 伙伴；养成伙伴，喂养它并陪它玩耍",
       days: { one: "{count} 天", other: "{count} 天" },
-      species: { mudcrab: "泥蟹", skeever: "硕鼠", fox: "狐狸", sabrecat: "剑齿虎", "frostbite-spider": "冰霜蜘蛛", horker: "海象", troll: "巨魔", "flame-atronach": "火焰精灵", "frost-atronach": "冰霜精灵", spriggan: "树精", "dwarven-spider": "矮人蜘蛛", chaurus: "夏鲁斯虫", netch: "浮游水母", mammoth: "猛犸象", "dragon-priest": "龙祭司", wisp: "鬼火", "death-hound": "死亡猎犬", chicken: "鸡" },
-      months: { "Morning Star": "晨星月", "Sun's Dawn": "晨曦月", "First Seed": "初种月", "Rain's Hand": "雨手月", "Second Seed": "中种月", Midyear: "年中月", "Sun's Height": "日高月", "Last Seed": "末种月", Hearthfire: "炉火月", Frostfall: "霜降月", "Sun's Dusk": "日暮月", "Evening Star": "暮星月" },
-      weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
+      species: { mudcrab: "泥沼蟹", skeever: "恶鼠", fox: "狐狸", sabrecat: "剑齿虎", "frostbite-spider": "霜噬蜘蛛", horker: "海象", troll: "巨魔", "flame-atronach": "火焰元素", "frost-atronach": "寒霜元素", spriggan: "树精", "dwarven-spider": "矮人蜘蛛", chaurus: "巢蚁", netch: "耐区", mammoth: "长毛象", "dragon-priest": "龙祭司", wisp: "幽魂", "death-hound": "死亡地狱犬", chicken: "小鸡" },
+      months: { "Morning Star": "晨星月", "Sun's Dawn": "日晓月", "First Seed": "初种月", "Rain's Hand": "雨手月", "Second Seed": "次种月", "Mid Year": "年中月", "Sun's Height": "日高月", "Last Seed": "末种月", Heartfire: "炉火月", Frostfall: "霜落月", "Sun's Dusk": "日暮月", "Evening Star": "夜星月" },
+      weekdays: { Sundas: "周日", Morndas: "周一", Tirdas: "周二", Middas: "周三", Turdas: "周四", Fredas: "周五", Loredas: "周六" },
       captions: {
         dovahmin: { moving: ["起飞喽！", "{name}冲上云霄。"], combat: ["喷火！", "{name}加入了战斗。"] },
         dovahpink: { moving: ["起飞喽！", "{name}冲上云霄。"], combat: ["喷火！", "{name}加入了战斗。"] },
@@ -1886,7 +1886,7 @@
       xpDetail: "{name} が喜んでいます。",
       levelTitle: "レベルアップ！",
       levelDetail: "小さくても力強いお祝いです。",
-      dragonSoulTitle: "ドラゴンソウル吸収",
+      dragonSoulTitle: "ドラゴンソウルを吸収した",
       dragonSoulOne: "+1ソウル。",
       dragonSoulMany: "+{amount}ソウル。",
       eggWarm: "卵が少し温かくなりました。",
@@ -2006,9 +2006,9 @@
       skillUnknown: "スキル",
       menuDescription: "XPとレベルアップを祝ってくれるドット絵のHUD仲間。仲間を育て、餌をあげて一緒に遊べます",
       days: { one: "{count}日", other: "{count}日" },
-      species: { mudcrab: "マッドクラブ", skeever: "スキーヴァー", fox: "キツネ", sabrecat: "サーベルキャット", "frostbite-spider": "フロストバイト・スパイダー", horker: "ホーカー", troll: "トロール", "flame-atronach": "炎の精霊", "frost-atronach": "氷の精霊", spriggan: "スプリガン", "dwarven-spider": "ドワーフ・スパイダー", chaurus: "シャウラス", netch: "ネッチ", mammoth: "マンモス", "dragon-priest": "ドラゴン・プリースト", wisp: "ウィスプ", "death-hound": "デス・ハウンド", chicken: "ニワトリ" },
-      months: { "Morning Star": "暁星の月", "Sun's Dawn": "薄明の月", "First Seed": "蒔種の月", "Rain's Hand": "恵雨の月", "Second Seed": "栽培の月", Midyear: "真央の月", "Sun's Height": "南中の月", "Last Seed": "収穫の月", Hearthfire: "薪木の月", Frostfall: "降霜の月", "Sun's Dusk": "黄昏の月", "Evening Star": "星霜の月" },
-      weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
+      species: { mudcrab: "マッドクラブ", skeever: "スキーヴァー", fox: "フォックス", sabrecat: "サーベルキャット", "frostbite-spider": "フロストバイト・スパイダー", horker: "ホーカー", troll: "トロール", "flame-atronach": "炎の精霊", "frost-atronach": "氷の精霊", spriggan: "スプリガン", "dwarven-spider": "ドワーフ・スパイダー", chaurus: "シャウラス", netch: "ネッチ", mammoth: "マンモス", "dragon-priest": "ドラゴン・プリースト", wisp: "ウィスプ", "death-hound": "デスハウンド", chicken: "鶏" },
+      months: { "Morning Star": "暁星の月", "Sun's Dawn": "薄明の月", "First Seed": "蒔種の月", "Rain's Hand": "レインズ・ハンド", "Second Seed": "栽培の月", "Mid Year": "年央", "Sun's Height": "南中の月", "Last Seed": "収穫の月", Heartfire: "薪木の月", Frostfall: "降霜の月", "Sun's Dusk": "黄昏の月", "Evening Star": "星霜の月" },
+      weekdays: { Sundas: "日", Morndas: "月", Tirdas: "火", Middas: "水", Turdas: "木", Fredas: "金", Loredas: "土" },
       captions: {
         dovahmin: { moving: ["さあ飛ぼう！", "{name}が空へ舞い上がります。"], combat: ["火炎のブレス！", "{name}が戦いに加わります。"] },
         dovahpink: { moving: ["さあ飛ぼう！", "{name}が空へ舞い上がります。"], combat: ["火炎のブレス！", "{name}が戦いに加わります。"] },
@@ -2231,8 +2231,8 @@
       menuDescription: "XP와 레벨 업을 축하해 주는 픽셀 아트 HUD 동료. 동료를 키우고 먹이를 주며 함께 놀 수 있습니다",
       days: { one: "{count}일", other: "{count}일" },
       species: { mudcrab: "머드크랩", skeever: "스키버", fox: "여우", sabrecat: "검치호", "frostbite-spider": "서리거미", horker: "호커", troll: "트롤", "flame-atronach": "화염 아트로나크", "frost-atronach": "얼음 아트로나크", spriggan: "스프리건", "dwarven-spider": "드워븐 스파이더", chaurus: "샤우루스", netch: "네치", mammoth: "매머드", "dragon-priest": "드래곤 프리스트", wisp: "위스프", "death-hound": "데스 하운드", chicken: "닭" },
-      months: { "Morning Star": "새벽별의 달", "Sun's Dawn": "해돋이의 달", "First Seed": "첫 씨앗의 달", "Rain's Hand": "비의 손길의 달", "Second Seed": "두 번째 씨앗의 달", Midyear: "한해 중간의 달", "Sun's Height": "한낮의 달", "Last Seed": "마지막 씨앗의 달", Hearthfire: "화롯불의 달", Frostfall: "서리 내림의 달", "Sun's Dusk": "해거름의 달", "Evening Star": "저녁별의 달" },
-      weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
+      months: { "Morning Star": "새벽별의 달", "Sun's Dawn": "해돋이의 달", "First Seed": "첫 씨앗의 달", "Rain's Hand": "비의 손길의 달", "Second Seed": "두 번째 씨앗의 달", "Mid Year": "한해 중간의 달", "Sun's Height": "한낮의 달", "Last Seed": "마지막 씨앗의 달", Heartfire: "화롯불의 달", Frostfall: "서리 내림의 달", "Sun's Dusk": "해거름의 달", "Evening Star": "저녁별의 달" },
+      weekdays: { Sundas: "일요일", Morndas: "월요일", Tirdas: "화요일", Middas: "수요일", Turdas: "목요일", Fredas: "금요일", Loredas: "토요일" },
       captions: {
         dovahmin: { moving: ["날아올라요!", "{name}이(가) 하늘로 날아오릅니다."], combat: ["불을 뿜어라!", "{name}이(가) 전투에 참가합니다."] },
         dovahpink: { moving: ["날아올라요!", "{name}이(가) 하늘로 날아오릅니다."], combat: ["불을 뿜어라!", "{name}이(가) 전투에 참가합니다."] },
@@ -2311,9 +2311,22 @@
     return translated === `${type}.${valueToTranslate}` ? valueToTranslate : translated;
   }
 
+  // the game's order (RE::Calendar), with the English names the game's settings use
+  const MONTHS = ['Morning Star', "Sun's Dawn", 'First Seed', "Rain's Hand", 'Second Seed', 'Mid Year', "Sun's Height", 'Last Seed', 'Heartfire', 'Frostfall', "Sun's Dusk", 'Evening Star'];
+  const WEEKDAYS = ['Sundas', 'Morndas', 'Tirdas', 'Middas', 'Turdas', 'Fredas', 'Loredas'];
+  // spellings the catalogue used before 1.8.5
+  const MONTH_ALIASES = { Hearthfire: 'Heartfire', Midyear: 'Mid Year' };
+
+  // The plugin sends the month and weekday by number as well as by name: the name comes from the
+  // game's own settings, in the game's language, so only the number is the same everywhere.
+  function dateName(type, order, index, name) {
+    const key = Number.isInteger(index) && order[index] ? order[index] : name && (MONTH_ALIASES[name] || name);
+    return key ? dateWord(type, key) : '';
+  }
+
   function formatDate(data) {
-    const weekday = data && data.weekday ? dateWord('weekdays', data.weekday) : '';
-    const month = data && data.month ? dateWord('months', data.month) : '';
+    const weekday = dateName('weekdays', WEEKDAYS, data && data.weekdayIndex, data && data.weekday);
+    const month = dateName('months', MONTHS, data && data.monthIndex, data && data.month);
     const day = Math.max(1, Math.floor(Number(data && data.day) || 1));
     const lastTwo = day % 100;
     const ordinal = lastTwo >= 11 && lastTwo <= 13 ? `${day}th` : `${day}${['th', 'st', 'nd', 'rd'][day % 10] || 'th'}`;

@@ -68,7 +68,7 @@ const SHARED_WORDS = {
   '*': ['skeever', 'horker', 'troll', 'spriggan', 'chaurus', 'netch', 'atronach', 'mmm'],
   // "pixel art" is the usual term in French, Italian and Spanish
   fr: ['menu', 'dragon', 'position', 'combat', 'date', 'style', 'corrections', 'gain', 'sabre', 'change', 'file', 'pixel', 'art'],
-  de: ['position', 'optional', 'warm', 'baby', 'in'],
+  de: ['position', 'optional', 'warm', 'baby', 'in', 'frost'],
   it: ['file', 'menu', 'pixel', 'art'],
   es: ['pixel', 'art'], pl: ['menu'], tr: [], 'zh-CN': [], ja: [], ko: [],
 };

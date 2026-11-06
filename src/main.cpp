@@ -783,9 +783,13 @@ namespace
         g_lastClockMinute = stamp;
         Invoke("dragonbornXP.clock", "{\"hour\":" + std::to_string(hour) +
                                          ",\"minute\":" + std::to_string(minute) +
+                                         // the names are the game's, in the game's language; the page
+                                         // words the date by the numbers, in MiniPets' language
                                          ",\"weekday\":" + JsonString(calendar->GetDayName()) +
+                                         ",\"weekdayIndex\":" + std::to_string(calendar->GetDayOfWeek()) +
                                          ",\"day\":" + std::to_string(day) +
                                          ",\"month\":" + JsonString(calendar->GetMonthName()) +
+                                         ",\"monthIndex\":" + std::to_string(month) +
                                          ",\"year\":" + std::to_string(year) +
                                          ",\"hours\":" + std::to_string(calendar->GetHoursPassed()) + "}");
     }

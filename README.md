@@ -21,7 +21,7 @@ Needs SKSE64, Address Library and Prisma UI.
 
 ## Settings
 
-Press **Shift+B** in game. You can pick your companion, drag the card wherever you like (or use the sliders), make it bigger or smaller or switch it to a wide card, switch on raise-a-pet mode and look after your pet (Shift+N to feed, Shift+K to play), hide or show the pet with Shift+V, turn the clock on and pick its style, choose a language, and change any of the hotkeys. Translations other than English are machine translations, covering the HUD card, the settings, the DovahHub tab and MiniPets’ DovahHub settings; corrections are welcome. Day names stay as Skyrim spells them. To check coverage after changing the text, run `node tools/i18n-coverage.js`. Settings are saved to `Data/SKSE/Plugins/MiniPets.ini`.
+Press **Shift+B** in game. You can pick your companion, drag the card wherever you like (or use the sliders), make it bigger or smaller or switch it to a wide card, switch on raise-a-pet mode and look after your pet (Shift+N to feed, Shift+K to play), hide or show the pet with Shift+V, turn the clock on and pick its style, choose a language, and change any of the hotkeys. Translations other than English are machine translations, covering the HUD card, the settings, the DovahHub tab and MiniPets’ DovahHub settings; corrections are welcome. Month, day and creature names are the game’s own, taken from its localised string files where the game has that language. To check coverage after changing the text, run `node tools/i18n-coverage.js`. Settings are saved to `Data/SKSE/Plugins/MiniPets.ini`.
 
 Setting `debug_preview_keys=1` in the INI turns on two test keys: F6 for an XP popup and F7 for a level-up.
 
