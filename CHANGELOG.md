@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.5-beta
+- The clock's month follows the chosen language again: French read "Morndas 1 Heartfire" because the game spells the month Heartfire. The plugin now sends the month and day by number, so the date is right whatever language the game itself is in
+- Month, day and creature names are taken from the game's own localised strings (French, German, Italian, Spanish, Polish, Japanese, Chinese). Several change, for example Vasard (French mudcrab), Zweigling (German spriggan), Ślizgacz (Polish skeever) and 薪木の月 with 月 for Morndas in Japanese
+- Egg and pet buttons in the settings no longer squeeze their labels onto two lines in French and German; a button that does not fit moves to the next row. The same in the DovahHub tab. A long date wraps inside the clock plate instead of running past it
+- French says ATH for the HUD, as the French game does
+- Upgrading from 1.8.4-beta: install over it in your mod manager; nothing else changes
+
 ## 1.8.4-beta
 - DovahMenu (0.3.5-beta or later) shows the MiniPets description in its own language
 - Upgrading from 1.8.3-beta: install over it in your mod manager; nothing else changes
