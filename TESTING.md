@@ -27,7 +27,7 @@ Run this in French and in Japanese; each check names what English would look lik
 3. Card: walk with the fox (Ember), then draw a weapon. It reads "En avant ! / Ember trotte à vos côtés." then "Hop, à l’attaque ! / Ember bondit dans la mêlée.". Switch to the mudcrab (Clack): "Trotte, trotte !" and "Clac clac !". Two companions, two different lines.
 4. Clock on: the date reads like `Morndas 17 Vifazur` (French month names).
 5. Raising a hatched pet: feed it (Shift+N), then play (Shift+K). The card reads "Ember a bien mangé / Miam, …" and "Ember adore jouer ! / Le bonheur augmente.".
-6. DovahHub, MiniPets tab: Votre compagnon, À propos, Compagnons, Nourrir and Jouer; the About facts (Éclos, Il y a … jours, Nourriture dans le sac, Touches). Click a companion: "… s’affichera sur votre HUD quand l’élevage sera désactivé."
+6. DovahHub, MiniPets tab: Votre compagnon, À propos, Compagnons, Nourrir and Jouer; the About facts (Éclos, Il y a … jours, Nourriture dans le sac, Touches). Click a companion: "… s’affichera sur votre ATH quand l’élevage sera désactivé."
 7. DovahHub, Settings, MiniPets: Élever un compagnon, Afficher l’horloge, Taille de la carte, Forme de la carte, Masquer la carte, Langue. Change Language there to 日本語 and reopen Settings: the labels follow (仲間を育てる, 時計を表示, カードの大きさ). `MiniPets.log` has `MiniPets: DovahHub settings sent again in ja`.
 8. Repeat steps 2 to 6 in 日本語: ぬくもり, 食べ物, 幸せ; "さあ行こう！" for the fox and "カサカサ！" for the mudcrab; the date like `収穫の月17日（Morndas）`; the tab reads あなたの仲間, 情報, 仲間.
 
@@ -37,7 +37,7 @@ Pass: no English words on any of those screens apart from names, day names and k
 
 Needs DovahMenu 0.3.5-beta or later.
 
-1. Open DovahMenu (Home) with its language set to Français. The MiniPets row reads "Compagnon en pixel art sur le HUD qui fête votre XP et vos niveaux ; élevez un compagnon, nourrissez-le et jouez avec lui".
+1. Open DovahMenu (Home) with its language set to Français. The MiniPets row reads "Compagnon en pixel art sur l’ATH qui fête votre XP et vos niveaux ; élevez un compagnon, nourrissez-le et jouez avec lui".
 2. Switch DovahMenu to 日本語 without rescanning: the row changes to "XPとレベルアップを祝ってくれるドット絵のHUD仲間。仲間を育て、餌をあげて一緒に遊べます".
 
 Pass: the description follows DovahMenu’s language. The name stays MiniPets.

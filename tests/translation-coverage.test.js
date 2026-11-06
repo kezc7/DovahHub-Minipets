@@ -71,3 +71,12 @@ test('dovahmenu.json describes MiniPets in every language, from the catalogue', 
   }
   assert.equal(fs.readFileSync(MENU, 'utf8').replace(/\r\n/g, '\n'), renderMenu(), 'run node tools/gen-hub-text.js');
 });
+
+// the French game calls the HUD "ATH" (affichage tête haute); "HUD" is English there
+test('French says ATH, as the French game does, never HUD', () => {
+  const { loadCatalogue, flatten } = require('../tools/i18n-coverage.js');
+  const french = flatten(loadCatalogue().ui.fr);
+  const hud = Object.entries(french).filter(([, value]) => /\bHUD\b/.test(value)).map(([key]) => key);
+  assert.deepEqual(hud, [], `HUD in French: ${hud.join(', ')}`);
+  assert.ok(Object.values(french).some(value => /\bATH\b/.test(value)));
+});
