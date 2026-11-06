@@ -22,6 +22,7 @@
 #include <REX/W32/KERNEL32.h>
 #include <REX/W32/USER32.h>
 #include "SettingsFile.h"
+#include "HubText.h"
 
 #include <atomic>
 #include <chrono>
@@ -540,6 +541,7 @@ namespace
 
     void CloseSettings();
     void PushPetsState();
+    void RefreshHubSettings();
     void FirePetEvent(const char* event, const std::string& json);
 
     const char* OverlayHiddenReason()
@@ -879,6 +881,7 @@ namespace
             WarnAboutDuplicateHotkeys();
             SaveSettings();
             PushPetsState();
+            RefreshHubSettings();
             if (pet != previousPet) {
                 FirePetEvent("companion", "{\"id\":" + JsonString(pet) + "}");
             }
@@ -1078,15 +1081,34 @@ namespace
     MINIPETS_API::ListenerId g_nextPetListener = 1;
     MINIPETS_API::MiniPetsApi1 g_miniPetsApi{};
     std::string g_pluginVersion;
+    // what the DovahHub Settings rows were last worded for
+    std::string g_hubSettingsLanguage;
+    std::string g_hubSettingsHideKey;
 
-    constexpr const char* kHubSettingsSchema = R"({"title":"MiniPets","settings":[
-{"key":"raise_pet","label":"Raise a pet","type":"toggle","value":false,"note":"Start from an egg, feed it and play with it"},
-{"key":"show_clock","label":"Show the clock","type":"toggle","value":false},
-{"key":"clock_style","label":"Clock style","type":"choice","options":[{"value":"plate","label":"Plate"},{"value":"ribbon","label":"Ribbon"}],"value":"plate"},
-{"key":"scale","label":"Card size","type":"range","min":50,"max":200,"step":10,"value":100,"unit":"%"},
-{"key":"card_shape","label":"Card shape","type":"choice","options":[{"value":"square","label":"Square"},{"value":"wide","label":"Wide"}],"value":"square"},
-{"key":"hidden","label":"Hide the card","type":"toggle","value":false,"note":"Shift+V toggles this in game"},
-{"key":"language","label":"Language","type":"choice","options":[{"value":"en","label":"English"},{"value":"fr","label":"Français"},{"value":"de","label":"Deutsch"},{"value":"it","label":"Italiano"},{"value":"es","label":"Español"},{"value":"pl","label":"Polski"},{"value":"tr","label":"Türkçe"},{"value":"zh-CN","label":"简体中文"},{"value":"ja","label":"日本語"},{"value":"ko","label":"한국어"}],"value":"en","note":"Translations other than English are machine translations; corrections welcome."}]})";
+    // DovahHub's Settings rows for MiniPets, worded in MiniPets' language (src/HubText.h, from the catalogue)
+    std::string HubSettingsSchema()
+    {
+        const auto& text = HubText::For(g_settings.language);
+        std::string hideNote = text.hubHideCardNote;
+        if (const auto at = hideNote.find("{key}"); at != std::string::npos) {
+            hideNote.replace(at, 5, g_settings.hideHotkeyName);
+        }
+        const auto choice = [](std::string_view value, std::string_view label) {
+            return "{\"value\":" + JsonString(value) + ",\"label\":" + JsonString(label) + "}";
+        };
+        std::string languages;
+        for (const auto& entry : HubText::kTexts) {
+            languages += (languages.empty() ? "" : ",") + choice(entry.code, entry.languageName);
+        }
+        return std::string("{\"title\":\"MiniPets\",\"settings\":[") +
+               "{\"key\":\"raise_pet\",\"label\":" + JsonString(text.raisePet) + ",\"type\":\"toggle\",\"value\":false,\"note\":" + JsonString(text.raisePetHint) + "}," +
+               "{\"key\":\"show_clock\",\"label\":" + JsonString(text.hubShowClock) + ",\"type\":\"toggle\",\"value\":false}," +
+               "{\"key\":\"clock_style\",\"label\":" + JsonString(text.clockStyle) + ",\"type\":\"choice\",\"options\":[" + choice("plate", text.plate) + "," + choice("ribbon", text.ribbon) + "],\"value\":\"plate\"}," +
+               "{\"key\":\"scale\",\"label\":" + JsonString(text.hubCardSize) + ",\"type\":\"range\",\"min\":50,\"max\":200,\"step\":10,\"value\":100,\"unit\":\"%\"}," +
+               "{\"key\":\"card_shape\",\"label\":" + JsonString(text.hubCardShape) + ",\"type\":\"choice\",\"options\":[" + choice("square", text.square) + "," + choice("wide", text.wide) + "],\"value\":\"square\"}," +
+               "{\"key\":\"hidden\",\"label\":" + JsonString(text.hubHideCard) + ",\"type\":\"toggle\",\"value\":false,\"note\":" + JsonString(hideNote) + "}," +
+               "{\"key\":\"language\",\"label\":" + JsonString(text.language) + ",\"type\":\"choice\",\"options\":[" + languages + "],\"value\":\"en\",\"note\":" + JsonString(text.machineTranslationNote) + "}]}";
+    }
 
     bool HasPet()
     {
@@ -1263,6 +1285,7 @@ namespace
             return false;
         }
         SettingsChangedOutside();
+        RefreshHubSettings();
         return true;
     }
 
@@ -1309,6 +1332,28 @@ namespace
         }
     }
 
+    // Sends the Settings rows again after the language or the hide key changed. Queued: DovahHub
+    // must not be called from inside its own callbacks, and AddSettings is game-thread only.
+    void RefreshHubSettings()
+    {
+        if (!g_hub || !g_hubModule) {
+            return;
+        }
+        if (g_hubSettingsLanguage == g_settings.language && g_hubSettingsHideKey == g_settings.hideHotkeyName) {
+            return;
+        }
+        g_hubSettingsLanguage = g_settings.language;
+        g_hubSettingsHideKey = g_settings.hideHotkeyName;
+        if (const auto* tasks = SKSE::GetTaskInterface()) {
+            tasks->AddTask([]() {
+                if (g_hub && g_hubModule) {
+                    (void)g_hub->AddSettings(g_hubModule, HubSettingsSchema().c_str());
+                    logger::info("MiniPets: DovahHub settings sent again in {}", g_settings.language);
+                }
+            });
+        }
+    }
+
     void RegisterWithDovahHub()
     {
         g_hub = DOVAHHUB_API::RequestApi();
@@ -1332,7 +1377,9 @@ namespace
             g_hubModule = 0;
             return;
         }
-        (void)g_hub->AddSettings(g_hubModule, kHubSettingsSchema);
+        g_hubSettingsLanguage = g_settings.language;
+        g_hubSettingsHideKey = g_settings.hideHotkeyName;
+        (void)g_hub->AddSettings(g_hubModule, HubSettingsSchema().c_str());
         logger::info("MiniPets: MiniPets tab registered with DovahHub {} on {}", g_hub->hostVersion, g_hub->host);
     }
 
@@ -1715,13 +1762,11 @@ static void WarnAboutLeftoverDll()
         return;
     }
     logger::warn("MiniPets: the old DragonbornXP.dll is still installed next to MiniPets.dll");
-    REX::W32::MessageBoxW(nullptr,
-        L"MiniPets 1.8 replaced DragonbornXP.dll, but the old file is still installed.\n\n"
-        L"Delete these from Skyrim's Data folder, then start the game again:\n"
-        L"    SKSE\\Plugins\\DragonbornXP.dll\n"
-        L"    PrismaUI\\views\\DragonbornXP\n\n"
-        L"Your pet, settings and hotkeys are kept.",
-        L"MiniPets", 0x00000030);  // MB_ICONWARNING
+    // in the player's language: the settings are read early for this, and again at kDataLoaded
+    LoadSettings();
+    const std::string_view text = HubText::For(g_settings.language).leftoverDll;
+    const std::wstring message = std::filesystem::path(std::u8string(reinterpret_cast<const char8_t*>(text.data()), text.size())).wstring();
+    REX::W32::MessageBoxW(nullptr, message.c_str(), L"MiniPets", 0x00000030);  // MB_ICONWARNING
 }
 
 extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface* skse)

@@ -163,13 +163,85 @@ test('English egg texts read as they did in 1.8.0', () => {
   assert.equal(card(page), 'Level 4! | The egg glows with warmth!');
 });
 
-test('a language without a companion line uses its own shared line, not English', () => {
-  const page = freshPage({ language: 'de' });
-  page.sandbox.dragonbornXP.companionState({ state: 'combat' });
+test('in French and Japanese two companions say their own lines while moving and in combat', () => {
+  for (const language of ['fr', 'ja']) {
+    const lines = {};
+    for (const pet of ['fox', 'mudcrab']) {
+      const page = freshPage({ language, pet });
+      page.sandbox.dragonbornXP.companionState({ state: 'flying' });
+      const moving = card(page);
+      page.sandbox.dragonbornXP.companionState({ state: 'combat' });
+      lines[pet] = { moving, combat: card(page) };
+    }
+    assert.notEqual(lines.fox.moving, lines.mudcrab.moving, `${language} moving lines differ`);
+    assert.notEqual(lines.fox.combat, lines.mudcrab.combat, `${language} combat lines differ`);
+    for (const line of Object.values(lines).flatMap(pair => Object.values(pair))) {
+      assert.doesNotMatch(line.replace(/Ember|Clack/g, ''), /\b(the|you|joins|fight|along|beside)\b/i, `${language}: ${line}`);
+    }
+  }
+  const fr = freshPage({ language: 'fr', pet: 'mudcrab' });
+  fr.sandbox.dragonbornXP.companionState({ state: 'combat' });
+  assert.equal(card(fr), 'Clac clac ! | Clack lève ses deux pinces.');
+  const ja = freshPage({ language: 'ja', pet: 'fox' });
+  ja.sandbox.dragonbornXP.companionState({ state: 'flying' });
+  assert.equal(card(ja), 'さあ行こう！ | Emberがあなたの横を駆けていきます。');
+});
+
+test('every companion has its own lines in every language', () => {
   const i18n = require('../view/i18n.js');
-  i18n.setLanguage('de');
-  assert.equal(card(page), `${i18n.t('combatTitle')} | ${i18n.t('combatDetail', { name: 'Ember' })}`);
+  const english = (i18n.setLanguage('en'), Object.keys(i18n.value('captions')));
+  for (const language of i18n.languages) {
+    i18n.setLanguage(language);
+    for (const pet of english) {
+      for (const state of ['moving', 'combat']) {
+        const pair = i18n.caption(pet, state);
+        assert.ok(Array.isArray(pair) && pair.length === 2, `${language} ${pet} ${state}`);
+        if (pet !== 'egg') assert.ok(pair[1].includes('{name}'), `${language} ${pet} ${state} names the companion: ${pair[1]}`);
+      }
+    }
+  }
   i18n.setLanguage('en');
+});
+
+test('feeding, playing and hatching celebrate in the chosen language', () => {
+  const life = require('../view/pet-life.js');
+  const page = loadPage();
+  page.sandbox.dragonbornXP.initialize({ language: 'de', raisePet: true, x: -1, y: -1 });
+  const hatched = life.create('fox', 0);
+  hatched.stage = 'hatched';
+  hatched.hatchedAt = 0;
+  hatched.hunger = 20;
+  hatched.happiness = 20;
+  page.sandbox.dragonbornXP.petState({ state: life.serialize(hatched) });
+  page.sandbox.dragonbornXP.petFed({ name: 'Süßbrötchen' });
+  assert.equal(card(page), 'Ember hat gut gegessen | Mmm, Süßbrötchen!');
+  page.sandbox.dragonbornXP.petAction({ action: 'play' });
+  assert.equal(card(page), 'Ember spielt so gern! | Die Freude steigt.');
+  const english = freshPage({ raisePet: true });
+  english.sandbox.dragonbornXP.petState({ state: life.serialize(hatched) });
+  english.sandbox.dragonbornXP.petFed({ name: 'Sweet Roll', source: 'ate' });
+  assert.equal(card(english), 'Ember ate with you | Mmm, Sweet Roll!');
+});
+
+test('the card starts on the companion name, with no English line waiting in the markup', () => {
+  const html = fs.readFileSync(path.join(VIEW_DIR, 'index.html'), 'utf8');
+  assert.match(html, /<p id="title"><\/p>/);
+  assert.match(html, /<p id="detail"><\/p>/);
+  const page = loadPage();
+  page.sandbox.dragonbornXP.initialize({ language: 'fr', x: -1, y: -1, pet: 'fox' });
+  assert.equal(card(page), 'Ember | ');
+});
+
+test('a skill gain without a skill name still reads in the chosen language', () => {
+  const page = freshPage({ language: 'de' });
+  page.sandbox.dragonbornXP.skillGain({});
+  assert.equal(card(page), 'EP erhalten | Fertigkeit wird stärker.');
+});
+
+test('with no egg yet the card title is in the chosen language', () => {
+  const page = loadPage();
+  page.sandbox.dragonbornXP.initialize({ language: 'es', raisePet: true, x: -1, y: -1 });
+  assert.equal(page.element('#title').textContent, 'Aún no hay huevo');
 });
 
 test('the English fallback in app.js matches the catalogue for every entry app.js uses', () => {

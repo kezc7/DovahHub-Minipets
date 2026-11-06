@@ -53,6 +53,7 @@ target(PLUGIN_NAME)
 
         -- DovahHub's MiniPets tab: the shared scripts are copied from view/ so they can't drift
         local hubsrc = path.join(os.projectdir(), "hub", "modules", "pets")
+        os.cp(path.join(os.projectdir(), "view", "i18n.js"), hubsrc)
         os.cp(path.join(os.projectdir(), "view", "pet-life.js"), hubsrc)
         os.cp(path.join(os.projectdir(), "view", "pet-sprites.js"), hubsrc)
         os.cp(path.join(os.projectdir(), "view", "pet-motion.css"), hubsrc)

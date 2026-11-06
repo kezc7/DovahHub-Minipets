@@ -1,13 +1,16 @@
 // MiniPets' tab in DovahHub. The HUD page owns the pet: this asks the plugin for the state
 // through DovahHub's relay, shows it (ticked with PetLife for display only, never saved), and sends
-// Feed, Play and the companion choice back the same way. pet-life.js and pet-sprites.js here are
-// copies of view/, refreshed by the build.
+// Feed, Play and the companion choice back the same way. i18n.js, pet-life.js and pet-sprites.js
+// here are copies of view/, refreshed by the build. Text follows MiniPets' own Language setting.
 (function () {
   'use strict';
   const mod = window.dovahhubModule && window.dovahhubModule('pets');
   if (!mod || !mod.root) return;
   const life = window.PetLife;
   const sprites = window.PetSprites;
+  // the HUD page's catalogue; without it (a broken install) the keys show, and the tab still works
+  const i18n = window.PetI18n || { t: key => key, plural: key => key, setLanguage() {}, apply() {}, species: id => sprites.species[id] || '' };
+  const t = (key, vars) => i18n.t(key, vars);
   const root = mod.root;
   const doc = root.ownerDocument;
   const slot = name => root.querySelector('[data-pets="' + name + '"]');
@@ -20,8 +23,9 @@
     picker: slot('picker'), pickerNote: slot('picker-note'), pickerToggle: slot('picker-toggle'),
     pickerCurrent: slot('picker-current')
   };
-  const MOODS = { happy: 'very happy', content: 'doing fine', hungry: 'hungry', sad: 'lonely', miserable: 'needs food and attention' };
-  const STAGES = { baby: 'Baby', young: 'Young', adult: 'All grown up' };
+  // catalogue keys for the mood and growth stage shown under the name
+  const MOODS = { happy: 'moodHappy', content: 'moodContent', hungry: 'moodHungry', sad: 'moodSad', miserable: 'moodMiserable' };
+  const STAGES = { baby: 'tabStageBaby', young: 'tabStageYoung', adult: 'tabStageAdult' };
   const ADULT_DAYS = 5;
   // pets.css animates by these, as the HUD card does
   const ARCHETYPES = ['light', 'heavy', 'hover', 'flyer', 'egg'];
@@ -45,8 +49,8 @@
 
   // "Ember the Fox", or just "Dovahmin"
   function fullName(id) {
-    const kind = sprites.species[id];
-    return kind ? nameOf(id) + ' the ' + kind : nameOf(id);
+    const kind = sprites.species[id] ? i18n.species(id) : '';
+    return kind ? t('tabNameSpecies', { name: nameOf(id), species: kind }) : nameOf(id);
   }
 
   // the saved pet moved on to now, for display
@@ -110,13 +114,13 @@
     const egg = pet && pet.stage === 'egg';
     els.feed.disabled = !pet || egg;
     els.play.disabled = !pet;
-    els.feed.textContent = egg ? 'Feed (after hatching)' : 'Feed';
-    els.play.textContent = egg ? 'Cuddle' : 'Play';
+    els.feed.textContent = egg ? t('feedAfterHatching') : t('feed');
+    els.play.textContent = egg ? t('cuddle') : t('play');
   }
 
   function daysText(days) {
     const whole = Math.max(1, Math.round(days));
-    return whole + (whole === 1 ? ' day' : ' days');
+    return i18n.plural('days', whole);
   }
 
   function fact(term, detail) {
@@ -128,21 +132,21 @@
   function renderFacts(pet) {
     els.facts.textContent = '';
     if (!state.raisePet) {
-      fact('Companion', fullName(state.companion));
-      fact('Raise a pet', 'Off. Turn it on in Settings to hatch an egg.');
+      fact(t('factCompanion'), fullName(state.companion));
+      fact(t('raisePet'), t('factRaisePetOff'));
     } else if (!pet) {
-      fact('Egg', 'None yet. Pick one on the HUD card (' + (state.hotkeys ? state.hotkeys.settings : 'Shift+B') + ').');
+      fact(t('factEgg'), t('factEggNone', { key: state.hotkeys ? state.hotkeys.settings : 'Shift+B' }));
     } else if (pet.stage === 'egg') {
-      fact('Warmth', Math.round(life.eggProgress(pet) * 100) + '% of the way to hatching');
-      fact('Hatches', 'With XP, level-ups and time');
+      fact(t('warmth'), t('factWarmthDetail', { percent: Math.round(life.eggProgress(pet) * 100) }));
+      fact(t('factHatches'), t('factHatchesDetail'));
     } else {
       const age = (hours() - pet.hatchedAt) / 24;
-      fact('Hatched', age < 1 ? 'Today' : daysText(age) + ' ago');
-      fact('Grows up', life.growth(pet, hours()) === 'adult' ? 'All grown up' : 'In ' + daysText(ADULT_DAYS - age));
+      fact(t('factHatched'), age < 1 ? t('factToday') : t('factAgo', { time: daysText(age) }));
+      fact(t('factGrowsUp'), life.growth(pet, hours()) === 'adult' ? t('tabStageAdult') : t('factGrowsIn', { time: daysText(ADULT_DAYS - age) }));
     }
-    fact('Food in pack', String(Number.isFinite(state.food) ? state.food : 0));
+    fact(t('factFoodInPack'), String(Number.isFinite(state.food) ? state.food : 0));
     if (state.hotkeys) {
-      fact('Keys', 'Feed ' + state.hotkeys.feed + ', play ' + state.hotkeys.play + ', hide ' + state.hotkeys.hide);
+      fact(t('factKeys'), t('factKeysDetail', { feed: state.hotkeys.feed, play: state.hotkeys.play, hide: state.hotkeys.hide }));
     }
   }
 
@@ -172,35 +176,35 @@
     Array.from(els.picker.children).forEach(button => {
       button.setAttribute('aria-pressed', button.dataset.companion === state.companion ? 'true' : 'false');
     });
-    els.pickerNote.textContent = state.raisePet
-      ? 'The card shows the pet you are raising.'
-      : 'Pick who sits on your HUD.';
+    els.pickerNote.textContent = state.raisePet ? t('tabPickerRaising') : t('tabPickerPick');
     els.pickerToggle.hidden = !state.raisePet;
-    els.pickerToggle.textContent = pickerOpen ? 'Hide companions' : 'Change HUD companion (' + nameOf(state.companion) + ')';
+    els.pickerToggle.textContent = pickerOpen ? t('tabHideCompanions') : t('tabChangeCompanionNamed', { name: nameOf(state.companion) });
     els.picker.hidden = Boolean(state.raisePet) && !pickerOpen;
     els.pickerCurrent.textContent = '';
     els.pickerCurrent.append(
-      el('span', '', state.raisePet ? 'On your HUD when raise-a-pet is off: ' : 'On your HUD: '),
+      el('span', '', (state.raisePet ? t('tabOnHudWhenOff') : t('tabOnHud')) + ' '),
       el('b', '', fullName(state.companion))
     );
   }
 
   function render() {
     if (!state) return;
+    i18n.setLanguage(state.language);
+    i18n.apply(root);
     const pet = shownPet();
     renderSprite(pet);
     if (!state.raisePet) {
       els.name.textContent = fullName(state.companion);
-      els.stage.textContent = 'Your HUD companion';
+      els.stage.textContent = t('tabHudCompanion');
     } else if (!pet) {
-      els.name.textContent = 'No egg yet';
-      els.stage.textContent = 'Pick an egg on the HUD card to start raising a pet';
+      els.name.textContent = t('noEggTitle');
+      els.stage.textContent = t('tabPickEgg');
     } else if (pet.stage === 'egg') {
-      els.name.textContent = nameOf(pet.species) + '’s egg';
-      els.stage.textContent = 'Egg, ' + Math.round(life.eggProgress(pet) * 100) + '% warm';
+      els.name.textContent = t('eggName', { name: nameOf(pet.species) });
+      els.stage.textContent = t('tabEggWarm', { percent: Math.round(life.eggProgress(pet) * 100) });
     } else {
       els.name.textContent = fullName(pet.species);
-      els.stage.textContent = STAGES[life.growth(pet, hours())] + ', ' + MOODS[life.mood(pet)];
+      els.stage.textContent = t('tabStageMood', { stage: t(STAGES[life.growth(pet, hours())]), mood: t(MOODS[life.mood(pet)]) });
     }
     renderNeeds(pet);
     renderButtons(pet);
@@ -211,19 +215,19 @@
   // worded like the HUD card's notices
   function resultText(result) {
     const pet = state && state.pet;
-    const name = pet ? nameOf(pet.species) : 'Your pet';
+    const name = pet ? nameOf(pet.species) : t('tabYourPet');
     const egg = pet && pet.stage === 'egg';
     if (result.ok) {
-      if (result.action === 'feed') return name + ' ate well. Mmm, ' + (result.food || 'a snack') + '!';
-      return result.reason === 'egg' ? 'You cuddle the egg. It feels a little warmer.' : name + ' loves playing! Happiness is up.';
+      if (result.action === 'feed') return t('resultAte', { name, food: result.food || t('resultSnack') });
+      return result.reason === 'egg' ? t('resultCuddle') : t('resultPlayed', { name });
     }
     switch (result.reason) {
-      case 'full': return name + ' is full. Try again later.';
-      case 'egg': return 'Eggs don’t eat. Keep it warm with XP instead.';
-      case 'tired': return egg ? 'The egg is cosy. Give it a little while.' : name + ' is tired. Let them rest for a bit.';
-      case 'no food': return 'No food in your pack. Pick up something to eat first.';
-      case 'no pet': return 'No egg yet. Pick one on the HUD card.';
-      default: return result.reason ? String(result.reason) : 'Nothing happened.';
+      case 'full': return t('resultFull', { name });
+      case 'egg': return t('resultEggFood');
+      case 'tired': return egg ? t('resultEggCosy') : t('resultTired', { name });
+      case 'no food': return t('resultNoFood');
+      case 'no pet': return t('resultNoPet');
+      default: return t('resultNothing');
     }
   }
 
@@ -236,7 +240,7 @@
     els.result.textContent = '…';
     mod.call(action, {}).then(reply => {
       if (!reply) return;
-      if (reply.error) els.result.textContent = 'DovahHub could not reach MiniPets (' + reply.error + ').';
+      if (reply.error) els.result.textContent = t('tabNoReach', { error: reply.error });
       else if (reply.ok === false) showResult(Object.assign({ action }, reply));
       // {"queued":true}: the outcome arrives as a push
     });
@@ -246,26 +250,24 @@
     if (!state || id === state.companion) return;
     mod.call('companion', { pet: id }).then(reply => {
       if (reply && reply.error) {
-        els.result.textContent = 'DovahHub could not reach MiniPets (' + reply.error + ').';
+        els.result.textContent = t('tabNoReach', { error: reply.error });
         return;
       }
       if (!reply || reply.ok === false) {
-        els.result.textContent = 'MiniPets does not know that companion.';
+        els.result.textContent = t('tabUnknownCompanion');
         return;
       }
       // the plugin pushes the new state too; show the change straight away
       state = Object.assign({}, state, { companion: id });
       renderPicker();
-      els.result.textContent = state.raisePet
-        ? nameOf(id) + ' will sit on your HUD when raise-a-pet is off.'
-        : nameOf(id) + ' is on your HUD now.';
+      els.result.textContent = state.raisePet ? t('tabWillSit', { name: nameOf(id) }) : t('tabOnHudNow', { name: nameOf(id) });
     });
   }
 
   function refresh() {
     mod.call('state', {}).then(reply => {
       if (!reply || reply.error) {
-        els.name.textContent = 'MiniPets is not answering';
+        els.name.textContent = t('tabNotAnswering');
         els.stage.textContent = reply && reply.error ? String(reply.error) : '';
         return;
       }

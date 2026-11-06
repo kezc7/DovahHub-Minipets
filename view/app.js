@@ -152,6 +152,9 @@
       actionHide: "hiding the pet",
       actionPlay: "playing",
       actionSettings: "opening this menu",
+      ateDetail: "Mmm, {food}!",
+      ateWellTitle: "{name} ate well",
+      ateWithYouTitle: "{name} ate with you",
       celebrating: "Celebrating!",
       celebratingDetail: "{name} is delighted.",
       chooseEgg: "Choose an egg",
@@ -180,6 +183,8 @@
       food: "Food",
       fullDetail: "Try again later.",
       fullTitle: "{name} is full",
+      hatchedDetail: "Feed ({feed}) and play ({play}) with them.",
+      hatchedTitle: "{name} hatched!",
       hintContent: "{name} is doing fine.",
       hintHappy: "{name} is very happy!",
       hintHungry: "{name} is hungry.",
@@ -205,9 +210,13 @@
       petStage: "{name}, {stage}",
       play: "Play",
       playPet: "Play with your pet",
+      playedDetail: "Happiness is up.",
+      playedTitle: "{name} loves playing!",
       pressKey: "Press a key",
+      resultSnack: "a snack",
       saveHotkeyHint: "Press Save settings to keep this key.",
       skillGrows: "{skill} grows stronger.",
+      skillUnknown: "Skill",
       skyrim: "Skyrim",
       stageAdult: "all grown up",
       stageBaby: "baby",
@@ -235,7 +244,7 @@
   }
 
   function petName() {
-    if (raisePet && !petLife) return 'No egg yet';
+    if (raisePet && !petLife) return t('noEggTitle');
     const name = petI18n.petName(shownSpecies()) || 'Dovahmin';
     return isEgg() ? t('eggName', { name }) : name;
   }
@@ -968,7 +977,7 @@
     const name = petNames[petLife.species];
     result.events.forEach(event => {
       if (event === 'hatched') {
-        controller.play('celebrating', { payload: { kind: 'level-up', title: `${name} hatched!`, detail: `Feed (${feedHotkey}) and play (${playHotkey}) with them.`, fill: 100 } });
+        controller.play('celebrating', { payload: { kind: 'level-up', title: t('hatchedTitle', { name }), detail: t('hatchedDetail', { feed: feedHotkey, play: playHotkey }), fill: 100 } });
       } else if (event === 'mood:hungry') petNotice(t('noticeHungryTitle', { name }), t('noticeHungryDetail', { key: feedHotkey }));
       else if (event === 'mood:sad') petNotice(t('noticeLonelyTitle', { name }), t('noticeLonelyDetail', { key: playHotkey }));
       else if (event === 'mood:miserable') petNotice(t('noticeMiserableTitle', { name }), t('noticeMiserableDetail'));
@@ -1024,7 +1033,7 @@
     savePet();
     refreshPet();
     if (result.reason === 'egg') petNotice(t('cuddleTitle'), t('cuddleDetail'));
-    else controller.play('celebrating', { payload: { kind: 'gain', title: `${name} loves playing!`, detail: 'Happiness is up.', fill: 90 } });
+    else controller.play('celebrating', { payload: { kind: 'gain', title: t('playedTitle', { name }), detail: t('playedDetail'), fill: 90 } });
   }
 
   function renderPetPanel() {
@@ -1084,7 +1093,7 @@
       reportLanguage();
     },
     skillGain(data) {
-      const skill = data && data.skill ? data.skill : 'Skill';
+      const skill = data && data.skill ? data.skill : t('skillUnknown');
       showToast('gain', t('xpTitle'), isEgg() && petLife ? t('eggWarm') : t('skillGrows', { skill }), 68);
       petXp(1);
     },
@@ -1116,13 +1125,13 @@
       }
       if (!raisePet || !petLife) return;
       const result = petLifeRules.feed(petLife);
-      const food = data && data.name ? data.name : 'a snack';
+      const food = data && data.name ? data.name : t('resultSnack');
       if (!result.ok) return reportPetAction('feed', false, result.reason);
       reportPetAction('feed', true, null, food);
       petLife = result.pet;
       savePet();
       refreshPet();
-      petCheer(`${petNames[petLife.species]} ate ${data && data.source === 'ate' ? 'with you' : 'well'}`, `Mmm, ${food}!`);
+      petCheer(t(data && data.source === 'ate' ? 'ateWithYouTitle' : 'ateWellTitle', { name: petNames[petLife.species] }), t('ateDetail', { food }));
     },
     companionState(data) {
       controller.setBase(data && data.state ? data.state : 'idle');

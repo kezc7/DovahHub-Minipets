@@ -53,6 +53,13 @@ class FakeElement {
     for (const node of this.walk()) if (node.dataset.pets === match[1]) return node;
     return null;
   }
+  // PetI18n.apply asks for [data-i18n] and [data-i18n-attr]
+  querySelectorAll(selector) {
+    const match = /^\[data-([a-z0-9-]+)\]$/.exec(selector);
+    assert.ok(match, `fake DOM only knows [data-*] lists, got ${selector}`);
+    const key = match[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    return [...this.walk()].filter(node => node.dataset[key] !== undefined);
+  }
 }
 
 // index.html, enough of it: tags with class and data-pets attributes, nested
@@ -69,7 +76,7 @@ function parseHtml(doc, html) {
     if (token[1] === '/') { stack.pop(); return; }
     const tag = /^<([a-z0-9]+)/i.exec(token)[1];
     const element = new FakeElement(doc, tag);
-    for (const attr of token.matchAll(/([a-z-]+)="([^"]*)"/gi)) {
+    for (const attr of token.matchAll(/([a-z0-9-]+)="([^"]*)"/gi)) {
       if (attr[1] === 'class') element.className = attr[2];
       else if (attr[1].startsWith('data-')) element.dataset[attr[1].slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = attr[2];
       else element.setAttribute(attr[1], attr[2]);
@@ -99,7 +106,7 @@ function loadTab() {
   sandbox.dovahhubModule = id => (id === 'pets' ? mod : null);
   vm.createContext(sandbox);
   // the same order DovahHub loads them in
-  for (const file of ['pet-life.js', 'pet-sprites.js', 'pets.js']) {
+  for (const file of ['i18n.js', 'pet-life.js', 'pet-sprites.js', 'pets.js']) {
     vm.runInContext(fs.readFileSync(path.join(MODULE_DIR, file), 'utf8'), sandbox, { filename: file });
   }
   const text = name => root.querySelector(`[data-pets="${name}"]`).textContent;
@@ -251,7 +258,7 @@ test('an egg shows warmth and offers a cuddle', async () => {
   tab.setAnswer(() => Object.assign({}, baseState, { raisePet: true, pet: eggPet }));
   tab.event('tabShown');
   await tab.tick();
-  assert.equal(tab.text('name'), 'Clack’s egg');
+  assert.equal(tab.text('name'), "Clack's egg");
   assert.equal(tab.text('stage'), 'Egg, 50% warm');
   assert.equal(tab.slot('need-warmth').hidden, false);
   assert.equal(tab.slot('bar-warmth').style.width, '50%');
@@ -298,8 +305,8 @@ test('a pushed state re-renders, and the picker sends the companion', async () =
   assert.equal(tab.slot('picker').children.find(button => button.dataset.companion === 'chicken').getAttribute('aria-pressed'), 'true');
 });
 
-test('the module ships the same pet-life.js, pet-sprites.js and pet-motion.css as the HUD page', () => {
-  for (const file of ['pet-life.js', 'pet-sprites.js', 'pet-motion.css']) {
+test('the module ships the same i18n.js, pet-life.js, pet-sprites.js and pet-motion.css as the HUD page', () => {
+  for (const file of ['i18n.js', 'pet-life.js', 'pet-sprites.js', 'pet-motion.css']) {
     assert.equal(fs.readFileSync(path.join(MODULE_DIR, file), 'utf8').replace(/\r\n/g, '\n'), fs.readFileSync(path.join(VIEW_DIR, file), 'utf8').replace(/\r\n/g, '\n'), `${file} matches view/`);
   }
 });
@@ -324,4 +331,29 @@ test('the plugin\'s companion table matches pet-sprites.js', () => {
   const table = source.slice(source.indexOf('kCompanions{'), source.indexOf('} };', source.indexOf('kCompanions{')));
   const native = [...table.matchAll(/\{ "([a-z-]+)", "([A-Za-z]+)" \}/g)].map(match => ({ id: match[1], name: match[2] }));
   assert.deepEqual(native, companions);
+});
+
+// DMP-9: the tab follows MiniPets' Language setting, with no English left on it
+test('the tab shows MiniPets in the language MiniPets is set to', async () => {
+  const tab = loadTab();
+  tab.setAnswer(() => Object.assign({}, baseState, { raisePet: true, pet: hatchedPet, hours: 210, language: 'de' }));
+  tab.event('tabShown');
+  await tab.tick();
+  assert.equal(tab.text('name'), 'Ember (Fuchs)');
+  assert.equal(tab.text('stage'), 'Jung, zufrieden');
+  assert.equal(tab.text('feed'), 'Füttern');
+  assert.equal(tab.text('play'), 'Spielen');
+  assert.ok(tab.text('facts').includes('Vor 4 Tagen'), tab.text('facts'));
+  assert.ok(tab.text('facts').includes('Essen im Gepäck3'), tab.text('facts'));
+  assert.equal(tab.text('picker-toggle'), 'HUD-Begleiter wechseln (Ember)');
+  const kickers = tab.root.querySelectorAll('[data-i18n]').map(node => node.textContent);
+  assert.ok(kickers.includes('Dein Begleiter') && kickers.includes('Info') && kickers.includes('Begleiter'), kickers.join(', '));
+  tab.push({ result: { action: 'feed', ok: false, reason: 'no food' } });
+  assert.equal(tab.text('result'), 'Nichts zu essen im Gepäck. Heb zuerst etwas Essbares auf.');
+  tab.push({ state: Object.assign({}, baseState, { raisePet: true, pet: hatchedPet, hours: 210, language: 'ja' }) });
+  assert.equal(tab.text('name'), 'Ember（キツネ）');
+  assert.equal(tab.text('feed'), '餌をあげる');
+  for (const word of ['Feed', 'Play', 'Companion', 'Your companion', 'Hatched', 'Keys']) {
+    assert.ok(!tab.root.textContent.includes(word), `no "${word}" in Japanese: ${tab.root.textContent}`);
+  }
 });

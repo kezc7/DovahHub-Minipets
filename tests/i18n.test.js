@@ -16,7 +16,7 @@ test('supports every requested language', () => {
 test('localizes companion species and Skyrim dates', () => {
   i18n.setLanguage('fr');
   assert.equal(i18n.species('fox'), 'Renard');
-  assert.equal(i18n.formatDate({ weekday: 'Morndas', day: 17, month: 'Last Seed' }), 'Morndas 17 Dernières Semences');
+  assert.equal(i18n.formatDate({ weekday: 'Morndas', day: 17, month: 'Last Seed' }), 'Morndas 17 Vifazur');
   i18n.setLanguage('en');
   assert.equal(i18n.formatDate({ weekday: 'Morndas', day: 17, month: 'Last Seed' }), 'Morndas, 17th of Last Seed');
 });

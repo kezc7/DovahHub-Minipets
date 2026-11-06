@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MiniPets</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="pet-motion.css?v=60">
-  <link rel="stylesheet" href="styles.css?v=60">
+  <link rel="stylesheet" href="pet-motion.css?v=61">
+  <link rel="stylesheet" href="styles.css?v=61">
 </head>
 <body>
   <main id="dragonborn-xp" aria-live="polite" aria-atomic="true">
@@ -25,13 +25,13 @@
         </div>
       </div>
       <section class="copy">
-        <p id="title">The dragon stirs…</p>
-        <p id="detail">A little more power for the road.</p>
+        <p id="title"></p>
+        <p id="detail"></p>
       </section>
       <div class="xp-bar" aria-hidden="true"><span></span></div>
       <div id="clock-banner" class="clock-banner" aria-hidden="true"><span id="clock-time" class="clock-time"></span><span class="clock-separator">◆</span><span id="clock-date" class="clock-date"></span></div>
       <div class="pet-needs" aria-hidden="true">
-        <div class="need-line need-line-warmth"><span class="need-label">Warmth</span><span class="need-track"><span id="card-need-warmth"></span></span></div>
+        <div class="need-line need-line-warmth"><span class="need-label" data-i18n="warmth">Warmth</span><span class="need-track"><span id="card-need-warmth"></span></span></div>
         <div class="need-line need-line-food"><span class="need-icon need-icon-food"></span><span class="need-track"><span id="card-need-food"></span></span></div>
         <div class="need-line need-line-happiness"><span class="need-icon need-icon-heart"></span><span class="need-track"><span id="card-need-happiness"></span></span></div>
       </div>
@@ -58,13 +58,13 @@
           <p id="pet-life-name" class="pet-life-name"></p>
           <div id="pet-life-eggs" class="egg-picker"></div>
           <div id="pet-life-needs">
-            <div class="need need-warmth"><span>Warmth</span><span class="need-bar"><span id="need-warmth"></span></span></div>
-            <div class="need need-food"><span>Food</span><span class="need-bar"><span id="need-food"></span></span></div>
-            <div class="need need-happiness"><span>Happiness</span><span class="need-bar"><span id="need-happiness"></span></span></div>
+            <div class="need need-warmth"><span data-i18n="warmth">Warmth</span><span class="need-bar"><span id="need-warmth"></span></span></div>
+            <div class="need need-food"><span data-i18n="food">Food</span><span class="need-bar"><span id="need-food"></span></span></div>
+            <div class="need need-happiness"><span data-i18n="happiness">Happiness</span><span class="need-bar"><span id="need-happiness"></span></span></div>
             <div class="pet-life-actions">
-              <button id="pet-feed" class="settings-secondary" type="button">Feed</button>
-              <button id="pet-play" class="settings-secondary" type="button">Play</button>
-              <button id="pet-reset" class="settings-secondary" type="button">Start over</button>
+              <button id="pet-feed" class="settings-secondary" type="button" data-i18n="feed">Feed</button>
+              <button id="pet-play" class="settings-secondary" type="button" data-i18n="play">Play</button>
+              <button id="pet-reset" class="settings-secondary" type="button" data-i18n="startOver">Start over</button>
             </div>
           </div>
           <p id="pet-life-hint" class="settings-hint"></p>
@@ -74,24 +74,24 @@
           <select id="pet-select">
             <option value="dovahmin">Dovahmin</option>
             <option value="dovahpink">Dovahpink</option>
-            <option value="mudcrab">Clack — Mudcrab</option>
-            <option value="skeever">Nibbles — Skeever</option>
-            <option value="fox">Ember — Fox</option>
-            <option value="sabrecat">Stripes — Sabre Cat</option>
-            <option value="frostbite-spider">Webber — Frostbite Spider</option>
-            <option value="horker">Waddles — Horker</option>
-            <option value="troll">Grumble — Troll</option>
-            <option value="flame-atronach">Cinder — Flame Atronach</option>
-            <option value="frost-atronach">Shiver — Frost Atronach</option>
-            <option value="spriggan">Moss — Spriggan</option>
-            <option value="dwarven-spider">Tinker — Dwarven Spider</option>
-            <option value="chaurus">Skitter — Chaurus</option>
-            <option value="netch">Bloop — Netch</option>
-            <option value="mammoth">Tusker — Mammoth</option>
-            <option value="dragon-priest">Masky — Dragon Priest</option>
-            <option value="wisp">Glowbug — Wisp</option>
-            <option value="death-hound">Gnasher — Death Hound</option>
-            <option value="chicken">Pip — Chicken</option>
+            <option value="mudcrab">Clack</option>
+            <option value="skeever">Nibbles</option>
+            <option value="fox">Ember</option>
+            <option value="sabrecat">Stripes</option>
+            <option value="frostbite-spider">Webber</option>
+            <option value="horker">Waddles</option>
+            <option value="troll">Grumble</option>
+            <option value="flame-atronach">Cinder</option>
+            <option value="frost-atronach">Shiver</option>
+            <option value="spriggan">Moss</option>
+            <option value="dwarven-spider">Tinker</option>
+            <option value="chaurus">Skitter</option>
+            <option value="netch">Bloop</option>
+            <option value="mammoth">Tusker</option>
+            <option value="dragon-priest">Masky</option>
+            <option value="wisp">Glowbug</option>
+            <option value="death-hound">Gnasher</option>
+            <option value="chicken">Pip</option>
           </select>
         </label>
       </div>
@@ -136,7 +136,7 @@
         <h2 data-i18n="language">Language</h2>
         <label class="settings-row" for="language-select">
           <span data-i18n="language">Language</span>
-          <select id="language-select" aria-label="Language">
+          <select id="language-select" aria-label="Language" data-i18n-attr="aria-label" data-i18n-attr-key="language">
             <option value="en">English</option>
             <option value="fr">Français</option>
             <option value="de">Deutsch</option>
@@ -165,14 +165,14 @@
       </footer>
     </div>
   </section>
-  <section id="animation-lab" class="hidden" aria-label="Animation preview">
+  <section id="animation-lab" class="hidden" aria-label="Animation preview" data-i18n-attr="aria-label" data-i18n-attr-key="animationLabLabel">
     <div class="animation-lab-card">
       <div class="animation-lab-header">
         <div>
           <p class="settings-kicker" data-i18n="animationKicker">DEVELOPMENT PREVIEW</p>
           <h2 data-i18n="animationTitle">Animation lab</h2>
         </div>
-        <button id="animation-lab-close" type="button" aria-label="Close animation preview">×</button>
+        <button id="animation-lab-close" type="button" aria-label="Close animation preview" data-i18n-attr="aria-label" data-i18n-attr-key="closeAnimationLab">×</button>
       </div>
       <label><span data-i18n="animationPet">Pet</span> <select id="animation-lab-pet"></select></label>
       <label><span data-i18n="animationPlace">Place</span> <select id="animation-lab-region"></select></label>
@@ -192,14 +192,14 @@
       </div>
     </div>
   </section>
-  <section id="pet-sheet" class="hidden" aria-label="All companions"></section>
-  <script src="animation-state.js?v=60"></script>
-  <script src="i18n.js?v=60"></script>
-  <script src="pet-sprites.js?v=60"></script>
-  <script src="clock.js?v=60"></script>
-  <script src="pet-life.js?v=60"></script>
-  <script src="regions.js?v=60"></script>
-  <script src="sky.js?v=60"></script>
-  <script src="app.js?v=60"></script>
+  <section id="pet-sheet" class="hidden" aria-label="All companions" data-i18n-attr="aria-label" data-i18n-attr-key="allCompanions"></section>
+  <script src="animation-state.js?v=61"></script>
+  <script src="i18n.js?v=61"></script>
+  <script src="pet-sprites.js?v=61"></script>
+  <script src="clock.js?v=61"></script>
+  <script src="pet-life.js?v=61"></script>
+  <script src="regions.js?v=61"></script>
+  <script src="sky.js?v=61"></script>
+  <script src="app.js?v=61"></script>
 </body>
 </html>
