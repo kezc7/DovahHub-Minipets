@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.4-beta
+- DovahMenu (0.3.5-beta or later) shows the MiniPets description in its own language
+- Upgrading from 1.8.3-beta: install over it in your mod manager; nothing else changes
+
 ## 1.8.3-beta
 - Every language other than English is translated in full: each companion's own moving and fighting lines, Skyrim's month names, every species, and the feeding, playing and hatching celebrations. These are machine translations, using the game's own terms where known; corrections welcome
 - The MiniPets tab in DovahHub follows MiniPets' Language setting: headings, bars, buttons, the About facts, the companion picker and every result line
