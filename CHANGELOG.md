@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.3-beta
+- Every language other than English is translated in full: each companion's own moving and fighting lines, Skyrim's month names, every species, and the feeding, playing and hatching celebrations. These are machine translations, using the game's own terms where known; corrections welcome
+- The MiniPets tab in DovahHub follows MiniPets' Language setting: headings, bars, buttons, the About facts, the companion picker and every result line
+- MiniPets' options on DovahHub's Settings tab, and the warning about a leftover DragonbornXP.dll, are in the chosen language too
+- The card's Warmth label and the settings panel's Warmth, Food and Happiness labels were always English; they follow the language now
+- Fixes in the existing translations: the hotkey hint in French, Italian and Spanish said "click a key" where it means "click a key box"; German "Der Drachenblut" is "Das Drachenblut"; Japanese and Korean left "Space" in English; Italian dates used the Spanish "de"
+- Upgrading from 1.8.2-beta: install over it in your mod manager; nothing else changes
+
 ## 1.8.2-beta
 - English reads as it did in 1.8.0 again: each companion's own moving and fighting lines, "Smithing grows stronger.", "Level 3!", the egg's level-up line, "Feed (after hatching)" and "Click again to start over". Other languages use a shared line for moving and fighting until the companions' own lines are translated
 - The rest of the card is translated too: growth stages, mood hints, egg hints, the hungry, lonely, full, tired and no-food notices, and the hotkey names in the settings hint
