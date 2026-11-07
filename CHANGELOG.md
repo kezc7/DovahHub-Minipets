@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1-beta
+- Nothing about one save carries into another any more. While a save loaded, the card could still tick the last save's raised pet and hand it to the new one, so a character with no pet (or a new game) could end up with the previous character's pet. The card now forgets the pet as soon as a load starts, and the plugin keeps only a pet the card sends for the save being played
+- A load also starts the reactions afresh: the outfit look's 10-minute gap, the Chronicle line's one-a-minute limit and any reaction still waiting no longer carry over from the last save, and the clock and scenery are sent again for the new one
+- Upgrading from 1.9.0-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.0-beta
 - Your companion reacts to what happens. Low health: it shrinks back and covers its eyes ("Careful!"). Sleeping: it curls up and sleeps on the card. Dying: it stays sad until you load
 - With DovahDamage: a new biggest hit gets a cheer with the number, and killing a dragon, a giant or a dungeon boss gets a victory hop. The record is kept in your save
