@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0-beta
+- Your companion reacts to what happens. Low health: it shrinks back and covers its eyes ("Careful!"). Sleeping: it curls up and sleeps on the card. Dying: it stays sad until you load
+- With DovahDamage: a new biggest hit gets a cheer with the number, and killing a dragon, a giant or a dungeon boss gets a victory hop. The record is kept in your save
+- With DovahHub 0.96.4-beta or later: it waves at a new follower or a horse, looks sad when someone is lost, sounds a fanfare for a milestone tier and gives a new outfit a curious look
+- Every companion has the new poses (cheer, wave, sad, cower, sleep, curious, a victory hop, a fanfare), with a small pixel emote over its head; several add their own touch: the mudcrab clacks, the wisp and the flame atronach dim, glowing eyes go dark, the netch sinks, the dragons spread their wings
+- New settings on DovahHub's Settings tab: React to other mods, Time between reactions (8 seconds), and two that are off by default: Shared moments count as care (three times a game day at most) and Your companion speaks in Chronicle (one line a minute at most)
+- For other mods: MiniPets_API.h version 2 adds React, so any mod can make the companion react; version 1 keeps working
+- Long captions (a long follower name, the longer languages) now fit the card instead of being cut off
+- Upgrading from 1.8.x: install over it in your mod manager; nothing else changes
+
 ## 1.8.5-beta
 - The clock's month follows the chosen language again: French read "Morndas 1 Heartfire" because the game spells the month Heartfire. The plugin now sends the month and day by number, so the date is right whatever language the game itself is in
 - Month, day and creature names are taken from the game's own localised strings (French, German, Italian, Spanish, Polish, Japanese, Chinese). Several change, for example Vasard (French mudcrab), Zweigling (German spriggan), Ślizgacz (Polish skeever) and 薪木の月 with 月 for Morndas in Japanese
