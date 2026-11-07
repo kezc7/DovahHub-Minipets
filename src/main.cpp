@@ -116,6 +116,12 @@ namespace
     std::string g_lastWorldMood;
     // raise-a-pet state from the view (JSON), kept per save in the SKSE co-save
     std::string g_petState;
+    // SAVE-LEAK: every load and new game starts a new pet session. The page echoes it with each pet
+    // state it sends back, so a state the page worked out for the previous save (a clock tick that
+    // landed while the next save was loading) is dropped instead of being written into this one.
+    std::atomic_uint32_t g_petSession = 1;
+    // between a load starting (Revert, kPreLoadGame) and the game being ready (kPostLoadGame, kNewGame)
+    std::atomic_bool g_loadingSave = false;
     std::int64_t g_lastClockMinute = -1;
 
     std::string Trim(std::string_view value)
@@ -679,6 +685,12 @@ namespace
         g_lastKills = 0;
         g_killsSeen.clear();
         g_loadedAtMs = NowMs();
+        g_lastOutfitMs = -1e18;
+        g_lastChronicleMs = -1e18;
+        {
+            std::lock_guard lock(g_reactQueueLock);
+            g_reactQueue.clear();
+        }
         Invoke("dragonbornXP.reactEnd", "{}");
     }
 
@@ -759,7 +771,8 @@ namespace
     // game thread, on the 250 ms task
     void UpdateReactions()
     {
-        if (!g_gameLoaded.load()) {
+        // nothing while a save loads: the counters and the record belong to the save being left
+        if (!g_gameLoaded.load() || g_loadingSave.load()) {
             return;
         }
         std::deque<std::string> pending;
@@ -812,7 +825,7 @@ namespace
         json = json.c_str();  // stop at the terminator whatever dataLen says
         if (const auto* tasks = SKSE::GetTaskInterface()) {
             tasks->AddTask([type, json]() {
-                if (!g_gameLoaded.load()) {
+                if (!g_gameLoaded.load() || g_loadingSave.load()) {
                     return;
                 }
                 Reactions::Reaction reaction;
@@ -1405,7 +1418,45 @@ namespace
 
     void SendPetState()
     {
-        Invoke("dragonbornXP.petState", "{\"state\":" + JsonString(g_petState) + "}");
+        Invoke("dragonbornXP.petState", "{\"state\":" + JsonString(g_petState) + ",\"session\":" + std::to_string(g_petSession.load()) + "}");
+    }
+
+    // "<session>|<pet JSON>" from the page; false (and nothing kept) for another save's session
+    bool AcceptPetState(const std::string& payload, std::string& state)
+    {
+        const auto bar = payload.find('|');
+        if (bar == std::string::npos || bar == 0 || bar > 10) {
+            logger::info("MiniPets: pet state without a session ignored");
+            return false;
+        }
+        const auto session = static_cast<std::uint32_t>(std::strtoul(payload.substr(0, bar).c_str(), nullptr, 10));
+        if (g_loadingSave.load() || session != g_petSession.load()) {
+            logger::info("MiniPets: pet state from an earlier save ignored (session {}, now {})", session, g_petSession.load());
+            return false;
+        }
+        state = payload.substr(bar + 1);
+        return true;
+    }
+
+    // Revert and kPreLoadGame: the page forgets the pet it had, so it can't tick or save it into
+    // the save being loaded; reactions, cooldowns and DovahDamage's counters start over
+    void BeginLoad()
+    {
+        g_loadingSave.store(true);
+        g_petSession.fetch_add(1);
+        ResetReactions();
+        SendPetState();
+    }
+
+    // kPostLoadGame and kNewGame: everything the card shows is sent again for this save
+    void FinishLoad()
+    {
+        g_loadingSave.store(false);
+        g_lastClockMinute = -1;
+        g_lastWorldMood.clear();
+        g_lastCompanionState.clear();
+        ResetReactions();
+        SendPetState();
     }
 
 
@@ -2073,7 +2124,13 @@ namespace
             g_prismaUI->RegisterJSListener(view, "petStateChanged", [](const char* payload) {
                 const std::string copy(payload ? payload : "");
                 if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-                    taskInterface->AddTask([copy]() { OnPetStateChanged(copy); });
+                    // the session is checked when the task runs, after any load that started meanwhile
+                    taskInterface->AddTask([copy]() {
+                        std::string state;
+                        if (AcceptPetState(copy, state)) {
+                            OnPetStateChanged(state);
+                        }
+                    });
                 }
             });
             g_prismaUI->RegisterJSListener(view, "petActionResult", [](const char* payload) {
@@ -2150,6 +2207,7 @@ static void OnRevert(SKSE::SerializationInterface*)
 {
     g_petState.clear();
     g_bestHit = 0.0f;
+    BeginLoad();
 }
 
 static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
@@ -2169,12 +2227,14 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
     case SKSE::MessagingInterface::kDataLoaded:
         OnDataLoaded();
         break;
+    case SKSE::MessagingInterface::kPreLoadGame:
+        BeginLoad();
+        break;
     case SKSE::MessagingInterface::kPostLoadGame:
     case SKSE::MessagingInterface::kNewGame:
         // stay hidden until a game is loaded
         g_gameLoaded.store(true);
-        ResetReactions();
-        SendPetState();
+        FinishLoad();
         PushPetsState();
         break;
     default:

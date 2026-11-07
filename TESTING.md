@@ -23,6 +23,18 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
+## Save to save (1.9.1)
+
+Nothing about one playthrough should show up in another. Settings (companion, card, clock, language, hotkeys, Shift+V hidden, raise-a-pet on or off) are the player's and apply to every save.
+
+1. Save A: raise a pet (for example a fox) and play until it has hatched. Make a save.
+2. Save B: a character that never had a pet, or a new game. Load it straight from A, without quitting to the menu. With raise-a-pet on, B shows the egg picker, not A's fox. `MiniPets.log` may show `MiniPets: pet state from an earlier save ignored (session …)` once or twice around the load; that line is the fix doing its job.
+3. Load A again. The fox is back with the bars it had when you saved.
+4. Quit to the main menu from A and start a new game. After the intro, the new character has no pet.
+5. In A, die (the sad pose), then load B. B's companion is not sad. In A, change the player's outfit with DovahHub's Wardrobe, load B and, after 30 seconds, change B's outfit: the curious look shows (the 10-minute gap was A's).
+
+Pass: B and the new game never show A's pet, its bars or a pose from A. Fail: note which save showed what, and the `MiniPets` lines around the load.
+
 ## Chinese, Japanese and Korean text
 
 MiniPets ships no font. The page uses Georgia, so Chinese, Japanese and Korean characters come from whatever font Prisma UI falls back to. If none covers them, they show as empty boxes.
