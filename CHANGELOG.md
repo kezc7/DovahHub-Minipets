@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.2
+- Fixed: switching saves or starting a new game could hand a character with no pet the pet raised by the previous character. While a save loaded, the card could still tick the last save's pet and pass it on; it now forgets the pet as soon as a load starts, and only a pet from the save being played is kept
+- The clock and scenery are sent again after every load, for the save just loaded
+
 ## 1.6.1
 - Feed and play hotkeys are ignored while the pet is hidden, so food doesn't vanish off screen
 - Cuddling an egg has the same cooldown as playing, so it can't be hatched by mashing the key
