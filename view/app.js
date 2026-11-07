@@ -24,6 +24,7 @@
   const petLifeNeeds = document.querySelector('#pet-life-needs');
   const petLifeHint = document.querySelector('#pet-life-hint');
   const petBubble = document.querySelector('.pet-bubble');
+  const petEmote = document.querySelector('.pet-emote');
   const petLifeRules = window.PetLife;
   const clockEnabledInput = document.querySelector('#clock-enabled');
   const clockStyleSelect = document.querySelector('#clock-style');
@@ -40,6 +41,8 @@
   const CLOCK_HEIGHT = { plate: 84, ribbon: 46 };
   const NEEDS_HEIGHT = 66;
   const animationStates = window.PetAnimationState;
+  // reactions.js can be missing in a hand-copied install that kept an older view folder: no reactions then
+  const petReactions = window.PetReactions || null;
   const petSprites = window.PetSprites;
   // square card, or a wider one that shows more scenery
   const CARD_SHAPES = { square: [256, 256], wide: [384, 224] };
@@ -108,6 +111,9 @@
   let resetArmed = false;
   const eggProfile = { idle: ['hop'], idleDelay: 4200, idleDuration: 700 };
   let showClock = false;
+  // the reaction showing now (view/reactions.js), and whether big moments count as care (a setting)
+  let reaction = null;
+  let careMoments = false;
   // in-game hour (fractional) and the per-day scenery seed
   let skyHours = 12.5;
   let scenerySeed = 1;
@@ -136,6 +142,7 @@
   const CAPTION_HOLD_MS = 3500;
 
   const controller = animationStates.createController({ onChange: render });
+  const reactionPlayer = petReactions ? petReactions.createPlayer({ onChange: applyReaction }) : null;
 
   // the species on the card: the picked companion, or the one being raised
   function shownSpecies() {
@@ -392,7 +399,8 @@
       captionFull ? 'caption-full' : 'caption-name',
       isEgg() ? `is-egg egg-warm-${petLife ? Math.min(3, Math.floor(petLifeRules.eggProgress(petLife) * 4)) : 0}` : '',
       petMood() && petMood() !== 'egg' ? `mood-${petMood()}` : '',
-      raisePet && petLife ? 'raising' : ''
+      raisePet && petLife ? 'raising' : '',
+      reaction ? `reacting react-${reaction.mood}` : ''
     ].filter(Boolean).join(' ');
   }
 
@@ -407,6 +415,21 @@
     applyPosition();
   }
 
+  // a long line (a follower's name, a long language) drops the side rules and steps down a size,
+  // then a second; a detail that still doesn't fit wraps onto two lines
+  function fitCaption() {
+    const copy = title.parentElement;
+    copy.classList.remove('fit-1', 'fit-2', 'fit-wrap');
+    const tooWide = element => element.scrollWidth > element.clientWidth + 1;
+    if (!tooWide(title) && !tooWide(detail)) return;
+    copy.classList.add('fit-1');
+    if (tooWide(title) || tooWide(detail)) {
+      copy.classList.remove('fit-1');
+      copy.classList.add('fit-2');
+    }
+    if (tooWide(detail)) copy.classList.add('fit-wrap');
+  }
+
   // full caption for events, otherwise just the name
   function showCaption(copy, holdMs) {
     window.clearTimeout(captionTimer);
@@ -415,14 +438,21 @@
     title.textContent = copy[0];
     detail.textContent = copy[1];
     bar.style.width = `${copy[2]}%`;
+    fitCaption();
   }
 
   function collapseCaption() {
     window.clearTimeout(captionTimer);
     captionTimer = 0;
+    if (reaction) {
+      showReactionCaption(0);
+      applySceneClasses();
+      return;
+    }
     captionFull = false;
     title.textContent = petName();
     detail.textContent = '';
+    title.parentElement.classList.remove('fit-1', 'fit-2', 'fit-wrap');
     applySceneClasses();
   }
 
@@ -696,6 +726,10 @@
     const delay = petProfile.idleDelay + ((idleVariationIndex * 137) % 1100);
     idleVariationTimer = window.setTimeout(() => {
       if (current.state !== 'idle') return;
+      if (reaction) {
+        scheduleIdleVariation();
+        return;
+      }
       // unhappy pets don't fidget
       if (['hungry', 'sad', 'miserable'].includes(petMood())) {
         scheduleIdleVariation();
@@ -714,6 +748,60 @@
   function applyLabSpeed() {
     if (!animationLabActive || typeof document.getAnimations !== 'function') return;
     window.requestAnimationFrame(() => document.getAnimations().forEach(animation => { animation.playbackRate = labSpeed; }));
+  }
+
+  // --- Reactions (1.9.0) ---------------------------------------------------
+
+  function reactionCaption() {
+    return petReactions.captionFor(reaction, t, petName());
+  }
+
+  function showReactionCaption(holdMs) {
+    window.clearTimeout(captionTimer);
+    captionTimer = holdMs ? window.setTimeout(collapseCaption, holdMs) : 0;
+    const copy = reactionCaption();
+    captionFull = true;
+    title.textContent = copy[0];
+    detail.textContent = copy[1];
+    bar.style.width = `${copy[2]}%`;
+    fitCaption();
+  }
+
+  function renderEmote() {
+    if (!petEmote) return;
+    petEmote.textContent = '';
+    const name = reaction && petReactions.EMOTES[reaction.mood];
+    if (name && petSprites.ornaments[name]) petEmote.append(petSprites.renderOrnament(document, name));
+  }
+
+  function applyReaction(next) {
+    reaction = next;
+    renderEmote();
+    if (reaction) {
+      stopIdleVariation();
+      showReactionCaption(reaction.hold ? 0 : reaction.ms);
+      applySceneClasses(true);
+    } else {
+      collapseCaption();
+      if (current.state === 'idle') scheduleIdleVariation();
+    }
+  }
+
+  function react(data) {
+    if (!reactionPlayer || !reactionPlayer.show(data)) return;
+    // a big moment counts as a little care, when the player turned that on
+    if (reaction.care && careMoments && raisePet && petLife) {
+      const result = petLifeRules.shareMoment(petLife, gameHours);
+      if (result.ok) {
+        petLife = result.pet;
+        savePet();
+        refreshPet();
+      }
+    }
+    // the plugin rate-limits the Chronicle line; the page words it in the player's language
+    if (reaction.say && typeof window.petSays === 'function') {
+      window.petSays(JSON.stringify({ speaker: petName(), text: reactionCaption()[1] }));
+    }
   }
 
   function showToast(kind, nextTitle, nextDetail, fill) {
@@ -860,6 +948,7 @@
     if (typeof data.hideHotkey === 'string' && data.hideHotkey) hideHotkey = data.hideHotkey;
     if (typeof data.language === 'string') setLanguage(data.language, false);
     if (typeof data.hidden === 'boolean') petHidden = data.hidden;
+    if (typeof data.careMoments === 'boolean') careMoments = data.careMoments;
     if (typeof data.clock === 'boolean') showClock = data.clock;
     if (data.clockStyle === 'plate' || data.clockStyle === 'ribbon') clockStyle = data.clockStyle;
     if (Number.isFinite(data.scale)) cardScale = clampScale(data.scale);
@@ -1136,6 +1225,14 @@
     companionState(data) {
       controller.setBase(data && data.state ? data.state : 'idle');
     },
+    // src/main.cpp OfferReaction: {"source","mood","caption","captionKey","vars","ms","priority","hold","care","say"}
+    react(data) {
+      react(data);
+    },
+    // a held reaction ends (waking up, getting up), or every reaction on a load ({})
+    reactEnd(data) {
+      if (reactionPlayer) reactionPlayer.end(data && data.mood);
+    },
     clock(data) {
       lastClockData = data || {};
       clockTime.textContent = petClock.formatTime(data && data.hour, data && data.minute);
@@ -1182,6 +1279,21 @@
   window.previewFlight = () => window.dragonbornXP.companionState({ state: 'flying' });
   window.previewCombat = () => window.dragonbornXP.companionState({ state: 'combat' });
   window.previewLand = () => window.dragonbornXP.companionState({ state: 'landed' });
+  // ?preview=react-cheer (or any mood), ?preview=react to go through all of them
+  const sampleReactions = {
+    cheer: { captionKey: 'reactBigHit', vars: { amount: 412 } }, wave: { captionKey: 'reactJoined', vars: { name: 'Lydia' } },
+    sad: { captionKey: 'reactLost', vars: { name: 'Frost' } }, cower: { captionKey: 'reactCareful' },
+    sleep: { captionKey: 'reactSleeping' }, curious: { captionKey: 'reactOutfit' },
+    hop: { captionKey: 'reactBossDown', vars: { name: 'Mirmulnir' } }, fanfare: { captionKey: 'reactMilestone', vars: { title: 'Master Smith' } }
+  };
+  window.previewReact = (mood, extra) => window.dragonbornXP.react(Object.assign({ source: 'preview', mood, ms: 3000, priority: 2 }, sampleReactions[mood], extra));
+  window.previewReactions = () => {
+    const moods = petReactions ? petReactions.MOODS : [];
+    let index = 0;
+    const next = () => window.previewReact(moods[index++ % moods.length], { ms: 3200 });
+    next();
+    window.setInterval(next, 3600);
+  };
   const sampleDate = { weekday: 'Morndas', day: 17, month: 'Last Seed', year: 201 };
   window.previewTime = (hours, nextWeather = 'clear', date = sampleDate) => {
     window.dragonbornXP.clock(Object.assign({}, date, { hour: Math.floor(hours), minute: Math.round((hours % 1) * 60) }));
@@ -1462,11 +1574,13 @@
       window.dragonbornXP.applySettings({ x: positionX, y: positionY, hotkey: settingsHotkey, pet, raisePet: true });
       window.previewSettings();
     },
-    places: () => window.previewPlaces()
+    places: () => window.previewPlaces(),
+    react: () => window.previewReactions()
   };
   // sample time for the preview
   if (browserPreview) window.previewTime(12.7);
   if (previews[previewMode]) previews[previewMode]();
   if (petNames[previewMode]) window.previewPet(previewMode);
   if (petRegions && petRegions.info[previewMode]) window.previewRegion(previewMode);
+  if (/^react-/.test(previewMode || '')) window.previewReact(previewMode.slice(6), { hold: true });
 })();

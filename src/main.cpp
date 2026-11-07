@@ -2,10 +2,15 @@
 #include "keyhandler.h"
 #include "DovahHub_API.h"
 #include "MiniPets_API.h"
+#include "DovahDamage_API.h"
+#include "Chronicle_API.h"
+#include "Reactions.h"
 
 #include <RE/A/ActorValueList.h>
 #include <RE/A/AlchemyItem.h>
+#include <RE/B/BGSDefaultObjectManager.h>
 #include <RE/B/BGSLocation.h>
+#include <RE/E/ExtraLocationRefType.h>
 #include <RE/C/Calendar.h>
 #include <RE/D/DragonSoulsGained.h>
 #include <RE/L/LevelIncrease.h>
@@ -15,6 +20,8 @@
 #include <RE/S/ScriptEventSourceHolder.h>
 #include <RE/S/Sky.h>
 #include <RE/T/TESDataHandler.h>
+#include <RE/T/TESDeathEvent.h>
+#include <RE/T/TESSleepStopEvent.h>
 #include <RE/T/TESEquipEvent.h>
 #include <RE/T/TESObjectCELL.h>
 #include <RE/T/TESWorldSpace.h>
@@ -36,7 +43,20 @@
 #include <array>
 #include <limits>
 #include <cstring>
+#include <deque>
+#include <mutex>
+#include <unordered_set>
 #include <vector>
+
+// CommonLib declares the sleep-start event without its members; MiniPets only needs it to arrive
+namespace RE
+{
+    struct TESSleepStartEvent
+    {
+        float startTime;    // 00
+        float endTime;      // 04
+    };
+}
 
 PRISMA_UI_API::IVPrismaUI1* g_prismaUI = nullptr;
 PrismaView g_view = 0;
@@ -68,6 +88,11 @@ namespace
         std::string hideHotkeyName = "Shift+V";
         std::string language = "en";
         bool petHidden = false;
+        // reactions (1.9.0): other mods' and the suite's events, the one cooldown, and the two extras
+        bool reactToMods = true;
+        int reactionCooldown = Reactions::kDefaultCooldownSeconds;
+        bool careMoments = false;
+        bool chronicleLines = false;
     };
 
     std::atomic_bool g_statePollerStarted = false;
@@ -431,6 +456,18 @@ namespace
                     else if (key == "hidden") {
                         g_settings.petHidden = ParseFlag(value);
                     }
+                    else if (key == "react_to_mods") {
+                        g_settings.reactToMods = ParseFlag(value);
+                    }
+                    else if (key == "reaction_cooldown") {
+                        g_settings.reactionCooldown = std::clamp(std::stoi(value), Reactions::kMinCooldownSeconds, Reactions::kMaxCooldownSeconds);
+                    }
+                    else if (key == "care_moments") {
+                        g_settings.careMoments = ParseFlag(value);
+                    }
+                    else if (key == "chronicle_lines") {
+                        g_settings.chronicleLines = ParseFlag(value);
+                    }
                 }
                 catch (...) {
                     logger::warn("MiniPets ignored invalid setting '{}'", key);
@@ -464,7 +501,11 @@ namespace
                    << "card_shape=" << g_settings.cardShape << '\n'
                    << "hide_hotkey=" << g_settings.hideHotkeyName << '\n'
                    << "language=" << g_settings.language << '\n'
-                   << "hidden=" << (g_settings.petHidden ? 1 : 0) << '\n';
+                   << "hidden=" << (g_settings.petHidden ? 1 : 0) << '\n'
+                   << "react_to_mods=" << (g_settings.reactToMods ? 1 : 0) << '\n'
+                   << "reaction_cooldown=" << g_settings.reactionCooldown << '\n'
+                   << "care_moments=" << (g_settings.careMoments ? 1 : 0) << '\n'
+                   << "chronicle_lines=" << (g_settings.chronicleLines ? 1 : 0) << '\n';
         }
         catch (const std::exception& error) {
             logger::warn("MiniPets settings could not be saved: {}", error.what());
@@ -486,7 +527,8 @@ namespace
                ",\"cardShape\":" + JsonString(g_settings.cardShape) +
                ",\"hideHotkey\":" + JsonString(g_settings.hideHotkeyName) +
                ",\"language\":" + JsonString(g_settings.language) +
-               ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") + "}";
+               ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") +
+               ",\"careMoments\":" + (g_settings.careMoments ? "true" : "false") + "}";
     }
 
     void Invoke(const std::string& functionName, const std::string& json)
@@ -543,6 +585,268 @@ namespace
     void PushPetsState();
     void RefreshHubSettings();
     void FirePetEvent(const char* event, const std::string& json);
+
+    // ---- reactions (1.9.0): src/Reactions.h decides, the page draws ----
+
+    // DovahHub's story broadcast (DHUB-67), 'DHB' 5; defined here until DovahHub_API.h carries it
+    constexpr std::uint32_t kMsgStoryEvent = 0x44484205;
+    constexpr std::size_t kReactQueueDepth = 16;
+    constexpr std::uint32_t kPlayerFormId = 0x14;
+
+    Reactions::Gate g_reactionGate;
+    Reactions::Threshold g_lowHealth(0.25, 0.40);
+    std::mutex g_reactQueueLock;
+    std::deque<std::string> g_reactQueue;   // React() JSON from any thread, drained on the game thread
+    const DOVAHDAMAGE_API::DovahDamageApi1* g_damage = nullptr;
+    const CHRONICLE_API::ChronicleApi1* g_chronicle = nullptr;
+    float g_bestHit = 0.0f;                 // this save's biggest hit (co-save record 'HITS')
+    std::uint32_t g_lastKills = 0;
+    bool g_damageBaselined = false;
+    std::unordered_set<std::uint32_t> g_killsSeen;
+    double g_loadedAtMs = 0.0;
+    double g_lastOutfitMs = -1e18;
+    double g_lastChronicleMs = -1e18;
+    double g_sleepReleaseAtMs = 0.0;
+    bool g_playerDead = false;
+    bool g_bleedingOut = false;
+
+    double NowMs()
+    {
+        using namespace std::chrono;
+        return static_cast<double>(duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count());
+    }
+
+    // game thread. fromOtherMod: the "react to other mods" switch covers it (React, DovahDamage, DovahHub)
+    void OfferReaction(const Reactions::Reaction& reaction, bool fromOtherMod)
+    {
+        const double now = NowMs();
+        const bool visible = !g_overlayHiddenForMenus.load() && !g_settings.petHidden;
+        g_reactionGate.SetCooldownSeconds(g_settings.reactionCooldown);
+        const auto verdict = g_reactionGate.Offer(reaction, now, visible, g_settings.reactToMods, fromOtherMod);
+        const bool shown = verdict == Reactions::Verdict::Show;
+        FirePetEvent("reaction", "{\"source\":" + JsonString(reaction.source) + ",\"mood\":" + JsonString(reaction.mood) +
+                                     ",\"shown\":" + (shown ? "true" : "false") +
+                                     (shown ? std::string() : std::string(",\"reason\":\"") + Reactions::VerdictName(verdict) + "\"") + "}");
+        if (!shown) {
+            logger::info("MiniPets reaction {} from {} not shown: {}", reaction.mood, reaction.source, Reactions::VerdictName(verdict));
+            return;
+        }
+        // one Chronicle line a minute at most, when the player turned it on
+        bool say = false;
+        if (g_settings.chronicleLines && g_chronicle && now - g_lastChronicleMs >= 60000.0) {
+            say = true;
+            g_lastChronicleMs = now;
+        }
+        logger::info("MiniPets reaction: {} from {}{}", reaction.mood, reaction.source, reaction.hold ? " (held)" : "");
+        Invoke("dragonbornXP.react", "{\"source\":" + JsonString(reaction.source) + ",\"mood\":" + JsonString(reaction.mood) +
+                                         ",\"caption\":" + JsonString(reaction.caption) + ",\"captionKey\":" + JsonString(reaction.captionKey) +
+                                         ",\"vars\":" + (reaction.vars.empty() ? std::string("{}") : reaction.vars) +
+                                         ",\"ms\":" + std::to_string(reaction.ms) + ",\"priority\":" + std::to_string(reaction.priority) +
+                                         ",\"hold\":" + (reaction.hold ? "true" : "false") + ",\"care\":" + (reaction.care ? "true" : "false") +
+                                         ",\"say\":" + (say ? "true" : "false") + "}");
+    }
+
+    void OwnReaction(const char* source, const char* mood, const char* captionKey, std::string vars, int ms, int priority, bool hold, bool care, bool fromOtherMod)
+    {
+        Reactions::Reaction reaction;
+        reaction.source = source;
+        reaction.mood = mood;
+        reaction.captionKey = captionKey;
+        reaction.vars = std::move(vars);
+        reaction.ms = ms;
+        reaction.priority = priority;
+        reaction.hold = hold;
+        reaction.care = care;
+        OfferReaction(reaction, fromOtherMod);
+    }
+
+    void ReleaseReaction(std::string_view mood)
+    {
+        if (g_reactionGate.Release(mood)) {
+            Invoke("dragonbornXP.reactEnd", "{\"mood\":" + JsonString(mood) + "}");
+        }
+    }
+
+    // a load or a new game: nothing held, no cooldown, DovahDamage starts counting again
+    void ResetReactions()
+    {
+        g_reactionGate.Reset();
+        g_lowHealth.Rearm();
+        g_playerDead = false;
+        g_bleedingOut = false;
+        g_sleepReleaseAtMs = 0.0;
+        g_damageBaselined = false;
+        g_lastKills = 0;
+        g_killsSeen.clear();
+        g_loadedAtMs = NowMs();
+        Invoke("dragonbornXP.reactEnd", "{}");
+    }
+
+    // windows.h maps GetObject to GetObjectW, which hides BGSDefaultObjectManager::GetObject
+#ifdef GetObject
+#    undef GetObject
+#endif
+
+    // a dragon, a giant, or a ref the game marks as a location's boss
+    bool IsBossActor(std::uint32_t formId)
+    {
+        auto* actor = RE::TESForm::LookupByID<RE::Actor>(formId);
+        if (!actor) {
+            return false;
+        }
+        if (actor->HasKeywordString("ActorTypeDragon") || actor->HasKeywordString("ActorTypeGiant")) {
+            return true;
+        }
+        const auto* refType = actor->extraList.GetByType<RE::ExtraLocationRefType>();
+        if (!refType || !refType->locRefType) {
+            return false;
+        }
+        const auto* defaults = RE::BGSDefaultObjectManager::GetSingleton();
+        const auto* boss = defaults ? defaults->GetObject(RE::DEFAULT_OBJECT::kLocRefTypeBoss) : nullptr;
+        return boss && static_cast<const RE::TESForm*>(refType->locRefType) == boss;
+    }
+
+    // game thread, on the 250 ms task: DovahDamage reads off its own frame queue, never its capture threads
+    void PollDovahDamage()
+    {
+        if (!g_damage) {
+            return;
+        }
+        DOVAHDAMAGE_API::Totals totals{};
+        totals.size = sizeof(totals);
+        if (g_damage->GetTotals(&totals) != DOVAHDAMAGE_API::Result::Ok) {
+            return;
+        }
+        const auto killedActors = [](auto&& onKilled) {
+            Reactions::ForEachObject(g_damage->GetActorsJson(64), [&](std::string_view actor) {
+                if (Reactions::ReadField(actor, "killed").text != "true") {
+                    return;
+                }
+                const auto id = static_cast<std::uint32_t>(std::strtoul(Reactions::ReadField(actor, "formId").text.c_str(), nullptr, 16));
+                if (id != 0 && id != kPlayerFormId) {
+                    onKilled(id, Reactions::ReadField(actor, "name").text);
+                }
+            });
+        };
+        if (!g_damageBaselined) {
+            // what was already counted when MiniPets started looking is not news
+            g_damageBaselined = true;
+            g_lastKills = totals.kills;
+            killedActors([](std::uint32_t id, const std::string&) { g_killsSeen.insert(id); });
+            return;
+        }
+        if (Reactions::IsNewRecord(totals.biggestHit, g_bestHit)) {
+            g_bestHit = totals.biggestHit;
+            OwnReaction("dovahdamage", "cheer", "reactBigHit", "{\"amount\":" + std::to_string(std::lround(totals.biggestHit)) + "}", 3000, 1, false, true, true);
+        }
+        if (totals.kills > g_lastKills) {
+            g_lastKills = totals.kills;
+            std::string bossName;
+            bool boss = false;
+            killedActors([&](std::uint32_t id, const std::string& name) {
+                if (g_killsSeen.insert(id).second && !boss && IsBossActor(id)) {
+                    boss = true;
+                    bossName = name;
+                }
+            });
+            if (boss) {
+                OwnReaction("dovahdamage", "hop", bossName.empty() ? "reactBossDownSomeone" : "reactBossDown",
+                            "{\"name\":" + JsonString(Reactions::ClipUtf8(bossName, 60)) + "}", 3200, 2, false, true, true);
+            }
+        }
+    }
+
+    // game thread, on the 250 ms task
+    void UpdateReactions()
+    {
+        if (!g_gameLoaded.load()) {
+            return;
+        }
+        std::deque<std::string> pending;
+        {
+            std::lock_guard lock(g_reactQueueLock);
+            pending.swap(g_reactQueue);
+        }
+        for (const auto& json : pending) {
+            Reactions::Reaction reaction;
+            if (Reactions::Parse(json, reaction) == Reactions::ParseError::None) {
+                OfferReaction(reaction, true);
+            }
+        }
+
+        if (g_sleepReleaseAtMs > 0.0 && NowMs() >= g_sleepReleaseAtMs) {
+            g_sleepReleaseAtMs = 0.0;
+            ReleaseReaction("sleep");
+        }
+
+        auto* player = RE::PlayerCharacter::GetSingleton();
+        if (player && !g_playerDead) {
+            const auto* state = player->AsActorState();
+            const bool bleeding = state && state->IsBleedingOut();
+            if (bleeding != g_bleedingOut) {
+                g_bleedingOut = bleeding;
+                if (bleeding) {
+                    OwnReaction("minipets", "sad", "reactGetUp", "{}", 2500, 2, true, false, false);
+                }
+                else {
+                    ReleaseReaction("sad");
+                }
+            }
+            const float maxHealth = player->GetActorValueMax(RE::ActorValue::kHealth);
+            const float health = player->AsActorValueOwner()->GetActorValue(RE::ActorValue::kHealth);
+            if (!bleeding && maxHealth > 0.0f && g_lowHealth.Update(health / maxHealth)) {
+                OwnReaction("minipets", "cower", "reactCareful", "{}", 3000, 1, false, false, false);
+            }
+        }
+        PollDovahDamage();
+    }
+
+    // DovahHub's broadcasts (DovahHub_API.h, SKSE messaging), game thread; copied and queued like the page's calls
+    void OnDovahHubMessage(SKSE::MessagingInterface::Message* message)
+    {
+        if (!message || !message->data || (message->type != kMsgStoryEvent && message->type != DOVAHHUB_API::kMsgOutfitChanged)) {
+            return;
+        }
+        const auto type = message->type;
+        std::string json(static_cast<const char*>(message->data), message->dataLen ? message->dataLen - 1 : 0);
+        json = json.c_str();  // stop at the terminator whatever dataLen says
+        if (const auto* tasks = SKSE::GetTaskInterface()) {
+            tasks->AddTask([type, json]() {
+                if (!g_gameLoaded.load()) {
+                    return;
+                }
+                Reactions::Reaction reaction;
+                if (type == kMsgStoryEvent) {
+                    if (Reactions::FromStoryEvent(json, reaction)) {
+                        OfferReaction(reaction, true);
+                    }
+                    return;
+                }
+                const double now = NowMs();
+                if (Reactions::FromOutfitChange(json, (now - g_loadedAtMs) / 1000.0, (now - g_lastOutfitMs) / 1000.0, reaction)) {
+                    g_lastOutfitMs = now;
+                    OfferReaction(reaction, true);
+                }
+            });
+        }
+    }
+
+    // the page words the pet's Chronicle line in the player's language: {"speaker":"Pip","text":"Pip squeaks happily."}
+    void SendChronicleLine(const std::string& json)
+    {
+        if (!g_chronicle || !g_settings.chronicleLines) {
+            return;
+        }
+        const auto speaker = JsonField(json, "speaker");
+        const auto text = JsonField(json, "text");
+        if (text.empty()) {
+            return;
+        }
+        const auto result = g_chronicle->Send(CHRONICLE_API::Kind::Mod, "minipets", speaker.c_str(), text.c_str());
+        if (result != CHRONICLE_API::Result::Ok) {
+            logger::info("MiniPets: Chronicle did not take the line ({})", static_cast<int>(result));
+        }
+    }
 
     const char* OverlayHiddenReason()
     {
@@ -911,6 +1215,7 @@ namespace
                         UpdateCompanionState();
                         UpdateWorldMood();
                         UpdateClock();
+                        UpdateReactions();
                     });
                 }
             }
@@ -958,6 +1263,47 @@ namespace
                 const auto rounded = std::lround(event->souls);
                 const auto souls = rounded > 0 ? rounded : 1L;
                 Invoke("dragonbornXP.dragonSoul", "{\"amount\":" + std::to_string(souls) + "}");
+            }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+    };
+
+    // the player's death: a sad pose until the next load
+    class DeathSink final : public RE::BSTEventSink<RE::TESDeathEvent>
+    {
+    public:
+        RE::BSEventNotifyControl ProcessEvent(const RE::TESDeathEvent* event, RE::BSTEventSource<RE::TESDeathEvent>*) override
+        {
+            if (event && event->actorDying && event->actorDying.get() == RE::PlayerCharacter::GetSingleton() && !g_playerDead) {
+                g_playerDead = true;
+                OwnReaction("minipets", "sad", "reactFallen", "{}", 2500, 2, true, false, false);
+            }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+    };
+
+    // sleeping: the pet curls up; the card is hidden behind the fade, so the pose stays until a few
+    // seconds after waking, where the player sees it
+    class SleepStartSink final : public RE::BSTEventSink<RE::TESSleepStartEvent>
+    {
+    public:
+        RE::BSEventNotifyControl ProcessEvent(const RE::TESSleepStartEvent* event, RE::BSTEventSource<RE::TESSleepStartEvent>*) override
+        {
+            if (event) {
+                g_sleepReleaseAtMs = 0.0;
+                OwnReaction("minipets", "sleep", "reactSleeping", "{}", 2500, 1, true, false, false);
+            }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+    };
+
+    class SleepStopSink final : public RE::BSTEventSink<RE::TESSleepStopEvent>
+    {
+    public:
+        RE::BSEventNotifyControl ProcessEvent(const RE::TESSleepStopEvent* event, RE::BSTEventSource<RE::TESSleepStopEvent>*) override
+        {
+            if (event && g_reactionGate.HeldMood() == "sleep") {
+                g_sleepReleaseAtMs = NowMs() + 4500.0;
             }
             return RE::BSEventNotifyControl::kContinue;
         }
@@ -1083,7 +1429,7 @@ namespace
     };
     std::vector<PetListener> g_petListeners;
     MINIPETS_API::ListenerId g_nextPetListener = 1;
-    MINIPETS_API::MiniPetsApi1 g_miniPetsApi{};
+    MINIPETS_API::MiniPetsApi2 g_miniPetsApi{};
     std::string g_pluginVersion;
     // what the DovahHub Settings rows were last worded for
     std::string g_hubSettingsLanguage;
@@ -1111,6 +1457,11 @@ namespace
                "{\"key\":\"scale\",\"label\":" + JsonString(text.hubCardSize) + ",\"type\":\"range\",\"min\":50,\"max\":200,\"step\":10,\"value\":100,\"unit\":\"%\"}," +
                "{\"key\":\"card_shape\",\"label\":" + JsonString(text.hubCardShape) + ",\"type\":\"choice\",\"options\":[" + choice("square", text.square) + "," + choice("wide", text.wide) + "],\"value\":\"square\"}," +
                "{\"key\":\"hidden\",\"label\":" + JsonString(text.hubHideCard) + ",\"type\":\"toggle\",\"value\":false,\"note\":" + JsonString(hideNote) + "}," +
+               "{\"key\":\"react_to_mods\",\"label\":" + JsonString(text.reactToMods) + ",\"type\":\"toggle\",\"value\":true,\"note\":" + JsonString(text.reactToModsNote) + "}," +
+               "{\"key\":\"reaction_cooldown\",\"label\":" + JsonString(text.reactionCooldown) + ",\"type\":\"range\",\"min\":" + std::to_string(Reactions::kMinCooldownSeconds) +
+               ",\"max\":" + std::to_string(Reactions::kMaxCooldownSeconds) + ",\"step\":1,\"value\":" + std::to_string(Reactions::kDefaultCooldownSeconds) + ",\"unit\":\"s\"}," +
+               "{\"key\":\"care_moments\",\"label\":" + JsonString(text.careMoments) + ",\"type\":\"toggle\",\"value\":false,\"note\":" + JsonString(text.careMomentsNote) + "}," +
+               "{\"key\":\"chronicle_lines\",\"label\":" + JsonString(text.chronicleLines) + ",\"type\":\"toggle\",\"value\":false,\"note\":" + JsonString(text.chronicleLinesNote) + "}," +
                "{\"key\":\"language\",\"label\":" + JsonString(text.language) + ",\"type\":\"choice\",\"options\":[" + languages + "],\"value\":\"en\",\"note\":" + JsonString(text.machineTranslationNote) + "}]}";
     }
 
@@ -1253,7 +1604,11 @@ namespace
                ",\"scale\":" + std::to_string(g_settings.scale) +
                ",\"card_shape\":" + JsonString(g_settings.cardShape) +
                ",\"language\":" + JsonString(g_settings.language) +
-               ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") + "}";
+               ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") +
+               ",\"react_to_mods\":" + (g_settings.reactToMods ? "true" : "false") +
+               ",\"reaction_cooldown\":" + std::to_string(g_settings.reactionCooldown) +
+               ",\"care_moments\":" + (g_settings.careMoments ? "true" : "false") +
+               ",\"chronicle_lines\":" + (g_settings.chronicleLines ? "true" : "false") + "}";
     }
 
     bool ApplyHubSetting(const std::string& key, const std::string& value)
@@ -1284,6 +1639,23 @@ namespace
         else if (key == "hidden") {
             SetPetHidden(ParseFlag(value));
             return true;
+        }
+        else if (key == "react_to_mods") {
+            g_settings.reactToMods = ParseFlag(value);
+        }
+        else if (key == "reaction_cooldown") {
+            try {
+                g_settings.reactionCooldown = std::clamp(std::stoi(value), Reactions::kMinCooldownSeconds, Reactions::kMaxCooldownSeconds);
+            }
+            catch (...) {
+                return false;
+            }
+        }
+        else if (key == "care_moments") {
+            g_settings.careMoments = ParseFlag(value);
+        }
+        else if (key == "chronicle_lines") {
+            g_settings.chronicleLines = ParseFlag(value);
         }
         else {
             return false;
@@ -1518,11 +1890,34 @@ namespace
         return MINIPETS_API::Result::InvalidId;
     }
 
+    // any thread: parse to refuse what can never show, then queue for UpdateReactions
+    MINIPETS_API::Result ApiReact(const char* json)
+    {
+        if (!json) {
+            return MINIPETS_API::Result::InvalidArgument;
+        }
+        Reactions::Reaction reaction;
+        const auto error = Reactions::Parse(json, reaction);
+        if (error != Reactions::ParseError::None) {
+            logger::info("MiniPets: React refused ({})", error == Reactions::ParseError::Mood ? "mood" : error == Reactions::ParseError::Source ? "source" : "not JSON");
+            return MINIPETS_API::Result::InvalidArgument;
+        }
+        if (!g_prismaUI || !g_view) {
+            return MINIPETS_API::Result::NotReady;
+        }
+        std::lock_guard lock(g_reactQueueLock);
+        g_reactQueue.emplace_back(json);
+        if (g_reactQueue.size() > kReactQueueDepth) {
+            g_reactQueue.pop_front();
+        }
+        return MINIPETS_API::Result::Ok;
+    }
+
     void BuildMiniPetsApi()
     {
         const auto version = SKSE::PluginDeclaration::GetSingleton()->GetVersion();
         g_pluginVersion = version.string(".");
-        g_miniPetsApi.apiVersion = MINIPETS_API::kApiVersion1;
+        g_miniPetsApi.apiVersion = MINIPETS_API::kApiVersion2;
         g_miniPetsApi.hostVersion = g_pluginVersion.c_str();
         g_miniPetsApi.hostVersionNumber = MINIPETS_API::PackVersion(version.major(), version.minor(), version.patch());
         g_miniPetsApi.GetStateJson = &ApiGetStateJson;
@@ -1536,6 +1931,7 @@ namespace
         g_miniPetsApi.IsVisible = &ApiIsVisible;
         g_miniPetsApi.AddListener = &ApiAddListener;
         g_miniPetsApi.RemoveListener = &ApiRemoveListener;
+        g_miniPetsApi.React = &ApiReact;
     }
 
     SkillIncreaseSink g_skillSink;
@@ -1543,6 +1939,9 @@ namespace
     DragonSoulSink g_soulSink;
     MenuStateSink g_menuSink;
     EquipSink g_equipSink;
+    DeathSink g_deathSink;
+    SleepStartSink g_sleepStartSink;
+    SleepStopSink g_sleepStopSink;
 
     void RegisterGameEvents()
     {
@@ -1560,6 +1959,9 @@ namespace
         }
         if (auto* scripts = RE::ScriptEventSourceHolder::GetSingleton()) {
             scripts->AddEventSink<RE::TESEquipEvent>(&g_equipSink);
+            scripts->AddEventSink<RE::TESDeathEvent>(&g_deathSink);
+            scripts->AddEventSink<RE::TESSleepStartEvent>(&g_sleepStartSink);
+            scripts->AddEventSink<RE::TESSleepStopEvent>(&g_sleepStopSink);
         }
     }
 
@@ -1683,6 +2085,15 @@ namespace
                     taskInterface->AddTask([copy]() { OnPetActionResult(copy); });
                 }
             });
+            g_prismaUI->RegisterJSListener(view, "petSays", [](const char* payload) {
+                if (!payload || *payload != '{') {
+                    return;
+                }
+                const std::string copy(payload);
+                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
+                    taskInterface->AddTask([copy]() { SendChronicleLine(copy); });
+                }
+            });
             g_prismaUI->RegisterJSListener(view, "feedPet", [](const char*) {
                 if (const auto* taskInterface = SKSE::GetTaskInterface()) {
                     taskInterface->AddTask([]() { FeedFromPack(); });
@@ -1706,11 +2117,15 @@ namespace
 }
 
 constexpr std::uint32_t kPetRecord = 'PETS';
+constexpr std::uint32_t kHitRecord = 'HITS';  // 1.9.0: this save's biggest hit, for DovahDamage's records
 
 static void OnGameSaved(SKSE::SerializationInterface* serialization)
 {
     if (!g_petState.empty()) {
         serialization->WriteRecord(kPetRecord, 1, g_petState.data(), static_cast<std::uint32_t>(g_petState.size()));
+    }
+    if (g_bestHit > 0.0f) {
+        serialization->WriteRecord(kHitRecord, 1, &g_bestHit, sizeof(g_bestHit));
     }
 }
 
@@ -1725,12 +2140,16 @@ static void OnGameLoaded(SKSE::SerializationInterface* serialization)
             serialization->ReadRecordData(state.data(), length);
             g_petState = state;
         }
+        else if (type == kHitRecord && version == 1 && length == sizeof(float)) {
+            serialization->ReadRecordData(&g_bestHit, sizeof(g_bestHit));
+        }
     }
 }
 
 static void OnRevert(SKSE::SerializationInterface*)
 {
     g_petState.clear();
+    g_bestHit = 0.0f;
 }
 
 static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
@@ -1742,6 +2161,10 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
     case SKSE::MessagingInterface::kPostPostLoad:
         BuildMiniPetsApi();
         RegisterWithDovahHub();
+        g_damage = DOVAHDAMAGE_API::RequestApi();
+        g_chronicle = CHRONICLE_API::RequestApi();
+        logger::info("MiniPets reactions: DovahDamage {}, Chronicle {}", g_damage ? g_damage->hostVersion : "not found",
+                     g_chronicle ? g_chronicle->hostVersion : "not found");
         break;
     case SKSE::MessagingInterface::kDataLoaded:
         OnDataLoaded();
@@ -1750,6 +2173,7 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
     case SKSE::MessagingInterface::kNewGame:
         // stay hidden until a game is loaded
         g_gameLoaded.store(true);
+        ResetReactions();
         SendPetState();
         PushPetsState();
         break;
@@ -1786,6 +2210,8 @@ extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface* skse)
     }
 
     messaging->RegisterListener("SKSE", SKSEMessageHandler);
+    // DovahHub's story events and outfit changes; nothing arrives when DovahHub isn't installed
+    messaging->RegisterListener("DovahHub", OnDovahHubMessage);
     WarnAboutLeftoverDll();
 
     // 'DBXP' is the co-save record from before the rename; every player's pet is stored under it
@@ -1800,5 +2226,6 @@ extern "C" DLLEXPORT bool SKSEPlugin_Load(const SKSE::LoadInterface* skse)
 
 extern "C" DLLEXPORT const void* MiniPets_RequestApi(std::uint32_t version)
 {
-    return version == MINIPETS_API::kApiVersion1 ? static_cast<const void*>(&g_miniPetsApi) : nullptr;
+    // a version-2 table starts with the version-1 one, so both are served from it
+    return version == MINIPETS_API::kApiVersion1 || version == MINIPETS_API::kApiVersion2 ? static_cast<const void*>(&g_miniPetsApi) : nullptr;
 }

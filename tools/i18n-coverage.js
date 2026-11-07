@@ -43,6 +43,8 @@ const NAMES = [
   'Sundas', 'Morndas', 'Tirdas', 'Middas', 'Turdas', 'Fredas', 'Loredas',
   'MiniPets', 'DovahHub', 'DragonbornXP', 'Skyrim', 'SKSE', 'Plugins', 'PrismaUI', 'views', 'dll', 'Data',
   'HUD', 'XP', 'Shift', 'Shift+', 'Enter', 'Tab', 'F1', 'F12', 'Dwemer', 'MINIPETS',
+  // the suite's other mods, named in the reaction settings (1.9.0)
+  'DovahDamage', 'Chronicle',
   // each language's own name, shown in that language in the picker
   'English', 'Français', 'Deutsch', 'Italiano', 'Español', 'Polski', 'Türkçe'
 ];
@@ -56,7 +58,7 @@ const SAME_AS_ENGLISH = {
   },
   fr: { position: 'French word', combat: 'French word', 'species.troll': 'official French name', 'species.spriggan': 'official French name', 'species.chaurus': 'official French name', 'species.netch': 'official French name', skyrim: 'name' },
   de: { position: 'German word', ateDetail: 'a sound, then the food', tabStageBaby: 'German word', factGrowsIn: 'German word, then the time', skyrim: 'name', 'species.skeever': 'official German name', 'species.horker': 'official German name', 'species.troll': 'official German name', 'species.spriggan': 'official German name', 'species.chaurus': 'official German name', 'species.netch': 'official German name' },
-  it: { skyrim: 'name', 'species.skeever': 'official Italian name', 'species.troll': 'official Italian name', 'species.spriggan': 'official Italian name', 'species.chaurus': 'official Italian name', 'species.netch': 'official Italian name', 'species.horker': 'official Italian name' },
+  it: { reactFallen: 'Oh no… is Italian too', skyrim: 'name', 'species.skeever': 'official Italian name', 'species.troll': 'official Italian name', 'species.spriggan': 'official Italian name', 'species.chaurus': 'official Italian name', 'species.netch': 'official Italian name', 'species.horker': 'official Italian name' },
   es: { skyrim: 'name', 'species.skeever': 'official Spanish name', 'species.horker': 'creature name kept in Spanish', 'species.troll': 'official Spanish name', 'species.spriggan': 'official Spanish name', 'species.chaurus': 'official Spanish name', 'species.netch': 'official Spanish name' },
   pl: { skyrim: 'name', 'species.troll': 'official Polish name', 'species.skeever': 'official Polish name', 'species.horker': 'official Polish name', 'species.spriggan': 'official Polish name', 'species.chaurus': 'official Polish name', 'species.netch': 'official Polish name' },
   tr: { skyrim: 'name', ateDetail: 'a sound, then the food', 'species.skeever': 'creature name, no official Turkish release', 'species.horker': 'creature name', 'species.spriggan': 'creature name', 'species.chaurus': 'creature name', 'species.netch': 'creature name' },
@@ -67,10 +69,11 @@ const SHARED_WORDS = {
   // the creature names Skyrim keeps in every language, and the atronachs' official name
   '*': ['skeever', 'horker', 'troll', 'spriggan', 'chaurus', 'netch', 'atronach', 'mmm'],
   // "pixel art" is the usual term in French, Italian and Spanish
-  fr: ['menu', 'dragon', 'position', 'combat', 'date', 'style', 'corrections', 'gain', 'sabre', 'change', 'file', 'pixel', 'art'],
-  de: ['position', 'optional', 'warm', 'baby', 'in', 'frost'],
-  it: ['file', 'menu', 'pixel', 'art'],
-  es: ['pixel', 'art'], pl: ['menu'], tr: [], 'zh-CN': [], ja: [], ko: [],
+  // and the reaction lines' loanwords: mods, chat, boss, look, the French and German fanfare
+  fr: ['menu', 'dragon', 'position', 'combat', 'date', 'style', 'corrections', 'gain', 'sabre', 'change', 'file', 'pixel', 'art', 'mods', 'moment', 'moments', 'chat', 'minute', 'attention', 'fanfare'],
+  de: ['position', 'optional', 'warm', 'baby', 'in', 'frost', 'mods', 'moment', 'chat', 'minute', 'boss', 'look', 'fanfare'],
+  it: ['file', 'menu', 'pixel', 'art', 'chat', 'boss', 'look'],
+  es: ['pixel', 'art', 'mods', 'chat', 'look'], pl: ['menu', 'boss'], tr: [], 'zh-CN': [], ja: [], ko: [],
 };
 
 function matchesRule(rules, key) {

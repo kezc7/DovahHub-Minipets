@@ -42,6 +42,8 @@
 namespace MINIPETS_API
 {
     inline constexpr std::uint32_t kApiVersion1 = 1;
+    // 1.9.0: React. A version-2 table starts with the whole version-1 table, so RequestApi() still works
+    inline constexpr std::uint32_t kApiVersion2 = 2;
 
     using ListenerId = std::uint32_t;   // 0 = invalid
 
@@ -64,6 +66,9 @@ namespace MINIPETS_API
     //   "levelUp"   {"level":12}            the popup MiniPets showed, for a mirror on another page
     //   "companion" {"id":"mudcrab"}        the companion changed (settings, or SetCompanion)
     //   "visible"   {"visible":false}       Shift+V, SetVisible or the "hidden" setting
+    //   "reaction"  {"source":"dovahstable","mood":"cheer","shown":true}     from 1.9.0: what became of a
+    //               reaction (React, or MiniPets' own); shown false carries "reason": "off", "hidden",
+    //               "cooldown" or "busy"
     using EventFn = void (*)(const char* event, const char* json, void* user);
 
     struct ListenerDesc
@@ -85,6 +90,7 @@ namespace MINIPETS_API
         //    "raisePet":true,
         //    "pet":{"species":"fox","stage":"egg"|"hatched","laidAt":120.5,"warmth":7.5,"hatchedAt":null,
         //           "hunger":64,"happiness":80,"lastTick":130.2,"lastPlay":null},  // or null
+        //           from 1.9.0 also "careDay":5,"careCount":2 once a shared moment counted as care (the setting)
         //    "hours":130.2,                 in-game hours passed (Calendar), the clock the pet runs on
         //    "food":3,                      food items in the player's pack
         //    "card":{"x":12,"y":88,"scale":100,"shape":"square"|"wide","hidden":false},   x,y -1 = default spot
@@ -124,6 +130,27 @@ namespace MINIPETS_API
         Result (*RemoveListener)(ListenerId listener);
     };
 
+    // Version 2 (MiniPets 1.9.0): everything in version 1, then React.
+    struct MiniPetsApi2 : MiniPetsApi1
+    {
+        // ANY thread. Make the pet react to something your mod noticed. The JSON is copied and queued; a
+        // main-thread pass a moment later decides whether the card shows it, so Ok means "queued", and the
+        // listener's "reaction" event says what happened:
+        //   {"source":"dovahstable",        required: your mod, a slug [a-z0-9_-], at most 32 chars
+        //    "mood":"cheer",               required: "cheer" | "wave" | "sad" | "cower" | "sleep" | "curious"
+        //    "caption":"Ember was born!",  optional: one line under the pet, at most 120 bytes of UTF-8;
+        //                                  MiniPets draws it (sprites and icons carry no text). Write it in
+        //                                  the player's language (DovahHub's GetLanguage) or leave it out
+        //    "ms":2500,                    optional: 800..6000, default 2500
+        //    "priority":1}                 optional: 0 = dropped if anything else is showing, 1 = normal
+        //                                  (the default), 2 = interrupts a playing reaction (a death, a birth)
+        // Dropped (not an error) while the card is hidden (menus, loading, Shift+V), while the player has
+        // "React to other mods" off, or within the cooldown of the last reaction (one cooldown for every
+        // source, 8 s by default, the player's setting; priority 2 is exempt). InvalidArgument: nullptr, not
+        // JSON, no or bad source, an unknown mood. NotReady: the card's view does not exist yet.
+        Result (*React)(const char* reactionJson);
+    };
+
     inline std::uint32_t PackVersion(std::uint32_t major, std::uint32_t minor, std::uint32_t patch)
     {
         return major * 10000 + minor * 100 + patch;
@@ -151,6 +178,12 @@ namespace MINIPETS_API
     {
         return static_cast<const MiniPetsApi1*>(RequestApiRaw(kApiVersion1));
     }
+
+    // nullptr before MiniPets 1.9.0 (then RequestApi() still serves version 1)
+    inline const MiniPetsApi2* RequestApi2()
+    {
+        return static_cast<const MiniPetsApi2*>(RequestApiRaw(kApiVersion2));
+    }
 #endif
 }
 
@@ -159,3 +192,11 @@ namespace MINIPETS_API
 // MiniPets' pet-life rules run in the HUD page (view/pet-life.js), with the state mirrored to the
 // DLL as a JSON string kept in the co-save. Feed/Play queue the page call and return Ok; the next
 // "fed"/"played" event carries the outcome. GetStateJson returns the last mirrored state.
+//
+// React (version 2) is the one call that may come from any thread: it copies the JSON into a small
+// locked queue (16 deep; the oldest goes when it is full), and MiniPets' 250 ms main-thread pass drains
+// it, applies the cooldown and priority, and calls the page.
+//
+//   if (const auto* pets = MINIPETS_API::RequestApi2()) {
+//       pets->React(R"({"source":"dovahstable","mood":"wave","caption":"Frost is home."})");
+//   }
