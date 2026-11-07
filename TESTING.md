@@ -4,6 +4,25 @@ The node tests (`node --test "tests/*.test.js"`) and the settings test (`xmake b
 
 `MiniPets.log` is in `Documents\My Games\Skyrim Special Edition\SKSE\`.
 
+## Playthrough: reactions (1.9.0)
+
+Play these in order on one character. Each step names the card's caption and the `MiniPets.log` line. Reactions never show over a menu or a loading screen, and the default gap between two of them is 8 seconds, so leave a few seconds between steps.
+
+1. Load a save. The log has `MiniPets reactions: DovahDamage <version>, Chronicle <version>` (or `not found` for a mod you don't have).
+2. **Low health.** Fight until your health is under a quarter. The companion shrinks back, trembles and covers its eyes, with blue drops over its head: "Careful! / Ember covers its eyes." Log: `MiniPets reaction: cower from minipets`. Dropping lower again does nothing. Heal past 40%, drop under a quarter again, and it shows again.
+3. **Sleep.** Sleep an hour in a bed. After the fade the companion is curled up with closed eyes and a moon over it, "Sweet dreams / Ember curls up and sleeps.", for about four seconds, then it gets up. Log: `MiniPets reaction: sleep from minipets (held)`.
+4. **DovahDamage, a new record** (needs DovahDamage). In a new save, the first hit you land cheers: the companion bounces with a star over it, "<number> damage! / Ember cheers." Log: `MiniPets reaction: cheer from dovahdamage`. Smaller hits do nothing; a bigger one cheers again. Save, load, and land a smaller hit than your best: nothing, because the record is kept in the save.
+5. **A boss** (needs DovahDamage). Kill a dragon, a giant or a dungeon's boss with your own hit. The companion does a victory hop with a crown: "<name> is down! / Ember hops for joy." Log: `MiniPets reaction: hop from dovahdamage`. An ordinary bandit does nothing.
+6. **DovahHub's story** (needs DovahHub 0.96.4-beta or later, with Your Story recording). Ask a follower to join you: a wave and a hand over the companion, "Hello, Lydia! / Ember waves hello." Reach a milestone tier: a fanfare with a note, "Wanderer II! / Ember sounds a little fanfare." Log: `MiniPets reaction: wave from dovahhub`, then `fanfare`.
+7. **Outfit** (DovahHub). More than 30 seconds after a load, change the player's outfit in the Wardrobe tab, then close DovahHub: "New look? / Ember tilts its head, curious." Change it again at once: nothing, because it shows at most once in 10 minutes.
+8. **Death.** Die (or `player.kill` in the console). The companion slumps with a tear and stays like that, "Oh no… / Ember looks sad.", until you load. After the load it is back to normal. Log: `MiniPets reaction: sad from minipets (held)`. With a mod that makes you bleed out instead, it reads "Get up!" and ends when you get up.
+9. **Settings, in DovahHub's Settings tab under MiniPets.** Turn off React to other mods. A new record (step 4) and a follower joining (step 6) do nothing; the log says `not shown: off`. Low health (step 2) still shows. Turn it back on, and set Time between reactions to 30: two record hits within 30 seconds show once; the log says `not shown: cooldown` for the second.
+10. **Shared moments count as care** (off by default). With raise-a-pet on and a hatched pet, turn it on. Each of the first three big moments of a game day (a record, a boss, a follower, a milestone) raises Happiness a little in the Shift+B panel; the fourth that day doesn't.
+11. **Chronicle** (off by default, needs Chronicle). Turn on Your companion speaks in Chronicle. After a reaction, Chronicle's System tab shows a line from Ember: "Ember cheers." At most one line a minute, however many reactions there are.
+12. **French.** Set the language to Français and repeat step 2: "Attention ! / Ember se cache les yeux." In DovahHub's Settings: Réagir aux autres mods, Délai entre les réactions.
+
+Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
+
 ## Chinese, Japanese and Korean text
 
 MiniPets ships no font. The page uses Georgia, so Chinese, Japanese and Korean characters come from whatever font Prisma UI falls back to. If none covers them, they show as empty boxes.

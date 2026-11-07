@@ -139,6 +139,13 @@ body.timelapse .sky-body { transition: none; }
 #dragonborn-xp.caption-name #title::before, #dragonborn-xp.caption-name #title::after { flex-basis: 10px; }
 #dragonborn-xp.caption-name #detail { display: none; }
 #dragonborn-xp.caption-full .copy { animation: caption-in .3s ease-out both; }
+/* long captions (fitCaption in app.js): no side rules, a size smaller, then the detail on two lines */
+#dragonborn-xp.caption-full .copy.fit-1 #title::before, #dragonborn-xp.caption-full .copy.fit-1 #title::after,
+#dragonborn-xp.caption-full .copy.fit-2 #title::before, #dragonborn-xp.caption-full .copy.fit-2 #title::after { display: none; }
+#dragonborn-xp.caption-full .copy.fit-1 #title { font-size: 15px; }
+#dragonborn-xp.caption-full .copy.fit-2 #title { font-size: 13px; letter-spacing: 0; }
+#dragonborn-xp.caption-full .copy.fit-2 #detail { font-size: 11px; }
+#dragonborn-xp.caption-full .copy.fit-wrap #detail { white-space: normal; text-overflow: clip; }
 .xp-bar { position: absolute; right: 46px; bottom: 6px; left: 46px; height: 4px; background: rgba(230, 199, 119, .14); transition: opacity .25s ease; }
 #dragonborn-xp.caption-name .xp-bar { opacity: 0; }
 .xp-bar span { display: block; width: 68%; height: 100%; background: linear-gradient(90deg, var(--flame), var(--gold)); transform-origin: left; animation: charge 1.2s ease-out both; }
@@ -390,3 +397,134 @@ body.settings-open.dragging-pet, body.settings-open.dragging-pet * { cursor: gra
 .sheet-cell { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 150px; height: 140px; padding: 8px; border: 1px solid rgba(23, 21, 26, .3); border-radius: 10px; background: linear-gradient(to bottom, #8bd8ed 0 70%, #6aaf4d 70%); }
 .sheet-cell .pet-sprite { flex: none; }
 .sheet-cell p { margin: 6px 0 0; color: #182c38; font: 700 12px Georgia, serif; }
+/* Reactions (1.9.0): what the companion does when something happens (src/Reactions.h decides, reactions.js
+   shows). First the body language every companion shares (squash, hop, tilt, closed eyes, the emote over
+   its head), then each species' own touch. Placed last so it wins over the state and mood rules. */
+.pet-emote { position: absolute; left: 50%; bottom: 100%; z-index: 3; display: none; transform: translate(-50%, -6px); pointer-events: none; }
+.pet-emote canvas { display: block; image-rendering: pixelated; transform-origin: 50% 100%; }
+#dragonborn-xp.reacting .pet-emote { display: block; }
+#dragonborn-xp.reacting .pet-emote canvas { animation: emote-pop .35s cubic-bezier(.3, 1.6, .5, 1) both, emote-bob 1.6s ease-in-out .35s infinite; }
+#dragonborn-xp.reacting .pet-bubble { display: none; }
+
+/* cheer: bouncing, arms and wings up */
+#dragonborn-xp.reacting.react-cheer .pet-motion { animation: react-jump .55s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-cheer .pet-body { animation: none; }
+#dragonborn-xp.reacting.react-cheer .role-head { animation: pet-head-cheer .55s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-cheer .role-arm-a, #dragonborn-xp.reacting.react-cheer .role-arm-b { animation: pet-cheer .28s ease-in-out infinite alternate; }
+#dragonborn-xp.reacting.react-cheer .role-wing-a, #dragonborn-xp.reacting.react-cheer .role-wing-b { animation: pet-flap .2s ease-in-out infinite alternate; }
+#dragonborn-xp.reacting.react-cheer .role-tail { animation: pet-wag .14s ease-in-out infinite alternate; }
+
+/* wave: a sway, the head tilted, the near arm or wing waving */
+#dragonborn-xp.reacting.react-wave .pet-motion { animation: none; }
+#dragonborn-xp.reacting.react-wave .pet-body { animation: react-sway 1s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-wave .role-head { animation: react-tilt 1s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-wave .role-arm-a, #dragonborn-xp.reacting.react-wave .role-wing-a { animation: react-wave .32s ease-in-out infinite alternate; }
+#dragonborn-xp.reacting.react-wave .role-tail { animation: pet-wag .2s ease-in-out infinite alternate; }
+
+/* sad: slumped, head down, eyes half shut, tail hanging */
+#dragonborn-xp.reacting.react-sad .pet-motion { animation: none; transform: translateY(2px); }
+#dragonborn-xp.reacting.react-sad .pet-body { animation: react-slump 4.2s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-sad .role-head { animation: none; transform: rotate(12deg) translateY(2px); }
+#dragonborn-xp.reacting.react-sad .role-eyes { animation: none; transform: scaleY(.45); }
+#dragonborn-xp.reacting.react-sad .role-tail { animation: none; transform: rotate(22deg); }
+#dragonborn-xp.reacting.react-sad .role-wing-a, #dragonborn-xp.reacting.react-sad .role-wing-b { animation: none; transform: rotate(10deg); }
+#dragonborn-xp.reacting.react-sad .role-arm-a, #dragonborn-xp.reacting.react-sad .role-arm-b { animation: none; transform: rotate(8deg); }
+
+/* cower: shrunk back and trembling, eyes shut, arms over the face */
+#dragonborn-xp.reacting.react-cower .pet-motion { animation: none; transform: translateX(-5px) scale(.88); }
+#dragonborn-xp.reacting.react-cower .pet-body { animation: react-tremble .12s linear infinite; }
+#dragonborn-xp.reacting.react-cower .role-head { animation: none; transform: rotate(18deg) translateY(1px); }
+#dragonborn-xp.reacting.react-cower .role-eyes { animation: none; transform: scaleY(.12); }
+#dragonborn-xp.reacting.react-cower .role-tail { animation: none; transform: rotate(36deg); }
+#dragonborn-xp.reacting.react-cower .role-arm-a, #dragonborn-xp.reacting.react-cower .role-arm-b { animation: none; transform: rotate(-110deg); }
+#dragonborn-xp.reacting.react-cower .role-wing-a, #dragonborn-xp.reacting.react-cower .role-wing-b { animation: none; transform: rotate(16deg) scaleY(.8); }
+
+/* sleep: curled low, slow breathing, eyes shut */
+#dragonborn-xp.reacting.react-sleep .pet-motion { animation: none; transform: translateY(3px); }
+#dragonborn-xp.reacting.react-sleep .pet-body { animation: react-sleep-breathe 3.6s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-sleep .role-head { animation: none; transform: rotate(16deg) translateY(3px); }
+#dragonborn-xp.reacting.react-sleep .role-eyes { animation: none; transform: scaleY(.12); }
+#dragonborn-xp.reacting.react-sleep .role-tail { animation: none; transform: rotate(-28deg); }
+#dragonborn-xp.reacting.react-sleep .role-leg-a, #dragonborn-xp.reacting.react-sleep .role-leg-b { animation: none; transform: scaleY(.6); }
+#dragonborn-xp.reacting.react-sleep .role-wing-a, #dragonborn-xp.reacting.react-sleep .role-wing-b { animation: none; transform: rotate(12deg) scaleY(.85); }
+#dragonborn-xp.reacting.react-sleep .role-arm-a, #dragonborn-xp.reacting.react-sleep .role-arm-b { animation: none; transform: rotate(14deg); }
+#dragonborn-xp.reacting.react-sleep .pet-shadow { transform: scale(1.1, .9); }
+
+/* curious: leaning in, head tilted, eyes wide */
+#dragonborn-xp.reacting.react-curious .pet-motion { animation: react-lean 2.4s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-curious .pet-body { animation: none; }
+#dragonborn-xp.reacting.react-curious .role-head { animation: react-tilt-hold 2.4s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-curious .role-eyes { animation: none; transform: scale(1.25); }
+
+/* hop: a victory hop with a twist */
+#dragonborn-xp.reacting.react-hop .pet-motion { animation: react-victory .8s cubic-bezier(.3, .7, .4, 1) infinite; }
+#dragonborn-xp.reacting.react-hop .pet-body { animation: none; }
+#dragonborn-xp.reacting.react-hop .role-head { animation: pet-head-cheer .8s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-hop .role-arm-a, #dragonborn-xp.reacting.react-hop .role-arm-b { animation: pet-cheer .4s ease-in-out infinite alternate; }
+#dragonborn-xp.reacting.react-hop .role-wing-a, #dragonborn-xp.reacting.react-hop .role-wing-b { animation: pet-flap .2s ease-in-out infinite alternate; }
+#dragonborn-xp.reacting.react-hop .role-tail { animation: pet-wag .12s ease-in-out infinite alternate; }
+
+/* fanfare: the level-up dance, a little longer */
+#dragonborn-xp.reacting.react-fanfare .pet-motion { animation: pet-level-up 1.15s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-fanfare .pet-body { animation: none; }
+#dragonborn-xp.reacting.react-fanfare .role-head { animation: pet-head-cheer 1.15s ease-in-out infinite; }
+#dragonborn-xp.reacting.react-fanfare .role-arm-a, #dragonborn-xp.reacting.react-fanfare .role-arm-b { animation: pet-cheer .38s ease-in-out infinite alternate; }
+#dragonborn-xp.reacting.react-fanfare .role-wing-a, #dragonborn-xp.reacting.react-fanfare .role-wing-b { animation: pet-flap .22s ease-in-out infinite alternate; }
+#dragonborn-xp.reacting.react-fanfare .pet-shadow { animation: pet-shadow-shrink 1.15s ease-in-out infinite; }
+
+/* species touches */
+/* the mudcrab clacks */
+#dragonborn-xp.pet-mudcrab.reacting.react-cheer .role-claw-a, #dragonborn-xp.pet-mudcrab.reacting.react-cheer .role-claw-b,
+#dragonborn-xp.pet-mudcrab.reacting.react-hop .role-claw-a, #dragonborn-xp.pet-mudcrab.reacting.react-hop .role-claw-b,
+#dragonborn-xp.pet-mudcrab.reacting.react-fanfare .role-claw-a, #dragonborn-xp.pet-mudcrab.reacting.react-fanfare .role-claw-b { animation: pet-snap .14s ease-in-out infinite alternate; }
+#dragonborn-xp.pet-mudcrab.reacting.react-cower .role-claw-a, #dragonborn-xp.pet-mudcrab.reacting.react-cower .role-claw-b { animation: none; transform: rotate(-24deg); }
+#dragonborn-xp.pet-mudcrab.reacting.react-wave .role-claw-a { animation: pet-snap .3s ease-in-out infinite alternate; }
+/* the wisp and the flame atronach dim when low and blaze when glad */
+#dragonborn-xp.pet-wisp.reacting.react-sad .pet-sprite, #dragonborn-xp.pet-wisp.reacting.react-cower .pet-sprite,
+#dragonborn-xp.pet-wisp.reacting.react-sleep .pet-sprite { opacity: .5; transition: opacity .8s ease; }
+#dragonborn-xp.pet-flame-atronach.reacting.react-sad .role-fx-glow, #dragonborn-xp.pet-flame-atronach.reacting.react-cower .role-fx-glow,
+#dragonborn-xp.pet-flame-atronach.reacting.react-sleep .role-fx-glow { animation: none; transform: scale(.75); opacity: .5; }
+#dragonborn-xp.reacting.react-cheer .role-fx-glow, #dragonborn-xp.reacting.react-hop .role-fx-glow,
+#dragonborn-xp.reacting.react-fanfare .role-fx-glow { animation: pet-flare .16s ease-in-out infinite alternate; }
+/* glowing eyes go dark asleep or sad and flicker when glad */
+#dragonborn-xp.reacting.react-sad .role-glow-eye, #dragonborn-xp.reacting.react-sleep .role-glow-eye,
+#dragonborn-xp.reacting.react-cower .role-glow-eye { animation: none; opacity: .25; }
+#dragonborn-xp.reacting.react-cheer .role-glow-eye, #dragonborn-xp.reacting.react-hop .role-glow-eye { animation: pet-glow .2s ease-in-out infinite alternate; }
+/* the netch sinks when sad and bobs high when glad */
+#dragonborn-xp.pet-netch.reacting.react-sad .pet-motion { animation: react-sink 2.2s ease-out both; }
+#dragonborn-xp.pet-netch.reacting.react-cheer .pet-motion { animation: react-bob-high .7s ease-in-out infinite; }
+/* the chicken flaps in a panic and pecks at what it is curious about */
+#dragonborn-xp.pet-chicken.reacting.react-cower .role-wing-a { animation: pet-flap .1s ease-in-out infinite alternate; }
+#dragonborn-xp.pet-chicken.reacting.react-curious .role-head { animation: pet-peck 1.2s ease-in-out infinite; }
+/* the dragons spread their wings for good news and wrap them to sleep */
+#dragonborn-xp.pet-dovahmin.reacting.react-cheer .role-wing-a, #dragonborn-xp.pet-dovahmin.reacting.react-cheer .role-wing-b,
+#dragonborn-xp.pet-dovahpink.reacting.react-cheer .role-wing-a, #dragonborn-xp.pet-dovahpink.reacting.react-cheer .role-wing-b { animation: pet-wing-spread .5s ease-in-out infinite; }
+#dragonborn-xp.pet-dovahmin.reacting.react-sleep .role-wing-a, #dragonborn-xp.pet-dovahpink.reacting.react-sleep .role-wing-a { transform: rotate(22deg) scaleY(.7); }
+#dragonborn-xp.pet-dovahmin.reacting.react-hop .role-fx-combat, #dragonborn-xp.pet-dovahpink.reacting.react-hop .role-fx-combat { animation: pet-fx .8s ease-out infinite; }
+/* the mammoth flaps an ear */
+#dragonborn-xp.pet-mammoth.reacting.react-wave .role-ear, #dragonborn-xp.pet-mammoth.reacting.react-curious .role-ear { animation: pet-ear .5s ease-in-out infinite; }
+/* the heavy ones stomp rather than jump */
+#dragonborn-xp.archetype-heavy.reacting.react-cheer .pet-motion { animation: pet-stomp .6s ease-in-out infinite; }
+/* the spiders and the chaurus skitter on the spot when scared */
+#dragonborn-xp.pet-frostbite-spider.reacting.react-cower .role-leg-a, #dragonborn-xp.pet-frostbite-spider.reacting.react-cower .role-leg-b,
+#dragonborn-xp.pet-dwarven-spider.reacting.react-cower .role-leg-a, #dragonborn-xp.pet-dwarven-spider.reacting.react-cower .role-leg-b,
+#dragonborn-xp.pet-chaurus.reacting.react-cower .role-leg-a, #dragonborn-xp.pet-chaurus.reacting.react-cower .role-leg-b { animation: pet-stride .1s ease-in-out infinite alternate; }
+/* the spriggan sways slowly in its sleep */
+#dragonborn-xp.pet-spriggan.reacting.react-sleep .role-sway { animation: pet-sway 5s ease-in-out infinite alternate; }
+/* the fox and the death hound wag hard for a friend */
+#dragonborn-xp.pet-fox.reacting.react-wave .role-tail, #dragonborn-xp.pet-death-hound.reacting.react-wave .role-tail { animation: pet-wag .09s ease-in-out infinite alternate; }
+
+@keyframes emote-pop { 0% { opacity: 0; transform: translateY(6px) scale(.3); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes emote-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes react-jump { 0%, 100% { transform: translateY(0) scale(1, 1); } 20% { transform: translateY(0) scale(1.1, .88); } 50% { transform: translateY(-12px) scale(.95, 1.06); } 80% { transform: translateY(0) scale(1.06, .94); } }
+@keyframes react-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes react-tilt { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(-14deg); } }
+@keyframes react-wave { from { transform: rotate(-60deg); } to { transform: rotate(-105deg); } }
+@keyframes react-slump { 0%, 100% { transform: scale(1.04, .9); } 50% { transform: scale(1.06, .88); } }
+@keyframes react-tremble { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-1px); } 75% { transform: translateX(1px); } }
+@keyframes react-sleep-breathe { 0%, 100% { transform: scale(1.06, .86); } 50% { transform: scale(1.09, .82); } }
+@keyframes react-lean { 0%, 100% { transform: translateX(0) rotate(0deg); } 30%, 80% { transform: translateX(3px) rotate(4deg); } }
+@keyframes react-tilt-hold { 0%, 100% { transform: rotate(0deg); } 30%, 80% { transform: rotate(-16deg); } }
+@keyframes react-victory { 0% { transform: translateY(0) rotate(0deg) scale(1, 1); } 18% { transform: translateY(0) scale(1.12, .86); } 45% { transform: translateY(-22px) rotate(-10deg) scale(.96, 1.05); } 70% { transform: translateY(0) rotate(0deg) scale(1.08, .92); } 100% { transform: translateY(0) scale(1, 1); } }
+@keyframes react-sink { from { transform: translateY(0); } to { transform: translateY(8px); } }
+@keyframes react-bob-high { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }

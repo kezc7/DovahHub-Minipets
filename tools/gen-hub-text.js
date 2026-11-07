@@ -15,16 +15,22 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const HEADER = path.join(ROOT, 'src', 'HubText.h');
 const FIELDS = ['raisePet', 'raisePetHint', 'hubShowClock', 'clockStyle', 'plate', 'ribbon', 'hubCardSize', 'hubCardShape',
-  'square', 'wide', 'hubHideCard', 'hubHideCardNote', 'language', 'machineTranslationNote', 'leftoverDll'];
+  'square', 'wide', 'hubHideCard', 'hubHideCardNote', 'language', 'machineTranslationNote', 'leftoverDll',
+  'reactToMods', 'reactToModsNote', 'reactionCooldown', 'careMoments', 'careMomentsNote', 'chronicleLines', 'chronicleLinesNote'];
 
 function cString(text) {
   let out = '"';
+  let afterEscape = false;
   for (const byte of Buffer.from(String(text), 'utf8')) {
+    const octal = byte < 0x20 || byte >= 0x7f;
+    // a digit right after an octal escape reads as one to the compiler's eye (C4125): close the literal
+    if (afterEscape && byte >= 0x30 && byte <= 0x39) out += '" "';
     if (byte === 0x22) out += '\\"';
     else if (byte === 0x5c) out += '\\\\';
     else if (byte === 0x0a) out += '\\n';
-    else if (byte < 0x20 || byte >= 0x7f) out += '\\' + byte.toString(8).padStart(3, '0');
+    else if (octal) out += '\\' + byte.toString(8).padStart(3, '0');
     else out += String.fromCharCode(byte);
+    afterEscape = octal && byte !== 0x0a;
   }
   return out + '"';
 }

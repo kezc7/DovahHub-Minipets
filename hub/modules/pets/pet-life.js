@@ -88,6 +88,19 @@
     return 'content';
   }
 
+  // 1.9.0, optional and off by default: a big moment the companion saw with you (a record hit, a boss,
+  // a new follower) counts as a little care, at most CARE_PER_DAY times a game day, so it never
+  // replaces Feed and Play. Eggs are left alone.
+  const CARE_PER_DAY = 3;
+  const CARE_HAPPINESS = 4;
+  function shareMoment(pet, hours) {
+    if (!pet || pet.stage === 'egg' || !Number.isFinite(hours)) return { pet, ok: false, reason: pet ? 'egg' : 'no pet' };
+    const day = Math.floor(hours / 24);
+    const count = pet.careDay === day ? pet.careCount || 0 : 0;
+    if (count >= CARE_PER_DAY) return { pet, ok: false, reason: 'enough today' };
+    return { pet: Object.assign({}, pet, { happiness: clamp(pet.happiness + CARE_HAPPINESS), careDay: day, careCount: count + 1 }), ok: true };
+  }
+
   function eggProgress(pet) {
     return pet.stage === 'egg' ? pet.warmth / HATCH_WARMTH : 1;
   }
@@ -116,9 +129,10 @@
       hunger: clamp(number(data.hunger, 100)),
       happiness: clamp(number(data.happiness, 80)),
       lastTick: number(data.lastTick, number(data.laidAt, 0)),
-      lastPlay: Number.isFinite(data.lastPlay) ? data.lastPlay : null
+      lastPlay: Number.isFinite(data.lastPlay) ? data.lastPlay : null,
+      ...(Number.isFinite(data.careDay) ? { careDay: data.careDay, careCount: Math.max(0, Math.min(CARE_PER_DAY, number(data.careCount, 0))) } : {})
     };
   }
 
-  return Object.freeze({ HATCH_WARMTH, GROWTH_SCALE, create, tick, feed, play, xp, levelUp, growth, mood, eggProgress, serialize, restore });
+  return Object.freeze({ HATCH_WARMTH, GROWTH_SCALE, create, tick, feed, play, xp, levelUp, growth, mood, eggProgress, shareMoment, CARE_PER_DAY, serialize, restore });
 });

@@ -8,6 +8,8 @@
 #include <sstream>
 #include <string>
 
+int RunReactionTests();
+
 namespace
 {
     int failures = 0;
@@ -90,6 +92,7 @@ int main()
         Check(choice.read == scratch.current && !choice.migrated, "new file only: read as is");
     }
 
+    failures += RunReactionTests();
     std::cout << (failures ? "FAILED" : "all passed") << '\n';
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }

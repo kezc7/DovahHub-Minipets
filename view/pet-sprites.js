@@ -916,7 +916,9 @@
       D: '#fff4d6', E: '#ffd27a', F: '#f6a04d', I: 'rgba(255, 214, 150, .28)',
       J: '#ffd2c0', K: '#f2626a', L: '#b8364f', N: 'rgba(240, 96, 110, .28)',
       // mood icons
-      p: '#c9703f', P: '#8e4a2b', q: '#f2ead2', R: '#d8485a'
+      p: '#c9703f', P: '#8e4a2b', q: '#f2ead2', R: '#d8485a',
+      // reaction emotes (1.9.0): tear and sweat blues, crown gold
+      b: '#5aa8f0', B: '#2f6fc0', c: '#d8f0ff', u: '#f5c542', U: '#b8862a'
     },
     corner: [
       'kkkkkkkkkkkkkkk.',
@@ -952,6 +954,15 @@
     sun: disc(13, [[1.4, 'W', -1.5, -1.5], [3.4, 'Y', -0.6, -0.6], [4.8, 'y'], [5.7, 'o']]),
     sunHalo: rays(25, 8, 11.6, 8.6),
     iconFood: ['.....kk.', '....kqqk', '...kPkqk', '..kpPPk.', '.kppPPk.', 'kppppk..', 'kpppk...', '.kkk....'],
+    // reaction emotes over the pet's head (view/reactions.js EMOTES)
+    emoteStar: ['....k....', '...kyk...', 'kkkkykkkk', 'kyyyYyyyk', '.kyyyyyk.', '..kyyyk..', '.kyykyyk.', '.kyk.kyk.', '.kk...kk.'],
+    emoteWave: ['.k.k.k...', 'kqkqkqk..', 'kqkqkqkk.', 'kqqqqqkqk', 'kqqqqqqqk', '.kqqqqqk.', '..kqqqk..', '...kkk...'],
+    emoteTear: ['..k..', '.kbk.', '.kbk.', 'kbcbk', 'kbbbk', 'kbbBk', '.kkk.'],
+    emoteSweat: ['.k.....k.', 'kck...kck', 'kbk...kbk', '.k.....k.', '....k....', '...kck...', '...kbk...', '....k....'],
+    emoteMoon: ['..kkkk..', '.kSSSk..', 'kSSkk...', 'kSk.....', 'kSk.....', 'kSSkk...', '.kSSSkk.', '..kkkk..'],
+    emoteSpark: ['...k...', '..kYk..', '.kkYkk.', 'kYYWYYk', '.kkYkk.', '..kYk..', '...k...'],
+    emoteCrown: ['k...k...k', 'kk.kuk.kk', 'kukuuukuk', 'kuuuuuuuk', 'kuRuuuRuk', 'kUUUUUUUk', 'kkkkkkkkk'],
+    emoteNote: ['...kkk..', '...kuuk.', '...kkuuk', '...k.kkk', '...k....', '.kkk....', 'kuuuk...', 'kuuuk...', '.kkk....'],
     iconHeart: ['.kk..kk.', 'kRRkkRRk', 'kRRRkRRk', 'kRRkRRRk', '.kRRkRk.', '..kRRk..', '...kk...'],
     sunDawn: disc(19, [[2.2, 'D', -1, -1], [5.4, 'E'], [6.6, 'F'], [9.3, 'I']]),
     sunDusk: disc(19, [[2.2, 'J', -1, -1], [5.4, 'K'], [6.6, 'L'], [9.3, 'N']]),
