@@ -105,6 +105,8 @@
   // toggled with the hide hotkey, settings still show the card
   let petHidden = false;
   let petLife = null;
+  // SAVE-LEAK: which load the pet belongs to (src/main.cpp g_petSession); sent back with every save
+  let petSession = 0;
   let gameHours = null;
   let lastClockData = null;
   let shownPetKey = '';
@@ -1012,7 +1014,7 @@
   // --- Raise a pet --------------------------------------------------------
 
   function savePet() {
-    if (typeof window.petStateChanged === 'function') window.petStateChanged(petLife ? petLifeRules.serialize(petLife) : '');
+    if (typeof window.petStateChanged === 'function') window.petStateChanged(`${petSession}|${petLife ? petLifeRules.serialize(petLife) : ''}`);
   }
 
   function updateNeedBars() {
@@ -1199,6 +1201,14 @@
     // saved pet from the co-save ('' = none yet)
     petState(data) {
       const text = data && typeof data.state === 'string' ? data.state : '';
+      const session = data && Number.isFinite(data.session) ? data.session : petSession;
+      if (session !== petSession) {
+        // another save: nothing of the last one's clock, reset prompt or reaction carries over
+        petSession = session;
+        gameHours = null;
+        resetArmed = false;
+        if (reactionPlayer) reactionPlayer.end();
+      }
       petLife = text ? petLifeRules.restore(text, id => Boolean(petNames[id])) : null;
       refreshPet(true);
     },
