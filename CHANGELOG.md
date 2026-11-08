@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.2-beta
+- Everything MiniPets does with the game and the card now runs on the game's own thread. In some load orders the way it queued that work could run it alongside the game instead, a crash risk
+- The update that runs every quarter second, and the check when a menu opens or closes, are queued once at a time, so a busy moment can't pile them up and run a backlog in one go
+- The log names the game thread once, and warns (once per place) if any of MiniPets' game work still finds itself elsewhere
+- Upgrading from 1.9.1-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.1-beta
 - Nothing about one save carries into another any more. While a save loaded, the card could still tick the last save's raised pet and hand it to the new one, so a character with no pet (or a new game) could end up with the previous character's pet. The card now forgets the pet as soon as a load starts, and the plugin keeps only a pet the card sends for the save being played
 - A load also starts the reactions afresh: the outfit look's 10-minute gap, the Chronicle line's one-a-minute limit and any reaction still waiting no longer carry over from the last save, and the clock and scenery are sent again for the new one
