@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.3-beta
+- MiniPets' work with the game and the card now runs from the game's own frame update, the one place that is always the game's main thread. With DovahHub 0.97.4-beta or later it shares DovahHub's; without DovahHub, MiniPets hooks the frame update itself, so it works on its own as before
+- 1.9.2's queue turned out to run on other threads in some load orders too, so it is no longer used
+- The log names the game's thread correctly (1.9.2 printed a number that wasn't one)
+- Upgrading from 1.9.2-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.2-beta
 - Everything MiniPets does with the game and the card now runs on the game's own thread. In some load orders the way it queued that work could run it alongside the game instead, a crash risk
 - The update that runs every quarter second, and the check when a menu opens or closes, are queued once at a time, so a busy moment can't pile them up and run a backlog in one go
