@@ -1,6 +1,7 @@
 #include "PrismaUI_API.h"
 #include "keyhandler.h"
 #include "DovahHub_API.h"
+#include "DovahGameThread.h"
 #include "MiniPets_API.h"
 #include "DovahDamage_API.h"
 #include "Chronicle_API.h"
@@ -540,63 +541,50 @@ namespace
                ",\"careMoments\":" + (g_settings.careMoments ? "true" : "false") + "}";
     }
 
-    // ---- the game thread (THREADS: the suite's rule of 8 Nov 2026) ----
-    // In some load orders SKSE's AddTask runs on a worker, racing the game; AddUITask runs on the game's
-    // main thread. Everything MiniPets queues touches the game or the card's view, so it all goes through
-    // GameThread(...)->Queue, never AddTask. "The game thread" is RE::Main's threadID.
+    // ---- the game thread (THREADS, then PUMP: the suite's rules of 8 Nov 2026) ----
+    // No SKSE task queue can be trusted to reach the game's main thread: in Kev's load order AddTask and
+    // AddUITask have each run their tasks on workers. DovahGameThread.h (DovahHub's, copied unchanged) runs
+    // work from a hook on the game's own frame update: DovahHub's pump when DovahHub 0.97.4+ is installed,
+    // otherwise its own chained hook, so MiniPets works alone. Installed at kPostLoad. "The game thread" is
+    // the frame's thread as the pump saw it, not RE::Main's threadID.
 
     std::atomic_bool g_threadLogged = false;
 
     std::uint32_t GameThreadId()
     {
-        const auto* main = RE::Main::GetSingleton();
-        return main ? main->threadID : 0;
-    }
-
-    bool OnGameThread()
-    {
-        const auto id = GameThreadId();
-        return id == 0 || id == REX::W32::GetCurrentThreadId();  // 0: too early to know; nothing runs then
+        return DovahGameThread::Id();
     }
 
     // one log line per place that finds itself off the game thread, naming the place and the threads
     void WarnIfOffGameThread(const char* where)
     {
-        if (OnGameThread()) {
-            return;
-        }
-        static std::mutex lock;
-        static std::set<std::string> warned;
-        std::lock_guard guard(lock);
-        if (warned.insert(where).second) {
-            logger::warn("MiniPets: {} ran off the game thread (thread {}, game thread {})", where, REX::W32::GetCurrentThreadId(), GameThreadId());
-        }
+        DovahGameThread::Note(where);
     }
 
-    // Always queued, never run inline: some callers are inside another mod's callback.
+    // Always posted, never run inline: some callers are inside another mod's callback.
     void QueueGameTask(const char* where, std::function<void()> task)
     {
-        if (const auto* tasks = SKSE::GetTaskInterface()) {
-            tasks->AddUITask([where, task = std::move(task)]() {
+        DovahGameThread::Post(where, std::move(task));
+    }
+
+    // GameThread("place")->Queue([]{ ... }): the place names the job in the pump's log and the warning
+    struct GameTaskQueue
+    {
+        const char* where;
+        explicit operator bool() const { return true; }
+        const GameTaskQueue* operator->() const { return this; }
+        void Queue(std::function<void()> task) const
+        {
+            QueueGameTask(where, [where = where, task = std::move(task)]() {
                 WarnIfOffGameThread(where);
                 task();
             });
         }
-    }
-
-    // GameThread("place")->Queue([]{ ... }): the place names the warning
-    struct GameTaskQueue
-    {
-        const char* where;
-        bool ready;
-        explicit operator bool() const { return ready; }
-        const GameTaskQueue* operator->() const { return this; }
-        void Queue(std::function<void()> task) const { QueueGameTask(where, std::move(task)); }
     };
 
     GameTaskQueue GameThread(const char* where)
     {
-        return { where, SKSE::GetTaskInterface() != nullptr };
+        return { where };
     }
 
     void Invoke(const std::string& functionName, const std::string& json)
@@ -657,8 +645,8 @@ namespace
 
     // ---- reactions (1.9.0): src/Reactions.h decides, the page draws ----
 
-    // DovahHub's story broadcast (DHUB-67), 'DHB' 5; defined here until DovahHub_API.h carries it
-    constexpr std::uint32_t kMsgStoryEvent = 0x44484205;
+    // DovahHub's story broadcast (DHUB-67), 'DHB' 5
+    using DOVAHHUB_API::kMsgStoryEvent;
     constexpr std::size_t kReactQueueDepth = 16;
     constexpr std::uint32_t kPlayerFormId = 0x14;
 
@@ -1297,7 +1285,8 @@ namespace
                 if (const auto taskInterface = GameThread("250 ms update")) {
                     taskInterface->Queue([]() {
                         if (!g_threadLogged.exchange(true)) {
-                            logger::info("MiniPets: game thread {}, first update ran on {}", GameThreadId(), REX::W32::GetCurrentThreadId());
+                            logger::info("MiniPets: game thread {} (the pump's{}), first update ran on {}", GameThreadId(),
+                                         DovahGameThread::Pumping() ? "" : "; not pumping, SKSE's UI tasks instead", REX::W32::GetCurrentThreadId());
                         }
                         UpdateOverlayMenuVisibility();
                         UpdateCompanionState();
@@ -1415,17 +1404,10 @@ namespace
             if (g_menuCheckQueued.exchange(true)) {
                 return RE::BSEventNotifyControl::kContinue;
             }
-            if (const auto taskInterface = GameThread("menu check")) {
-                taskInterface->Queue([]() {
-                    g_menuCheckQueued.store(false);
-                    UpdateOverlayMenuVisibility();
-                });
-            }
-            else {
+            GameThread("menu check")->Queue([]() {
                 g_menuCheckQueued.store(false);
-                WarnIfOffGameThread("menu check");
                 UpdateOverlayMenuVisibility();
-            }
+            });
             return RE::BSEventNotifyControl::kContinue;
         }
     };
@@ -2304,6 +2286,10 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
         return;
     }
     switch (message->type) {
+    case SKSE::MessagingInterface::kPostLoad:
+        // every plugin is loaded: DovahHub's pump if it has one, otherwise MiniPets' own frame hook
+        DovahGameThread::Install("MiniPets");
+        break;
     case SKSE::MessagingInterface::kPostPostLoad:
         BuildMiniPetsApi();
         RegisterWithDovahHub();

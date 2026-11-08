@@ -23,12 +23,13 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
-## Game thread (1.9.2)
+## Game thread (1.9.3)
 
-Nothing to do but play; check `MiniPets.log` afterwards.
+Nothing to do but play; check `MiniPets.log` afterwards. Try it once with DovahHub 0.97.4-beta or later installed and once without DovahHub.
 
-1. After the first load the log has `MiniPets: game thread <n>, first update ran on <n>`, both numbers the same.
-2. Search the log for `ran off the game thread`. Pass: no such line. Fail: send the lines; each names the place (for example `250 ms update` or `view Invoke`) and the two threads.
+1. Near the top of the log, with DovahHub: `MiniPets: game-thread work goes to DovahHub 0.97.x's pump`. Without DovahHub: `MiniPets: game-thread pump: hooked the main loop's call to Main::Update (ID 36544 +0x160, ...)`, then `MiniPets: game-thread pump: first frame on thread <n>; ...`.
+2. After the first load: `MiniPets: game thread <n> (the pump's), first update ran on <n>`, both numbers the same, and a real thread number (four or five digits, not 7152824).
+3. Search the log for `not the game thread` and `game-thread pump not installed`. Pass: neither. Fail: send the lines; each names the place (for example `250 ms update` or `view Invoke`) and the two threads.
 
 ## Save to save (1.9.1)
 
