@@ -4,7 +4,7 @@ includes("lib/commonlibsse-ng")
 
 local PLUGIN_NAME = "MiniPets"
 -- bump this for releases
-local PLUGIN_VERSION = "1.9.1-beta"
+local PLUGIN_VERSION = "1.9.2-beta"
 local PACKAGE_NAME = "dovahhub-minipets"
 local VIEW_NAME = "MiniPets"
 -- the MiniPets tab lives inside DovahHub's view folder
