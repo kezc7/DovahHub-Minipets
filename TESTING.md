@@ -23,6 +23,13 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
+## Game thread (1.9.2)
+
+Nothing to do but play; check `MiniPets.log` afterwards.
+
+1. After the first load the log has `MiniPets: game thread <n>, first update ran on <n>`, both numbers the same.
+2. Search the log for `ran off the game thread`. Pass: no such line. Fail: send the lines; each names the place (for example `250 ms update` or `view Invoke`) and the two threads.
+
 ## Save to save (1.9.1)
 
 Nothing about one playthrough should show up in another. Settings (companion, card, clock, language, hotkeys, Shift+V hidden, raise-a-pet on or off) are the player's and apply to every save.

@@ -142,7 +142,7 @@ test('the plugin: React in API version 2, DovahDamage polled on the game-thread 
   assert.match(cpp, /version == MINIPETS_API::kApiVersion1 \|\| version == MINIPETS_API::kApiVersion2/);
   assert.strictEqual(cpp.split('GetTotals(').length - 1, 1, 'GetTotals is read in one place');
   const poll = cpp.slice(cpp.indexOf('void StartCompanionStatePoller()'));
-  assert.match(poll.slice(0, 900), /AddTask\(\[\]\(\) \{[\s\S]*UpdateReactions\(\);/);
+  assert.match(poll.slice(0, 1400), /GameThread\("250 ms update"\)\) \{\s*taskInterface->Queue\(\[\]\(\) \{[\s\S]*UpdateReactions\(\);/);
   assert.match(cpp.slice(cpp.indexOf('void UpdateReactions()'), cpp.indexOf('void OnDovahHubMessage')), /PollDovahDamage\(\);/);
   assert.match(cpp, /RegisterListener\("DovahHub", OnDovahHubMessage\)/);
   assert.match(cpp, /std::lock_guard lock\(g_reactQueueLock\);\s*g_reactQueue\.emplace_back/);
