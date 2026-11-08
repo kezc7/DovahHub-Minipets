@@ -15,6 +15,7 @@
 #include <RE/D/DragonSoulsGained.h>
 #include <RE/L/LevelIncrease.h>
 #include <RE/I/IMenu.h>
+#include <RE/M/Main.h>
 #include <RE/M/MenuOpenCloseEvent.h>
 #include <RE/S/SkillIncrease.h>
 #include <RE/S/ScriptEventSourceHolder.h>
@@ -36,6 +37,8 @@
 #include <cctype>
 #include <cmath>
 #include <filesystem>
+#include <functional>
+#include <set>
 #include <fstream>
 #include <string>
 #include <string_view>
@@ -537,8 +540,68 @@ namespace
                ",\"careMoments\":" + (g_settings.careMoments ? "true" : "false") + "}";
     }
 
+    // ---- the game thread (THREADS: the suite's rule of 8 Nov 2026) ----
+    // In some load orders SKSE's AddTask runs on a worker, racing the game; AddUITask runs on the game's
+    // main thread. Everything MiniPets queues touches the game or the card's view, so it all goes through
+    // GameThread(...)->Queue, never AddTask. "The game thread" is RE::Main's threadID.
+
+    std::atomic_bool g_threadLogged = false;
+
+    std::uint32_t GameThreadId()
+    {
+        const auto* main = RE::Main::GetSingleton();
+        return main ? main->threadID : 0;
+    }
+
+    bool OnGameThread()
+    {
+        const auto id = GameThreadId();
+        return id == 0 || id == REX::W32::GetCurrentThreadId();  // 0: too early to know; nothing runs then
+    }
+
+    // one log line per place that finds itself off the game thread, naming the place and the threads
+    void WarnIfOffGameThread(const char* where)
+    {
+        if (OnGameThread()) {
+            return;
+        }
+        static std::mutex lock;
+        static std::set<std::string> warned;
+        std::lock_guard guard(lock);
+        if (warned.insert(where).second) {
+            logger::warn("MiniPets: {} ran off the game thread (thread {}, game thread {})", where, REX::W32::GetCurrentThreadId(), GameThreadId());
+        }
+    }
+
+    // Always queued, never run inline: some callers are inside another mod's callback.
+    void QueueGameTask(const char* where, std::function<void()> task)
+    {
+        if (const auto* tasks = SKSE::GetTaskInterface()) {
+            tasks->AddUITask([where, task = std::move(task)]() {
+                WarnIfOffGameThread(where);
+                task();
+            });
+        }
+    }
+
+    // GameThread("place")->Queue([]{ ... }): the place names the warning
+    struct GameTaskQueue
+    {
+        const char* where;
+        bool ready;
+        explicit operator bool() const { return ready; }
+        const GameTaskQueue* operator->() const { return this; }
+        void Queue(std::function<void()> task) const { QueueGameTask(where, std::move(task)); }
+    };
+
+    GameTaskQueue GameThread(const char* where)
+    {
+        return { where, SKSE::GetTaskInterface() != nullptr };
+    }
+
     void Invoke(const std::string& functionName, const std::string& json)
     {
+        WarnIfOffGameThread("view Invoke");
         if (!g_prismaUI || !g_view || !g_prismaUI->IsValid(g_view)) {
             return;
         }
@@ -721,6 +784,7 @@ namespace
     // game thread, on the 250 ms task: DovahDamage reads off its own frame queue, never its capture threads
     void PollDovahDamage()
     {
+        WarnIfOffGameThread("DovahDamage poll");
         if (!g_damage) {
             return;
         }
@@ -771,6 +835,7 @@ namespace
     // game thread, on the 250 ms task
     void UpdateReactions()
     {
+        WarnIfOffGameThread("reaction drain");
         // nothing while a save loads: the counters and the record belong to the save being left
         if (!g_gameLoaded.load() || g_loadingSave.load()) {
             return;
@@ -823,8 +888,8 @@ namespace
         const auto type = message->type;
         std::string json(static_cast<const char*>(message->data), message->dataLen ? message->dataLen - 1 : 0);
         json = json.c_str();  // stop at the terminator whatever dataLen says
-        if (const auto* tasks = SKSE::GetTaskInterface()) {
-            tasks->AddTask([type, json]() {
+        if (const auto tasks = GameThread("DovahHub message")) {
+            tasks->Queue([type, json]() {
                 if (!g_gameLoaded.load() || g_loadingSave.load()) {
                     return;
                 }
@@ -1118,8 +1183,8 @@ namespace
             return;
         }
 
-        if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-            taskInterface->AddTask([]() {
+        if (const auto taskInterface = GameThread("open settings")) {
+            taskInterface->Queue([]() {
                 // not over game menus, the view is hidden there
                 if (!g_prismaUI || !g_view || !g_prismaUI->IsValid(g_view) || g_overlayHiddenForMenus.load()) {
                     g_settingsOpen.store(false);
@@ -1141,8 +1206,8 @@ namespace
             return;
         }
 
-        if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-            taskInterface->AddTask([]() {
+        if (const auto taskInterface = GameThread("close settings")) {
+            taskInterface->Queue([]() {
                 if (g_prismaUI && g_view && g_prismaUI->IsValid(g_view) && g_prismaUI->HasFocus(g_view)) {
                     g_prismaUI->Unfocus(g_view);
                 }
@@ -1212,6 +1277,9 @@ namespace
         }
     }
 
+    std::atomic_bool g_pollQueued = false;
+    std::atomic_bool g_menuCheckQueued = false;
+
     void StartCompanionStatePoller()
     {
         bool expected = false;
@@ -1222,14 +1290,25 @@ namespace
         std::thread([]() {
             while (true) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(250));
-                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-                    taskInterface->AddTask([]() {
+                // bounded: the next pass is queued only once the last one has run
+                if (g_pollQueued.exchange(true)) {
+                    continue;
+                }
+                if (const auto taskInterface = GameThread("250 ms update")) {
+                    taskInterface->Queue([]() {
+                        if (!g_threadLogged.exchange(true)) {
+                            logger::info("MiniPets: game thread {}, first update ran on {}", GameThreadId(), REX::W32::GetCurrentThreadId());
+                        }
                         UpdateOverlayMenuVisibility();
                         UpdateCompanionState();
                         UpdateWorldMood();
                         UpdateClock();
                         UpdateReactions();
+                        g_pollQueued.store(false);
                     });
+                }
+                else {
+                    g_pollQueued.store(false);
                 }
             }
         }).detach();
@@ -1333,12 +1412,18 @@ namespace
                 return RE::BSEventNotifyControl::kContinue;
             }
 
-            if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-                taskInterface->AddTask([]() {
+            if (g_menuCheckQueued.exchange(true)) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+            if (const auto taskInterface = GameThread("menu check")) {
+                taskInterface->Queue([]() {
+                    g_menuCheckQueued.store(false);
                     UpdateOverlayMenuVisibility();
                 });
             }
             else {
+                g_menuCheckQueued.store(false);
+                WarnIfOffGameThread("menu check");
                 UpdateOverlayMenuVisibility();
             }
             return RE::BSEventNotifyControl::kContinue;
@@ -1541,6 +1626,7 @@ namespace
     // everything the tab (or another mod) needs; see MiniPets_API.h for the shape
     const std::string& StateJson()
     {
+        WarnIfOffGameThread("pet state for DovahHub or the API");
         const auto* calendar = RE::Calendar::GetSingleton();
         int food = 0;
         CheapestFood(&food);
@@ -1572,8 +1658,8 @@ namespace
         if (!g_hub || !g_hubModule || !g_petsTabShown.load()) {
             return;
         }
-        if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-            taskInterface->AddTask([]() {
+        if (const auto taskInterface = GameThread("DovahHub tab push")) {
+            taskInterface->Queue([]() {
                 if (g_hub && g_hubModule && g_petsTabShown.load()) {
                     (void)g_hub->PushJson(g_hubModule, ("{\"state\":" + StateJson() + "}").c_str());
                 }
@@ -1718,6 +1804,7 @@ namespace
 
     const char* OnHubRequest(const char* request, const char* json, void*)
     {
+        WarnIfOffGameThread("DovahHub request");
         const std::string_view name = request ? request : "";
         const std::string_view payload = json ? json : "";
         if (name == "state") {
@@ -1771,8 +1858,8 @@ namespace
         }
         g_hubSettingsLanguage = g_settings.language;
         g_hubSettingsHideKey = g_settings.hideHotkeyName;
-        if (const auto* tasks = SKSE::GetTaskInterface()) {
-            tasks->AddTask([]() {
+        if (const auto tasks = GameThread("DovahHub settings")) {
+            tasks->Queue([]() {
                 if (g_hub && g_hubModule) {
                     (void)g_hub->AddSettings(g_hubModule, HubSettingsSchema().c_str());
                     logger::info("MiniPets: DovahHub settings sent again in {}", g_settings.language);
@@ -1838,6 +1925,7 @@ namespace
 
     MINIPETS_API::Result ApiPetAction(std::string_view action)
     {
+        WarnIfOffGameThread("API Feed or Play");
         if (!g_prismaUI || !g_view || !g_prismaUI->IsValid(g_view)) {
             return MINIPETS_API::Result::NotReady;
         }
@@ -2057,8 +2145,8 @@ namespace
                     return;
                 }
                 if (scanCode == g_hideKey.scan.load() && shiftDown == g_hideKey.shift.load()) {
-                    if (const auto* taskInterface = SKSE::GetTaskInterface(); taskInterface && !g_overlayHiddenForMenus.load()) {
-                        taskInterface->AddTask([]() {
+                    if (const auto taskInterface = GameThread("hide hotkey"); taskInterface && !g_overlayHiddenForMenus.load()) {
+                        taskInterface->Queue([]() {
                             SetPetHidden(!g_settings.petHidden);
                         });
                     }
@@ -2076,8 +2164,8 @@ namespace
                     action = "play";
                 }
                 if (action) {
-                    if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-                        taskInterface->AddTask([action]() {
+                    if (const auto taskInterface = GameThread("pet hotkey")) {
+                        taskInterface->Queue([action]() {
                             Invoke("dragonbornXP.petAction", std::string("{\"action\":\"") + action + "\"}");
                         });
                     }
@@ -2107,8 +2195,8 @@ namespace
                     return;
                 }
                 const std::string copy(payload);
-                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-                    taskInterface->AddTask([copy]() {
+                if (const auto taskInterface = GameThread("settings from the card")) {
+                    taskInterface->Queue([copy]() {
                         ApplySettings(copy);
                     });
                 }
@@ -2123,9 +2211,9 @@ namespace
             });
             g_prismaUI->RegisterJSListener(view, "petStateChanged", [](const char* payload) {
                 const std::string copy(payload ? payload : "");
-                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
+                if (const auto taskInterface = GameThread("pet state from the card")) {
                     // the session is checked when the task runs, after any load that started meanwhile
-                    taskInterface->AddTask([copy]() {
+                    taskInterface->Queue([copy]() {
                         std::string state;
                         if (AcceptPetState(copy, state)) {
                             OnPetStateChanged(state);
@@ -2138,8 +2226,8 @@ namespace
                     return;
                 }
                 const std::string copy(payload);
-                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-                    taskInterface->AddTask([copy]() { OnPetActionResult(copy); });
+                if (const auto taskInterface = GameThread("pet action result")) {
+                    taskInterface->Queue([copy]() { OnPetActionResult(copy); });
                 }
             });
             g_prismaUI->RegisterJSListener(view, "petSays", [](const char* payload) {
@@ -2147,13 +2235,13 @@ namespace
                     return;
                 }
                 const std::string copy(payload);
-                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-                    taskInterface->AddTask([copy]() { SendChronicleLine(copy); });
+                if (const auto taskInterface = GameThread("Chronicle line")) {
+                    taskInterface->Queue([copy]() { SendChronicleLine(copy); });
                 }
             });
             g_prismaUI->RegisterJSListener(view, "feedPet", [](const char*) {
-                if (const auto* taskInterface = SKSE::GetTaskInterface()) {
-                    taskInterface->AddTask([]() { FeedFromPack(); });
+                if (const auto taskInterface = GameThread("feed from the pack")) {
+                    taskInterface->Queue([]() { FeedFromPack(); });
                 }
             });
             // new page, resend everything

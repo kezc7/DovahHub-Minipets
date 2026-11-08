@@ -96,7 +96,7 @@ test('the plugin: Revert and kPreLoadGame start a new session; loading clears ev
 });
 
 test('the plugin keeps a pet state only from the current session, checked when the task runs', () => {
-  assert.match(cpp, /AddTask\(\[copy\]\(\) \{\s*std::string state;\s*if \(AcceptPetState\(copy, state\)\)/);
+  assert.match(cpp, /Queue\(\[copy\]\(\) \{\s*std::string state;\s*if \(AcceptPetState\(copy, state\)\)/);
   const accept = cpp.slice(cpp.indexOf('bool AcceptPetState('), cpp.indexOf('void BeginLoad()'));
   assert.match(accept, /g_loadingSave\.load\(\) \|\| session != g_petSession\.load\(\)/);
   assert.match(cpp, /"\{\\"state\\":" \+ JsonString\(g_petState\) \+ ",\\"session\\":"/);
