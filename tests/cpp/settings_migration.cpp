@@ -9,6 +9,7 @@
 #include <string>
 
 int RunReactionTests();
+int RunSelfTestTests();
 
 namespace
 {
@@ -93,6 +94,7 @@ int main()
     }
 
     failures += RunReactionTests();
+    failures += RunSelfTestTests();
     std::cout << (failures ? "FAILED" : "all passed") << '\n';
     return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }
