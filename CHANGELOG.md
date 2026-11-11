@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.7-beta
+- A raised pet lives longer: after baby, young and adult it becomes seasoned (20 in-game days) and then an elder (60), and the card celebrates each time it grows. A pet you already have takes its stage quietly
+- It remembers what it saw with you: the first dragon, the bosses you bring down, your DovahHub milestones, every tenth level, and the first time in each city, realm and at home. Now and then, at most once an in-game day, it brings one up. The MiniPets tab in DovahHub lists the newest five
+- It reacts to places: a hop in a city, wonder in Sovngarde and the other realms, keeping close in a dungeon, a cheer at an inn, quiet in a temple, a wave when you come home. The first visit to a city or home is worded as one. Place names are the game's own
+- All of it is kept per save, as the pet is. Eggs and companions you aren't raising are unchanged
+- The self-test checks the new stage, a memory and a place reaction
+- Upgrading from 1.9.6-beta: install over it in your mod manager; your pet keeps everything
+
 ## 1.9.6-beta
 - The self-test's switch, `self_test=1` in MiniPets.ini, now sets itself back to 0 as its one run starts, so it no longer runs again after every restart
 - Under the hood, the plugin's code is split from one large file into a small core and five parts (the card, the reactions, save and load, DovahHub and the API, the self-test), each keeping its own state. Nothing else changes in game
