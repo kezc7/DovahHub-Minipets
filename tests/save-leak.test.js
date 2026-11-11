@@ -7,7 +7,7 @@ const path = require('node:path');
 const life = require('../view/pet-life.js');
 const { loadPage } = require('./page-harness.js');
 
-const cpp = fs.readFileSync(path.join(__dirname, '..', 'src', 'main.cpp'), 'utf8');
+const cpp = require('./plugin-source.js').pluginSource();
 
 function hatchedFox(hours) {
   const pet = life.create('fox', 0);
@@ -73,13 +73,14 @@ test('a held reaction from the last save ends with the load', () => {
 
 test('the plugin: Revert and kPreLoadGame start a new session; loading clears every per-playthrough value', () => {
   // OnRevert calls RevertSave, which the self-test's new-game step calls too
-  assert.match(cpp.slice(cpp.indexOf('static void OnRevert('), cpp.indexOf('static void SKSEMessageHandler(')), /RevertSave\(\);/);
-  const revert = cpp.slice(cpp.indexOf('void RevertSave()'), cpp.indexOf('void MaybeStartSelfTestFromIni();'));
+  assert.match(cpp, /void OnRevert\(SKSE::SerializationInterface\*\)\s*\{\s*RevertSave\(\);\s*\}/);
+  assert.match(cpp, /serialization->SetRevertCallback\(PetSave::OnRevert\);/);
+  const revert = cpp.slice(cpp.indexOf('void RevertSave()'), cpp.indexOf('void FinishLoad()'));
   assert.match(revert, /g_petState\.clear\(\);/);
-  assert.match(revert, /g_bestHit = 0\.0f;/);
+  assert.match(revert, /ReactionWiring::SetBestHit\(0\.0f\);/);
   assert.match(revert, /BeginLoad\(\);/);
   const handler = cpp.slice(cpp.indexOf('static void SKSEMessageHandler('));
-  assert.match(handler, /kPreLoadGame:\s*BeginLoad\(\);/);
+  assert.match(handler, /kPreLoadGame:\s*PetSave::BeginLoad\(\);/);
   assert.match(handler, /kNewGame:[\s\S]*?FinishLoad\(\);/);
   const begin = cpp.slice(cpp.indexOf('void BeginLoad()'), cpp.indexOf('void FinishLoad()'));
   assert.match(begin, /g_loadingSave\.store\(true\)/);
@@ -87,8 +88,13 @@ test('the plugin: Revert and kPreLoadGame start a new session; loading clears ev
   assert.match(begin, /ResetReactions\(\);/);
   assert.match(begin, /SendPetState\(\);/);
   const finish = cpp.slice(cpp.indexOf('void FinishLoad()'), cpp.indexOf('void FinishLoad()') + 600);
-  for (const line of ['g_loadingSave.store(false)', 'g_lastClockMinute = -1', 'g_lastWorldMood.clear()', 'g_lastCompanionState.clear()', 'ResetReactions()', 'SendPetState()']) {
+  for (const line of ['g_loadingSave.store(false)', 'Card::ForgetLastSent()', 'ResetReactions()', 'SendPetState()']) {
     assert.ok(finish.includes(line), line);
+  }
+  // the card's part forgets what it last sent
+  const forget = cpp.slice(cpp.indexOf('void ForgetLastSent()'), cpp.indexOf('void ForgetLastSent()') + 200);
+  for (const line of ['g_lastClockMinute = -1', 'g_lastWorldMood.clear()', 'g_lastCompanionState.clear()']) {
+    assert.ok(forget.includes(line), line);
   }
   const reset = cpp.slice(cpp.indexOf('void ResetReactions()'), cpp.indexOf('void ResetReactions()') + 900);
   for (const line of ['g_reactionGate.Reset()', 'g_lowHealth.Rearm()', 'g_playerDead = false', 'g_bleedingOut = false', 'g_sleepReleaseAtMs = 0.0',
@@ -98,10 +104,11 @@ test('the plugin: Revert and kPreLoadGame start a new session; loading clears ev
 });
 
 test('the plugin keeps a pet state only from the current session, checked when the task runs', () => {
-  assert.match(cpp, /Queue\(\[copy\]\(\) \{\s*std::string state;\s*if \(AcceptPetState\(copy, state\)\)/);
+  assert.match(cpp, /Queue\(\[copy\]\(\) \{\s*std::string state;\s*if \(PetSave::AcceptPetState\(copy, state\)\)/);
   const accept = cpp.slice(cpp.indexOf('bool AcceptPetState('), cpp.indexOf('void BeginLoad()'));
   assert.match(accept, /g_loadingSave\.load\(\) \|\| session != g_petSession\.load\(\)/);
   assert.match(cpp, /"\{\\"state\\":" \+ JsonString\(g_petState\) \+ ",\\"session\\":"/);
   const update = cpp.slice(cpp.indexOf('void UpdateReactions()'), cpp.indexOf('void UpdateReactions()') + 300);
-  assert.match(update, /g_loadingSave\.load\(\)/, 'no DovahDamage record or React drained while a save loads');
+  assert.match(update, /PetSave::Loading\(\)/, 'no DovahDamage record or React drained while a save loads');
+  assert.match(cpp, /bool Loading\(\)\s*\{\s*return g_loadingSave\.load\(\);/);
 });

@@ -8,8 +8,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const SRC = path.join(__dirname, '..', 'src');
-const cpp = fs.readFileSync(path.join(SRC, 'main.cpp'), 'utf8');
-const ownSources = ['main.cpp', 'Reactions.h', 'SettingsFile.h', 'HubText.h'].map(file => [file, fs.readFileSync(path.join(SRC, file), 'utf8')]);
+const { pluginSource, pluginFiles, pluginFile } = require('./plugin-source.js');
+const cpp = pluginSource();
+const ownSources = [...pluginFiles(), ...['Reactions.h', 'SettingsFile.h', 'HubText.h', 'SelfTest.h'].map(file => [file, fs.readFileSync(path.join(SRC, file), 'utf8')])];
 
 test('no SKSE task queue for game work in MiniPets\' own sources', () => {
   for (const [file, text] of ownSources) {
@@ -18,9 +19,12 @@ test('no SKSE task queue for game work in MiniPets\' own sources', () => {
 });
 
 test('the one place that queues posts to the pump, installed at kPostLoad', () => {
-  const queue = cpp.slice(cpp.indexOf('void QueueGameTask('), cpp.indexOf('struct GameTaskQueue'));
+  // the core (main.cpp) posts; Plugin.h's GameTaskQueue is how every part asks
+  const core = pluginFile('main.cpp');
+  const queue = core.slice(core.indexOf('void QueueGameTask('), core.indexOf('GameTaskQueue GameThread('));
   assert.match(queue, /DovahGameThread::Post\(where, std::move\(task\)\);/);
-  const struct = cpp.slice(cpp.indexOf('struct GameTaskQueue'), cpp.indexOf('GameTaskQueue GameThread('));
+  const plugin = pluginFile('Plugin.h');
+  const struct = plugin.slice(plugin.indexOf('struct GameTaskQueue'), plugin.indexOf('GameTaskQueue GameThread('));
   assert.match(struct, /WarnIfOffGameThread\(where\);\s*task\(\);/, 'each job notes where it ran');
   assert.match(cpp, /void WarnIfOffGameThread\(const char\* where\)\s*\{\s*DovahGameThread::Note\(where\);/);
   assert.match(cpp, /case SKSE::MessagingInterface::kPostLoad:\s*\/\/[^\n]*\n\s*DovahGameThread::Install\("MiniPets"\);/);

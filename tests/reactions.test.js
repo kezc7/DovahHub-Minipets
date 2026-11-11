@@ -68,7 +68,7 @@ test('the caption is the other mod\'s, or MiniPets\' own line, or the name; the 
 });
 
 test('every caption key the plugin and the story mapping send is in every language', () => {
-  const cpp = read('src/main.cpp') + read('src/Reactions.h');
+  const cpp = require('./plugin-source.js').pluginSource() + read('src/Reactions.h');
   const keys = [...new Set([...cpp.matchAll(/"(react[A-Z][A-Za-z]+)"/g)].map(m => m[1]))].filter(key => key !== 'reactToMods');
   assert.ok(keys.length >= 14, `found ${keys.length} caption keys`);
   const moodLines = reactions.MOODS.map(mood => 'react' + mood[0].toUpperCase() + mood.slice(1));
@@ -138,20 +138,20 @@ test('the plugin: React in API version 2, DovahDamage polled on the game-thread 
   assert.match(api, /struct MiniPetsApi2 : MiniPetsApi1/);
   assert.match(api, /Result \(\*React\)\(const char\* reactionJson\);/);
   assert.match(api, /inline const MiniPetsApi2\* RequestApi2\(\)/);
-  const cpp = read('src/main.cpp');
+  const cpp = require('./plugin-source.js').pluginSource();
   assert.match(cpp, /version == MINIPETS_API::kApiVersion1 \|\| version == MINIPETS_API::kApiVersion2/);
   assert.strictEqual(cpp.split('GetTotals(').length - 1, 1, 'GetTotals is read in one place');
   const poll = cpp.slice(cpp.indexOf('void StartCompanionStatePoller()'));
-  assert.match(poll.slice(0, 1400), /GameThread\("250 ms update"\)\) \{\s*taskInterface->Queue\(\[\]\(\) \{[\s\S]*UpdateReactions\(\);/);
+  assert.match(poll.slice(0, 1400), /GameThread\("250 ms update"\)\) \{\s*taskInterface->Queue\(\[\]\(\) \{[\s\S]*ReactionWiring::UpdateReactions\(\);/);
   assert.match(cpp.slice(cpp.indexOf('void UpdateReactions()'), cpp.indexOf('void OnDovahHubMessage')), /PollDovahDamage\(\);/);
-  assert.match(cpp, /RegisterListener\("DovahHub", OnDovahHubMessage\)/);
+  assert.match(cpp, /RegisterListener\("DovahHub", ReactionWiring::OnDovahHubMessage\)/);
   assert.match(cpp, /std::lock_guard lock\(g_reactQueueLock\);\s*g_reactQueue\.emplace_back/);
   assert.match(cpp, /SetUniqueID\('DBXP'\)/, 'the co-save id never changes');
 });
 
 test('the DovahHub settings: one switch, the cooldown, and the two extras off by default', () => {
-  const cpp = read('src/main.cpp');
-  const schema = cpp.slice(cpp.indexOf('std::string HubSettingsSchema()'), cpp.indexOf('bool HasPet()'));
+  const cpp = require('./plugin-source.js').pluginSource();
+  const schema = cpp.slice(cpp.indexOf('std::string HubSettingsSchema()'), cpp.indexOf('std::string CompanionsJson()'));
   assert.match(schema, /\\"react_to_mods\\"[^\n]*\\"value\\":true/);
   assert.match(schema, /\\"reaction_cooldown\\"[^\n]*\\"type\\":\\"range\\"/);
   assert.match(schema, /\\"care_moments\\"[^\n]*\\"value\\":false/);
