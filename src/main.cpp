@@ -542,7 +542,7 @@ namespace
     }
 
     // ---- the game thread (THREADS, then PUMP: the suite's rules of 8 Nov 2026) ----
-    // No SKSE task queue can be trusted to reach the game's main thread: in Kev's load order AddTask and
+    // No SKSE task queue can be trusted to reach the game's main thread: in some load orders AddTask and
     // AddUITask have each run their tasks on workers. DovahGameThread.h (DovahHub's, copied unchanged) runs
     // work from a hook on the game's own frame update: DovahHub's pump when DovahHub 0.97.4+ is installed,
     // otherwise its own chained hook, so MiniPets works alone. Installed at kPostLoad. "The game thread" is

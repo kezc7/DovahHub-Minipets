@@ -50,7 +50,7 @@ test('no shipped text uses the old name Dragonborn XP', () => {
   i18n.setLanguage('en');
 });
 
-// DMP-9: Kev's French clock read "Morndas 1 Heartfire". The game's English month is "Heartfire",
+// DMP-9: a French check of the clock read "Morndas 1 Heartfire". The game's English month is "Heartfire",
 // which the catalogue spelled "Hearthfire", and a game in another language sends its own names; the
 // plugin now sends the month and weekday by number too.
 test('the clock words the month in the chosen language, by number and by the game\'s English name', () => {
@@ -98,5 +98,5 @@ test('long button labels wrap as whole buttons, and the clock plate wraps a long
   assert.match(css, /\.clock-plate \.clock-date \{[^}]*white-space: normal/);
   const tab = fs.readFileSync(path.join(__dirname, '..', 'hub', 'modules', 'pets', 'pets.css'), 'utf8');
   assert.match(tab, /\.pets-actions \{[^}]*flex-wrap: wrap/);
-  assert.match(tab, /\.pets-actions \.hearth-proof-button \{[^}]*white-space: nowrap/);
+  assert.match(tab, /\.pets-actions \.dv-button \{[^}]*white-space: nowrap/);
 });
