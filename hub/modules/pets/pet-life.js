@@ -29,6 +29,7 @@
       if (next.warmth >= HATCH_WARMTH && hours - next.laidAt >= MIN_EGG_HOURS) {
         next.stage = 'hatched';
         next.hatchedAt = hours;
+        next.grown = 'baby';
         next.hunger = 70;
         next.happiness = 90;
         events.push('hatched');
@@ -42,6 +43,13 @@
     next.happiness = clamp(next.happiness - (HAPPINESS_PER_HOUR + extra) * elapsed);
     const nowMood = mood(next);
     if (nowMood !== wasMood) events.push(`mood:${nowMood}`);
+    // DMP-13: growing into a new stage is a moment, once; a pet from before 1.9.7 takes its stage quietly
+    const grown = growth(next, next.lastTick);
+    if (!STAGES.includes(next.grown)) next.grown = grown;
+    else if (STAGES.indexOf(grown) > STAGES.indexOf(next.grown)) {
+      next.grown = grown;
+      events.push(`grow:${grown}`);
+    }
     return { pet: next, events };
   }
 
@@ -70,14 +78,61 @@
     return Object.assign({}, pet, { happiness: clamp(pet.happiness + 15) });
   }
 
-  // egg, baby (first 2 in-game days), young (up to 5), adult
+  // egg, baby (first 2 in-game days), young (up to 5), adult (up to 20), seasoned (up to 60), elder.
+  // DMP-13 added the last two: a longer life, at full size
+  const STAGES = ['baby', 'young', 'adult', 'seasoned', 'elder'];
+  const STAGE_DAYS = { young: 2, adult: 5, seasoned: 20, elder: 60 };
   function growth(pet, hours) {
     if (pet.stage === 'egg') return 'egg';
     const days = (hours - pet.hatchedAt) / 24;
-    return days < 2 ? 'baby' : days < 5 ? 'young' : 'adult';
+    return days < STAGE_DAYS.young ? 'baby' : days < STAGE_DAYS.adult ? 'young' : days < STAGE_DAYS.seasoned ? 'adult' : days < STAGE_DAYS.elder ? 'seasoned' : 'elder';
   }
 
-  const GROWTH_SCALE = { baby: 0.62, young: 0.8, adult: 1 };
+  // the stage after this one and the in-game day it starts, or null for an elder
+  function nextStage(pet) {
+    if (!pet || pet.stage === 'egg') return null;
+    const at = STAGES.indexOf(STAGES.includes(pet.grown) ? pet.grown : 'baby');
+    const next = STAGES[at + 1];
+    return next ? { stage: next, days: STAGE_DAYS[next] } : null;
+  }
+
+  const GROWTH_SCALE = { baby: 0.62, young: 0.8, adult: 1, seasoned: 1, elder: 1 };
+
+  // DMP-13: what a hatched pet saw with you, kept with the pet in its save. Each memory is
+  // {k: kind, id: what makes it one of a kind, s: the words shown, d: the game day}. Only the first of
+  // each is kept: the first dragon, each boss once, a place's first visit.
+  const MEMORY_KINDS = ['dragon', 'boss', 'place', 'milestone', 'level'];
+  const MAX_MEMORIES = 24;
+  const MEMORY_GAP_HOURS = 24;
+
+  function clip(value, max) {
+    return Array.from(String(value === undefined || value === null ? '' : value)).slice(0, max).join('');
+  }
+
+  function knows(pet, kind, id) {
+    return Boolean(pet && Array.isArray(pet.memories) && pet.memories.some(m => m.k === kind && m.id === clip(id, 64)));
+  }
+
+  function remember(pet, memory, hours) {
+    if (!pet || pet.stage === 'egg') return { pet, ok: false, reason: pet ? 'egg' : 'no pet' };
+    if (!memory || !MEMORY_KINDS.includes(memory.k) || !Number.isFinite(hours)) return { pet, ok: false, reason: 'not a memory' };
+    const id = clip(memory.id, 64);
+    if (!id) return { pet, ok: false, reason: 'not a memory' };
+    if (knows(pet, memory.k, id)) return { pet, ok: false, reason: 'known' };
+    const list = (Array.isArray(pet.memories) ? pet.memories : []).concat([{ k: memory.k, id, s: clip(memory.s, 60), d: Math.floor(hours / 24) }]);
+    return { pet: Object.assign({}, pet, { memories: list.slice(-MAX_MEMORIES) }), ok: true };
+  }
+
+  // now and then the pet brings one up: at most once a game day, one from an earlier day, each in turn
+  function mention(pet, hours) {
+    if (!pet || pet.stage === 'egg' || !Array.isArray(pet.memories) || !Number.isFinite(hours)) return { pet, memory: null };
+    if (Number.isFinite(pet.lastMention) && hours - pet.lastMention < MEMORY_GAP_HOURS) return { pet, memory: null };
+    const today = Math.floor(hours / 24);
+    const older = pet.memories.filter(m => m.d < today);
+    if (!older.length) return { pet, memory: null };
+    const turn = Number.isFinite(pet.mentions) ? pet.mentions : 0;
+    return { pet: Object.assign({}, pet, { lastMention: hours, mentions: turn + 1 }), memory: older[turn % older.length] };
+  }
 
   function mood(pet) {
     if (pet.stage === 'egg') return 'egg';
@@ -109,6 +164,13 @@
     return JSON.stringify(pet);
   }
 
+  function restoreMemories(list) {
+    return list
+      .filter(m => m && MEMORY_KINDS.includes(m.k) && clip(m.id, 64) && Number.isFinite(m.d))
+      .map(m => ({ k: m.k, id: clip(m.id, 64), s: clip(m.s, 60), d: Math.floor(m.d) }))
+      .slice(-MAX_MEMORIES);
+  }
+
   // Returns null for anything that isn't a valid saved pet.
   function restore(text, isSpecies) {
     let data;
@@ -130,9 +192,14 @@
       happiness: clamp(number(data.happiness, 80)),
       lastTick: number(data.lastTick, number(data.laidAt, 0)),
       lastPlay: Number.isFinite(data.lastPlay) ? data.lastPlay : null,
-      ...(Number.isFinite(data.careDay) ? { careDay: data.careDay, careCount: Math.max(0, Math.min(CARE_PER_DAY, number(data.careCount, 0))) } : {})
+      ...(Number.isFinite(data.careDay) ? { careDay: data.careDay, careCount: Math.max(0, Math.min(CARE_PER_DAY, number(data.careCount, 0))) } : {}),
+      ...(hatched && STAGES.includes(data.grown) ? { grown: data.grown } : {}),
+      ...(hatched && Array.isArray(data.memories) ? { memories: restoreMemories(data.memories) } : {}),
+      ...(Number.isFinite(data.lastMention) ? { lastMention: data.lastMention } : {}),
+      ...(Number.isFinite(data.mentions) ? { mentions: Math.max(0, Math.floor(data.mentions)) } : {})
     };
   }
 
-  return Object.freeze({ HATCH_WARMTH, GROWTH_SCALE, create, tick, feed, play, xp, levelUp, growth, mood, eggProgress, shareMoment, CARE_PER_DAY, serialize, restore });
+  return Object.freeze({ HATCH_WARMTH, GROWTH_SCALE, STAGES, STAGE_DAYS, MEMORY_KINDS, MAX_MEMORIES, create, tick, feed, play, xp, levelUp, growth, nextStage, mood, eggProgress,
+    shareMoment, CARE_PER_DAY, remember, knows, mention, serialize, restore });
 });

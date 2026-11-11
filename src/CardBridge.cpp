@@ -24,6 +24,8 @@ namespace MiniPets::Card
         std::atomic_bool g_overlayHiddenForMenus = true;
         std::string g_lastCompanionState;
         std::string g_lastWorldMood;
+        // DMP-13: the place the pet last noticed ("" after a load: the place a load starts in says nothing)
+        std::string g_lastPlace;
         std::int64_t g_lastClockMinute = -1;
 
         constexpr std::array<std::string_view, 36> kBlockingMenus{
@@ -560,6 +562,34 @@ namespace MiniPets::Card
         }
     }
 
+    // DMP-13: the player's own house, and the place as the game names it
+    void UpdatePlace(std::string_view region)
+    {
+        const auto* player = RE::PlayerCharacter::GetSingleton();
+        if (!player) {
+            return;
+        }
+        const auto* location = player->GetCurrentLocation();
+        const bool home = location && location->HasKeywordString("LocTypePlayerHouse");
+        const auto* cell = player->GetParentCell();
+        const char* name = nullptr;
+        if (cell && cell->IsInteriorCell()) {
+            name = location ? location->GetName() : nullptr;
+        }
+        else if (const auto* worldspace = player->GetWorldspace()) {
+            name = worldspace->GetName();
+        }
+        const std::string place = home ? std::string("home|") + (name ? name : "") : std::string(region);
+        if (place == g_lastPlace) {
+            return;
+        }
+        const bool first = g_lastPlace.empty();
+        g_lastPlace = place;
+        if (!first) {
+            ReactionWiring::OnPlaceChanged(region, home, name ? name : "");
+        }
+    }
+
     void UpdateWorldMood()
     {
         const auto* calendar = RE::Calendar::GetSingleton();
@@ -576,6 +606,7 @@ namespace MiniPets::Card
         g_lastWorldMood = mood;
         Invoke("dragonbornXP.worldMood", "{\"time\":\"" + std::string(timeOfDay) + "\",\"weather\":\"" + weather +
                                              "\",\"region\":\"" + region + "\"}");
+        UpdatePlace(region);
     }
 
     // once per in-game minute
@@ -750,6 +781,7 @@ namespace MiniPets::Card
         g_lastClockMinute = -1;
         g_lastWorldMood.clear();
         g_lastCompanionState.clear();
+        g_lastPlace.clear();
     }
 
     void StoreKeys()

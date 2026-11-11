@@ -28,16 +28,19 @@ namespace SelfTest
     };
 
     // in the order they run
-    inline constexpr std::array<Step, 14> kSteps{ {
+    inline constexpr std::array<Step, 17> kSteps{ {
         { "pet.summon", "a test companion is put on the card, and the page draws it" },
         { "pet.follow", "the card's pose follows the player's movement state" },
         { "pet.listed", "MiniPets' API state lists the test companion" },
+        { "pet.stage", "the card's rules grow a made-up pet from baby to young, with one moment (yours is untouched)" },
+        { "pet.memory", "the card's rules keep a first visit once and bring it up a day later, once that day" },
         { "react.lowhealth", "the health handler under 25% offers cower, reactCareful" },
         { "react.sleep", "the sleep-start handler offers sleep, reactSleeping, held" },
         { "react.boss", "a boss kill (a spawned, disabled giant) offers hop, reactBossDown" },
         { "react.death", "the death handler for the player offers sad, reactFallen, held" },
         { "react.milestone", "DovahHub's story event Horse Master I offers fanfare, reactMilestone" },
-        { "react.lines", "every reaction line is in the catalogue of the current language" },
+        { "react.place", "the place handler, given Whiterun, offers hop, placeCity (needs a hatched raised pet; never remembered)" },
+        { "react.lines", "every reaction, place, growth and memory line is in the catalogue of the current language" },
         { "save.stale", "a pet state from another save, without a session or while loading is refused" },
         { "save.newgame", "a new game clears the pet and the page follows; the pet is put back" },
         { "pump", "which pump ran the work, and that every step ran on the game thread" },
@@ -181,25 +184,30 @@ namespace SelfTest
         bool hold;
     };
 
-    inline constexpr std::array<ExpectedReaction, 5> kReactions{ {
+    inline constexpr std::array<ExpectedReaction, 6> kReactions{ {
         { "react.lowhealth", "minipets", "cower", "reactCareful", false },
         { "react.sleep", "minipets", "sleep", "reactSleeping", true },
         { "react.boss", "dovahdamage", "hop", "reactBossDown", false },
         { "react.death", "minipets", "sad", "reactFallen", true },
         { "react.milestone", "stable", "fanfare", "reactMilestone", false },
+        { "react.place", "minipets", "hop", "placeCity", false },
     } };
 
     // the story event react.milestone hands to the DovahHub message handler, as DovahStable's would arrive
     inline constexpr std::string_view kMilestoneEvent =
         R"({"key":"selftest.horse-master-1","kind":"milestone","category":"riding","subject":"","source":"stable","tier":1,"title":"Horse Master I"})";
 
-    // every catalogue line a reaction can show (view/i18n.js); tests/selftest.test.js keeps it in step
-    // with the catalogue's react* keys
-    inline constexpr std::array<std::string_view, 22> kReactionLineKeys{ {
+    // every catalogue line a reaction, a place, a new stage or a memory can show (view/i18n.js);
+    // tests/selftest.test.js keeps it in step with the catalogue's react*, place*, grow* and memory* keys
+    inline constexpr std::array<std::string_view, 41> kReactionLineKeys{ {
         "reactCheer", "reactWave", "reactSad", "reactCower", "reactSleep", "reactCurious", "reactHop", "reactFanfare",
         "reactBigHit", "reactBossDown", "reactBossDownSomeone", "reactCareful", "reactFallen", "reactGetUp",
         "reactJoined", "reactJoinedSomeone", "reactLost", "reactLostSomeone", "reactMilestone", "reactMilestoneSomething",
         "reactOutfit", "reactSleeping",
+        // DMP-13
+        "placeCity", "placeCityFirst", "placeRealm", "placeRealmFirst", "placeHome", "placeHomeFirst", "placeDungeon", "placeInn", "placeTemple",
+        "growTitle", "growDetail", "stageSeasoned", "stageElder",
+        "memoryDragon", "memoryBoss", "memoryPlace", "memoryHome", "memoryMilestone", "memoryLevel",
     } };
 
     inline std::string ReactionLineKeysJson()

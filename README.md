@@ -15,6 +15,7 @@ Needs SKSE64, Address Library and Prisma UI.
 - A scrolling landscape behind them that changes every in-game day.
 - Backdrops for Solstheim, the five major cities, Blackreach, Apocrypha, the Soul Cairn and Sovngarde, and for caves, homes, inns, mines, temples, Dwemer ruins, Nordic tombs, vampire lairs and Falmer hives.
 - Optional raise-a-pet mode: pick an egg, hatch it with XP, then feed it and play with it. Saved per character.
+- A raised pet has a long life: baby, young, adult, then seasoned after 20 in-game days and an elder after 60, with a moment on the card each time it grows. It remembers what it saw with you (the first dragon, the bosses you bring down, your milestones, every tenth level, the first time in each city and at home) and now and then brings one up. It reacts to places: a city, a dungeon, an inn, a temple, Sovngarde and the other realms, and coming home. The DovahHub tab lists its newest memories. All of it is kept per save.
 - Optional in-game clock above the card.
 - It reacts to what happens: it covers its eyes when your health gets low, curls up when you sleep, and looks sad if you die. With [DovahDamage](https://github.com/kezc7/DovahDamage) it cheers a new biggest hit and does a victory hop when you kill a dragon, a giant or a dungeon boss. With DovahHub 0.96.4-beta or later it waves at a new follower, sounds a fanfare for a milestone and gives your new outfit a curious look. Other mods can make it react too (see below).
 - Hides itself on loading screens, in menus and when other Prisma UI menus are open.

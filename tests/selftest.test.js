@@ -17,7 +17,7 @@ const code = cpp.split('\n').filter(line => !line.trim().startsWith('//')).join(
 const selfTestCode = pluginPart('SelfTestRunner');
 const reactionCode = pluginPart('ReactionWiring');
 const stepNames = [...header.slice(header.indexOf('kSteps{'), header.indexOf('enum class Result')).matchAll(/\{ "([^"]+)", "/g)].map(m => m[1]);
-const lineKeys = [...header.slice(header.indexOf('kReactionLineKeys{'), header.indexOf('ReactionLineKeysJson')).matchAll(/"(react[A-Za-z]+)"/g)].map(m => m[1]);
+const lineKeys = [...header.slice(header.indexOf('kReactionLineKeys{'), header.indexOf('ReactionLineKeysJson')).matchAll(/"((?:react|place|grow|memory)[A-Za-z]+|stageSeasoned|stageElder)"/g)].map(m => m[1]);
 
 function ask(xp, sandbox, question) {
   let answer = null;
@@ -27,7 +27,7 @@ function ask(xp, sandbox, question) {
 }
 
 test('every step in the list is reported by the run, and nothing else is', () => {
-  assert.equal(stepNames.length, 14);
+  assert.equal(stepNames.length, 17);
   const reported = new Set([...selfTestCode.matchAll(/SelfTestReport\(\*run, "([^"]+)"/g)].map(m => m[1]));
   const checked = new Set([...selfTestCode.matchAll(/SelfTestCheckOffer\(\*run, "([^"]+)"/g)].map(m => m[1]));
   for (const step of stepNames) assert.ok(reported.has(step) || checked.has(step), `${step} is reported`);
@@ -109,7 +109,9 @@ test('the catalogue knows a line of its own language from an English fallback', 
 test('the lines the self-test checks are every reaction line in the catalogue', () => {
   const source = fs.readFileSync(path.join(ROOT, 'view', 'i18n.js'), 'utf8');
   const enBlock = source.slice(source.indexOf('    en: {'), source.indexOf('    fr: {'));
-  const catalogue = [...new Set([...enBlock.matchAll(/^\s+(react[A-Z][A-Za-z]*):/gm)].map(m => m[1]))].filter(key => !/^reactToMods/.test(key));
+  // every reaction line, and DMP-13's place, growth and memory lines
+  const catalogue = [...new Set([...enBlock.matchAll(/^\s+((?:react|place|grow|memory)[A-Z][A-Za-z]*|stageSeasoned|stageElder):/gm)].map(m => m[1]))]
+    .filter(key => !/^reactToMods/.test(key));
   assert.deepEqual([...lineKeys].sort(), catalogue.sort());
   for (const language of i18n.languages) {
     i18n.setLanguage(language);

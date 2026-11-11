@@ -60,6 +60,7 @@
 #include <future>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -201,6 +202,8 @@ namespace MiniPets
         void UpdateReactions();
         void OnDovahHubMessage(SKSE::MessagingInterface::Message* message);
         void SendChronicleLine(const std::string& json);
+        void OnPlaceChanged(std::string_view region, bool home, const std::string& name, bool test = false);
+        void ForgetPlaces();
         void ConnectOtherMods();
         void LogOtherMods();
         void RegisterEvents();
