@@ -140,6 +140,28 @@ int RunReactionTests()
         Check(!Reactions::FromOutfitChange(R"({"actor":"player","outfit":3})", 10, 1e9, r), "outfit: not in the first 30 s after a load");
         Check(!Reactions::FromOutfitChange(R"({"actor":"player","outfit":3})", 1000, 300, r), "outfit: at most once in 10 minutes");
     }
+    // DMP-13: places
+    {
+        Reactions::Reaction r;
+        Check(Reactions::FromPlace("whiterun", false, "Whiterun", r) && r.mood == "hop" && r.captionKey == "placeCity" && r.priority == 0 && !r.hold &&
+                  r.vars == R"({"place":"Whiterun","region":"whiterun","memorable":true})",
+              "place: a city hops, memorable, at the lowest priority");
+        Check(Reactions::FromPlace("sovngarde", false, "Sovngarde", r) && r.mood == "curious" && r.captionKey == "placeRealm", "place: a realm is a wonder");
+        Check(Reactions::FromPlace("tomb", false, "Bleak Falls Barrow", r) && r.mood == "cower" && r.captionKey == "placeDungeon" &&
+                  r.vars.find(R"("memorable":false)") != std::string::npos,
+              "place: a dungeon makes it stay close, and is not a memory");
+        Check(Reactions::FromPlace("house", true, "Breezehome", r) && r.mood == "wave" && r.captionKey == "placeHome" && r.vars.find(R"("region":"home")") != std::string::npos,
+              "place: the player's own house is home");
+        Check(!Reactions::FromPlace("house", false, "Belethor's", r), "place: someone else's house says nothing");
+        Check(!Reactions::FromPlace("skyrim", false, "Skyrim", r), "place: the wilds say nothing");
+        Check(Reactions::FromPlace("inn", false, "The Bannered Mare", r) && r.captionKey == "placeInn" && Reactions::FromPlace("temple", false, "Temple of Kynareth", r) &&
+                  r.captionKey == "placeTemple",
+              "place: inns and temples");
+        Check(Reactions::FromPlace("riften", false, "Riften \"Ratway\"", r, true) && r.vars.find(R"("test":true)") != std::string::npos &&
+                  r.vars.find(R"(Riften \"Ratway\")") != std::string::npos,
+              "place: a self-test's is marked, and the name is escaped");
+        Check(Reactions::FromPlace("markarth", false, std::string(100, 'x'), r) && r.vars.find(std::string(61, 'x')) == std::string::npos, "place: a long name is clipped");
+    }
     {
         int count = 0;
         std::string names;

@@ -23,6 +23,31 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
+## A raised pet's longer life (1.9.7)
+
+Stages, memories and places (DMP-13). Use a save with a hatched raised pet, and play these in order. Nothing here happens to an egg or to a companion you aren't raising.
+
+1. **Places.** Walk from the wilds into Whiterun. The pet hops: "Whiterun! So much to see." Leave and come back within ten minutes: nothing. After ten minutes: "Back in Whiterun!" Then:
+   - **A dungeon** (Bleak Falls Barrow): it shrinks back, "It's dark in here…".
+   - **An inn**: it cheers, "Something smells good!".
+   - **A temple**: "Shh… a temple.".
+   - **Your own house**, the first time: "Is this… home?"; after that, "Home again.".
+
+   Loading a save inside a city says nothing about the city.
+2. **Memories.** Open DovahHub on the MiniPets tab. Under About, "Memories" lists the newest five, with how long ago:
+   - "Our first day in Whiterun";
+   - "The first time home";
+   - after killing a dragon, "Our first dragon";
+   - a boss or a DovahHub milestone;
+   - every tenth level.
+
+   With none yet, it says "Nothing yet…".
+3. **Bringing one up.** Wait an in-game day (Wait for 24 hours, or play on). With the card on screen and nothing else showing, the pet tilts its head with one of its memories as the caption, at most once an in-game day, and only from an earlier day.
+4. **Growing.** The tab's "Next stage" says when the pet reaches the next stage. When it does, the card plays the celebration "Ember is growing up! Now seasoned.". To get there quickly on a throwaway save, wait in-game days with Wait or `set timescale`. An older save's pet takes its stage quietly on load, with no celebration.
+5. **Save to save.** Load another character: its pet has its own memories, or none. Start a new game: no memories carry over.
+
+Pass: each of the above, in your language (French and Japanese at least), and the self-test's `pet.stage`, `pet.memory` and `react.place` lines are PASS.
+
 ## Self-test (1.9.5)
 
 MiniPets checks itself in game: the card, every reaction, and the save-to-save rules. **It changes the save it runs on** (it simulates a new game and puts the pet back), so load a save you can throw away first.
@@ -35,7 +60,7 @@ MiniPets checks itself in game: the card, every reaction, and the save-to-save r
 **Where the lines land:** `MiniPets.log`, one line per step, then the totals:
 ```
 SELFTEST pets react.sleep PASS shown sleep reactSleeping (held); the card plays it
-SELFTEST pets DONE pass=14 fail=0 skip=0 ms=21480
+SELFTEST pets DONE pass=17 fail=0 skip=0 ms=23960
 ```
 In DovahHub's run the same steps also go to DovahHub's list, `DovahHub.log` and `DovahSuite-SelfTest-<runId>.log`. A run takes about 20 to 40 seconds; it stops starting new steps after 150.
 
@@ -46,12 +71,15 @@ In DovahHub's run the same steps also go to DovahHub's list, `DovahHub.log` and 
 | `pet.summon` | A test companion (Pip the chicken, or Ember the fox if Pip is yours) is put on the card, and the card draws it. Raise-a-pet is paused for the test. |
 | `pet.follow` | The card's pose follows the player: standing idle, moving, or in combat. |
 | `pet.listed` | MiniPets' API state (what the DovahHub tab reads) names the test companion. |
+| `pet.stage` | The card's growth rules, on a made-up pet that hatched 50 in-game hours ago: it starts as a baby with no celebration and becomes young with exactly one. Your own pet is untouched. |
+| `pet.memory` | The card's memory rules, on the same made-up pet: a first visit to Whiterun is kept once, brought up a day later in your language, then nothing more that day. |
 | `react.lowhealth` | The health handler, given 20% health, offers cower with "Careful!". |
 | `react.sleep` | The sleep-start handler offers the held sleep pose. |
 | `react.boss` | A giant from the load order is placed beside you, disabled in the same frame, so it never appears; the kill handler counts it as a boss and offers the hop. It is deleted straight after. SKIP when the load order has no giant. |
 | `react.death` | The death handler, given the player's death, offers the held sad pose. |
 | `react.milestone` | DovahHub's story event "Horse Master I" through MiniPets' DovahHub message handler offers the fanfare. |
-| `react.lines` | All 22 reaction lines are in the current language's own catalogue (not English stand-ins). |
+| `react.place` | The place handler, given Whiterun, offers the hop with "Whiterun! So much to see.". It needs a hatched raised pet (SKIP otherwise), and the card never keeps it as a memory. |
+| `react.lines` | All 41 reaction, place, growth and memory lines are in the current language's own catalogue (not English stand-ins). |
 | `save.stale` | A pet state from another save, one without a session, and one sent during a load are refused; this save's is taken. |
 | `save.newgame` | A new game's revert clears the pet and the card and refuses the old save's state; the pet is then put back. |
 | `pump` | Which pump ran the work (DovahHub's, or MiniPets' own frame hook without DovahHub), and that every step ran on the game thread. |

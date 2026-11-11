@@ -36,7 +36,8 @@ int RunSelfTestTests()
         for (const auto& reaction : SelfTest::kReactions) {
             Check(names.count(reaction.step) == 1, "steps: " + std::string(reaction.step) + " is in the list");
         }
-        for (const auto* card : { "pet.summon", "react.lowhealth", "react.sleep", "react.boss", "react.death", "react.milestone", "react.lines", "save.stale", "save.newgame", "pump", "cleanup" }) {
+        for (const auto* card : { "pet.summon", "react.lowhealth", "react.sleep", "react.boss", "react.death", "react.milestone", "react.lines", "save.stale", "save.newgame", "pump", "cleanup",
+                                  "pet.stage", "pet.memory", "react.place" }) {
             Check(names.count(card) == 1, std::string("steps: the card's check ") + card + " is there");
         }
     }
@@ -101,6 +102,12 @@ int RunSelfTestTests()
         Check(want.step == "react.milestone" && milestone.mood == want.mood && milestone.captionKey == want.captionKey && milestone.source == want.source &&
                   milestone.hold == want.hold && milestone.vars == R"({"title":"Horse Master I"})",
               "milestone: fanfare, reactMilestone from stable, titled Horse Master I");
+        // DMP-13: the place step's expectation is what FromPlace offers for Whiterun
+        Reactions::Reaction place;
+        const auto& wantPlace = SelfTest::kReactions[5];
+        Check(wantPlace.step == "react.place" && Reactions::FromPlace("whiterun", false, "Whiterun", place, true) && place.mood == wantPlace.mood &&
+                  place.captionKey == wantPlace.captionKey && place.source == wantPlace.source && place.hold == wantPlace.hold,
+              "place: the step expects what the handler offers for Whiterun");
         bool moods = true;
         for (const auto& reaction : SelfTest::kReactions) {
             moods = moods && Reactions::IsMood(reaction.mood, false);

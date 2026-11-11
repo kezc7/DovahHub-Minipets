@@ -453,6 +453,59 @@ namespace Reactions
         return true;
     }
 
+    // DMP-13: a hatched pet notices a change of place. region is the card's backdrop id (CardBridge's
+    // GetRegion), home the player's own house, name the place as the game names it (in the game's language).
+    // Cities, realms and home are memorable: the page keeps the first visit and words it as one. The wilds,
+    // other houses and unknown places say nothing (false). Priority 0: it never pushes another reaction aside.
+    inline constexpr std::string_view kCities[] = { "whiterun", "windhelm", "solitude", "riften", "markarth" };
+    inline constexpr std::string_view kRealms[] = { "solstheim", "sovngarde", "apocrypha", "soulcairn", "blackreach" };
+    inline constexpr std::string_view kDungeons[] = { "tomb", "dwemer", "falmer", "vampire", "mine", "cave" };
+
+    // test: the self-test's call, which the page shows but never keeps as a memory
+    inline bool FromPlace(std::string_view region, bool home, std::string_view name, Reaction& out, bool test = false)
+    {
+        const auto in = [region](const auto& list) { return std::find(std::begin(list), std::end(list), region) != std::end(list); };
+        Reaction reaction;
+        reaction.source = "minipets";
+        reaction.priority = 0;
+        reaction.ms = 3000;
+        bool memorable = false;
+        if (home) {
+            reaction.mood = "wave";
+            reaction.captionKey = "placeHome";
+            memorable = true;
+        }
+        else if (in(kCities)) {
+            reaction.mood = "hop";
+            reaction.captionKey = "placeCity";
+            memorable = true;
+        }
+        else if (in(kRealms)) {
+            reaction.mood = "curious";
+            reaction.captionKey = "placeRealm";
+            memorable = true;
+        }
+        else if (in(kDungeons)) {
+            reaction.mood = "cower";
+            reaction.captionKey = "placeDungeon";
+        }
+        else if (region == "inn") {
+            reaction.mood = "cheer";
+            reaction.captionKey = "placeInn";
+        }
+        else if (region == "temple") {
+            reaction.mood = "curious";
+            reaction.captionKey = "placeTemple";
+        }
+        else {
+            return false;
+        }
+        reaction.vars = "{\"place\":" + JsonText(ClipUtf8(std::string(name), 60)) + ",\"region\":" + JsonText(home ? std::string_view("home") : region) +
+                        ",\"memorable\":" + (memorable ? "true" : "false") + (test ? ",\"test\":true" : "") + "}";
+        out = reaction;
+        return true;
+    }
+
     // kMsgOutfitChanged: only the player, never from a load or a cell attach, at most once in 10 minutes
     // (seconds since the last one passed in), and not in the first 30 s after a load.
     inline bool FromOutfitChange(std::string_view json, double secondsSinceLoad, double secondsSinceLast, Reaction& out)

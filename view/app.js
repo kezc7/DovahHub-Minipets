@@ -192,6 +192,8 @@
       food: "Food",
       fullDetail: "Try again later.",
       fullTitle: "{name} is full",
+      growDetail: "Now {stage}.",
+      growTitle: "{name} is growing up!",
       hatchedDetail: "Feed ({feed}) and play ({play}) with them.",
       hatchedTitle: "{name} hatched!",
       hintContent: "{name} is doing fine.",
@@ -204,6 +206,12 @@
       levelDetail: "A mighty little celebration.",
       levelNumber: "Level {level}!",
       levelTitle: "Level up!",
+      memoryBoss: "{subject}, brought down",
+      memoryDragon: "Our first dragon",
+      memoryHome: "The first time home",
+      memoryLevel: "Reaching level {level}",
+      memoryMilestone: "The day you became {subject}",
+      memoryPlace: "Our first day in {place}",
       movingDetail: "{name} is travelling with you.",
       movingTitle: "On the move",
       noEggDetail: "Pick one in settings.",
@@ -229,6 +237,8 @@
       skyrim: "Skyrim",
       stageAdult: "all grown up",
       stageBaby: "baby",
+      stageElder: "an elder",
+      stageSeasoned: "seasoned",
       stageYoung: "young",
       startOver: "Start over",
       startOverConfirm: "Click again to start over",
@@ -815,7 +825,9 @@
   }
 
   function react(data) {
+    data = firstVisit(data);
     if (!reactionPlayer || !reactionPlayer.show(data)) return;
+    rememberMoment(memoryFromReaction(data));
     // a big moment counts as a little care, when the player turned that on
     if (reaction.care && careMoments && raisePet && petLife) {
       const result = petLifeRules.shareMoment(petLife, gameHours);
@@ -1096,11 +1108,80 @@
     result.events.forEach(event => {
       if (event === 'hatched') {
         controller.play('celebrating', { payload: { kind: 'level-up', title: t('hatchedTitle', { name }), detail: t('hatchedDetail', { feed: feedHotkey, play: playHotkey }), fill: 100 } });
+      } else if (event.startsWith('grow:')) {
+        // DMP-13: a new stage is a moment, once
+        controller.play('celebrating', { payload: { kind: 'level-up', title: t('growTitle', { name }), detail: t('growDetail', { stage: t(STAGE_KEYS[event.slice(5)] || 'stageAdult') }), fill: 100 } });
       } else if (event === 'mood:hungry') petNotice(t('noticeHungryTitle', { name }), t('noticeHungryDetail', { key: feedHotkey }));
       else if (event === 'mood:sad') petNotice(t('noticeLonelyTitle', { name }), t('noticeLonelyDetail', { key: playHotkey }));
       else if (event === 'mood:miserable') petNotice(t('noticeMiserableTitle', { name }), t('noticeMiserableDetail'));
     });
     savePet();
+  }
+
+  // --- Memories (DMP-13): what a hatched pet saw with you, kept with it in the save -------------
+
+  const STAGE_KEYS = { baby: 'stageBaby', young: 'stageYoung', adult: 'stageAdult', seasoned: 'stageSeasoned', elder: 'stageElder' };
+
+  function rememberMoment(memory) {
+    if (!memory || !raisePet || !petLife || petLife.stage === 'egg' || gameHours === null) return false;
+    const result = petLifeRules.remember(petLife, memory, gameHours);
+    if (!result.ok) return false;
+    petLife = result.pet;
+    savePet();
+    return true;
+  }
+
+  // the moments the plugin's reactions carry that are worth keeping (a self-test's never are)
+  function memoryFromReaction(data) {
+    const vars = data && data.vars && typeof data.vars === 'object' ? data.vars : {};
+    if (vars.test) return null;
+    if (/^reactBossDown$/.test(data.captionKey) && vars.name) return { k: 'boss', id: vars.name, s: vars.name };
+    if (data.captionKey === 'reactMilestone' && vars.title) return { k: 'milestone', id: vars.title, s: vars.title };
+    if (/^place/.test(data.captionKey) && vars.memorable && vars.region) return { k: 'place', id: vars.region, s: vars.place || '' };
+    return null;
+  }
+
+  // a memorable place the pet hasn't seen yet is worded as a first visit
+  function firstVisit(data) {
+    const vars = data && data.vars && typeof data.vars === 'object' ? data.vars : {};
+    if (!/^place/.test(data.captionKey || '') || !vars.memorable || !raisePet || !petLife || petLife.stage === 'egg') return data;
+    return petLifeRules.knows(petLife, 'place', vars.region) ? data : Object.assign({}, data, { captionKey: `${data.captionKey}First` });
+  }
+
+  function memoryWords(memory) {
+    if (memory.k === 'dragon') return t('memoryDragon');
+    if (memory.k === 'boss') return t('memoryBoss', { subject: memory.s });
+    if (memory.k === 'place') return memory.id === 'home' ? t('memoryHome') : t('memoryPlace', { place: memory.s });
+    if (memory.k === 'milestone') return t('memoryMilestone', { subject: memory.s });
+    return t('memoryLevel', { level: memory.s });
+  }
+
+  // now and then, on the clock: never over a reaction, the settings, a menu or a hidden card
+  function maybeMention() {
+    if (!raisePet || !petLife || gameHours === null || !overlayActive || petHidden || settingsOpen) return;
+    if (reactionPlayer && reactionPlayer.current()) return;
+    const result = petLifeRules.mention(petLife, gameHours);
+    if (!result.memory) return;
+    petLife = result.pet;
+    savePet();
+    react({ source: 'minipets', mood: 'curious', caption: memoryWords(result.memory), ms: 3500, priority: 0 });
+  }
+
+  // the self-test's check of the rules above, on a made-up pet: the player's own is never touched
+  function simulateLife() {
+    const base = Object.assign(petLifeRules.create('fox', 0), { stage: 'hatched', hatchedAt: 0, lastTick: 0, hunger: 100, happiness: 100 });
+    const first = petLifeRules.tick(base, 1);
+    const grown = petLifeRules.tick(first.pet, 50);
+    const kept = petLifeRules.remember(grown.pet, { k: 'place', id: 'whiterun', s: 'Whiterun' }, 50);
+    const again = petLifeRules.remember(kept.pet, { k: 'place', id: 'whiterun', s: 'Whiterun' }, 51);
+    const said = petLifeRules.mention(kept.pet, 75);
+    const quiet = petLifeRules.mention(said.pet, 80);
+    return {
+      simStart: first.pet.grown || '', simStartGrew: first.events.some(event => event.startsWith('grow:')),
+      simGrown: grown.pet.grown || '', simGrowEvents: grown.events.filter(event => event.startsWith('grow:')).join(','),
+      simKept: kept.ok, simAgain: again.ok, simSaid: said.memory ? said.memory.id : '', simQuiet: !quiet.memory,
+      simWords: said.memory ? memoryWords(said.memory) : ''
+    };
   }
 
   function petXp(amount) {
@@ -1190,7 +1271,7 @@
     const name = petNames[petLife.species];
     const species = localizedSpecies(petLife.species);
     const stage = petLifeRules.growth(petLife, gameHours ?? petLife.laidAt);
-    petLifeName.textContent = egg ? `${t('eggName', { name })}${species ? ` (${species})` : ''}` : t('petStage', { name, stage: t({ baby: 'stageBaby', young: 'stageYoung', adult: 'stageAdult' }[stage]) });
+    petLifeName.textContent = egg ? `${t('eggName', { name })}${species ? ` (${species})` : ''}` : t('petStage', { name, stage: t(STAGE_KEYS[stage] || 'stageAdult') });
     const needs = { warmth: petLifeRules.eggProgress(petLife) * 100, food: petLife.hunger, happiness: petLife.happiness };
     Object.entries(needs).forEach(([name, value]) => {
       const shown = Math.round(Math.max(0, Math.min(100, value)));
@@ -1222,11 +1303,13 @@
       const level = data && data.level ? data.level : '?';
       showToast('level-up', t('levelNumber', { level }), isEgg() && petLife ? t('eggGlows') : t('dragonbornMighty'), 100);
       petXp('level');
+      if (Number(level) > 0 && Number(level) % 10 === 0) rememberMoment({ k: 'level', id: String(level), s: String(level) });
     },
     dragonSoul(data) {
       const amount = Math.max(1, Math.round(Number(data && data.amount) || 1));
       showToast('gain', t('dragonSoulTitle'), amount === 1 ? t('dragonSoulOne') : t('dragonSoulMany', { amount }), 82);
       petXp(2);
+      rememberMoment({ k: 'dragon', id: 'first', s: '' });
     },
     // saved pet from the co-save ('' = none yet)
     petState(data) {
@@ -1278,7 +1361,8 @@
       const playing = reactionPlayer ? reactionPlayer.current() : null;
       window.selfTestAnswer(JSON.stringify({
         id: data && data.id, species: shownSpecies() || '', raisePet, base: current.base, session: petSession,
-        hasPet: Boolean(petLife), reaction: playing ? playing.mood : '', language, missing: missing.join(', ')
+        hasPet: Boolean(petLife), reaction: playing ? playing.mood : '', reactionKey: playing ? playing.captionKey : '', language, missing: missing.join(', '),
+        ...(data && data.sim === 'life' ? simulateLife() : {})
       }));
     },
     // a held reaction ends (waking up, getting up), or every reaction on a load ({})
@@ -1292,6 +1376,7 @@
       skyHours = (Number(data && data.hour) || 0) + (Number(data && data.minute) || 0) / 60;
       gameHours = Number.isFinite(data && data.hours) ? data.hours : (Number(data && data.day) || 0) * 24 + skyHours;
       tickPet();
+      maybeMention();
       scenerySeed = petSky.hashText(`${data && data.year}-${data && data.month}-${data && data.day}`);
       updateSky();
       renderScenery();

@@ -315,7 +315,37 @@ namespace MiniPets::SelfTestRunner
                     }
                 }
 
-                // 2. each reaction through the handler the game event calls
+                // DMP-13: the card's growth and memory rules, run on a made-up pet the card builds for the question
+            if (!outOfTime("pet.stage")) {
+                const auto answer = SelfTestAskPage(",\"sim\":\"life\"");
+                if (answer.empty()) {
+                    SelfTestReport(*run, "pet.stage", Result::Fail, kNoAnswer);
+                    SelfTestReport(*run, "pet.memory", Result::Fail, kNoAnswer);
+                }
+                else {
+                    const auto start = PageField(answer, "simStart");
+                    const auto grown = PageField(answer, "simGrown");
+                    const auto events = PageField(answer, "simGrowEvents");
+                    if (start == "baby" && PageField(answer, "simStartGrew") == "false" && grown == "young" && events == "grow:young") {
+                        SelfTestReport(*run, "pet.stage", Result::Pass, "a test pet hatched 50 in-game hours ago grew from baby to young with one moment; yours is untouched");
+                    }
+                    else {
+                        SelfTestReport(*run, "pet.stage", Result::Fail, "test pet: started '" + start + "', grew to '" + grown + "', moments '" + events + "'");
+                    }
+                    const auto said = PageField(answer, "simSaid");
+                    const auto words = PageField(answer, "simWords");
+                    if (PageField(answer, "simKept") == "true" && PageField(answer, "simAgain") == "false" && said == "whiterun" &&
+                        PageField(answer, "simQuiet") == "true" && !words.empty()) {
+                        SelfTestReport(*run, "pet.memory", Result::Pass, "a first visit kept once, brought up a day later ('" + words + "'), then quiet that day");
+                    }
+                    else {
+                        SelfTestReport(*run, "pet.memory", Result::Fail, "kept " + PageField(answer, "simKept") + ", kept again " + PageField(answer, "simAgain") +
+                                                                            ", brought up '" + said + "', quiet after " + PageField(answer, "simQuiet"));
+                    }
+                }
+            }
+
+            // 2. each reaction through the handler the game event calls
                 if (!outOfTime("react.lowhealth")) {
                     const bool ran = SelfTestFire(run, "self-test low health", []() {
                         ReactionWiring::OnHealthShare(1.0);  // armed
@@ -391,7 +421,31 @@ namespace MiniPets::SelfTestRunner
                     SelfTestEndPose("fanfare");
                 }
 
-                // 3. the reaction lines in the current language
+                // DMP-13: the place handler, as the card part calls it on a change of place
+            if (!outOfTime("react.place")) {
+                const bool ran = SelfTestFire(run, "self-test place", [run]() {
+                    // places are a raised pet's: as the player had raise-a-pet, for this one call
+                    const bool raise = g_settings.raisePet;
+                    g_settings.raisePet = run->raisePet;
+                    run->checks[5] = PetSave::HasPet() && !PetSave::PetIsEgg();
+                    if (run->checks[5]) {
+                        ReactionWiring::ForgetPlaces();
+                        ReactionWiring::OnPlaceChanged("whiterun", false, "Whiterun", true);
+                        // a real visit to Whiterun right after the run still gets its reaction
+                        ReactionWiring::ForgetPlaces();
+                    }
+                    g_settings.raisePet = raise;
+                });
+                if (ran && !run->checks[5]) {
+                    SelfTestReport(*run, "react.place", Result::Skip, "no hatched pet is raised in this save: places are a raised pet's");
+                }
+                else {
+                    SelfTestCheckOffer(*run, "react.place", ran);
+                    SelfTestEndPose("hop");
+                }
+            }
+
+            // 3. the reaction lines in the current language
                 if (!outOfTime("react.lines")) {
                     (void)SelfTestOnGame("self-test language", [run]() { run->language = g_settings.language; });
                     const auto answer = SelfTestAskPage(",\"keys\":" + SelfTest::ReactionLineKeysJson());

@@ -25,7 +25,9 @@
   };
   // catalogue keys for the mood and growth stage shown under the name
   const MOODS = { happy: 'moodHappy', content: 'moodContent', hungry: 'moodHungry', sad: 'moodSad', miserable: 'moodMiserable' };
-  const STAGES = { baby: 'tabStageBaby', young: 'tabStageYoung', adult: 'tabStageAdult' };
+  const STAGES = { baby: 'tabStageBaby', young: 'tabStageYoung', adult: 'tabStageAdult', seasoned: 'tabStageSeasoned', elder: 'tabStageElder' };
+  // the newest few of what the pet remembers (DMP-13)
+  const MEMORIES_SHOWN = 5;
   const ADULT_DAYS = 5;
   // pets.css animates by these, as the HUD card does
   const ARCHETYPES = ['light', 'heavy', 'hover', 'flyer', 'egg'];
@@ -123,6 +125,25 @@
     return i18n.plural('days', whole);
   }
 
+  // the same words the HUD card uses when the pet brings a memory up
+  function memoryWords(memory) {
+    if (memory.k === 'dragon') return t('memoryDragon');
+    if (memory.k === 'boss') return t('memoryBoss', { subject: memory.s });
+    if (memory.k === 'place') return memory.id === 'home' ? t('memoryHome') : t('memoryPlace', { place: memory.s });
+    if (memory.k === 'milestone') return t('memoryMilestone', { subject: memory.s });
+    return t('memoryLevel', { level: memory.s });
+  }
+
+  function renderMemories(pet) {
+    const memories = Array.isArray(pet.memories) ? pet.memories.slice(-MEMORIES_SHOWN).reverse() : [];
+    fact(t('tabMemories'), memories.length ? '' : t('tabNoMemories'));
+    const today = Math.floor(hours() / 24);
+    memories.forEach(memory => {
+      const days = today - memory.d;
+      fact(memoryWords(memory), days < 1 ? t('factToday') : t('factAgo', { time: daysText(days) }));
+    });
+  }
+
   function fact(term, detail) {
     const row = el('div');
     row.append(el('dt', '', term), el('dd', '', detail));
@@ -142,7 +163,14 @@
     } else {
       const age = (hours() - pet.hatchedAt) / 24;
       fact(t('factHatched'), age < 1 ? t('factToday') : t('factAgo', { time: daysText(age) }));
-      fact(t('factGrowsUp'), life.growth(pet, hours()) === 'adult' ? t('tabStageAdult') : t('factGrowsIn', { time: daysText(ADULT_DAYS - age) }));
+      const stage = life.growth(pet, hours());
+      if (stage === 'baby' || stage === 'young') fact(t('factGrowsUp'), t('factGrowsIn', { time: daysText(ADULT_DAYS - age) }));
+      else {
+        // DMP-13: a grown pet still has seasoned and elder ahead of it
+        const next = { adult: 'seasoned', seasoned: 'elder' }[stage];
+        fact(t('factNextStage'), next ? t('factNextStageIn', { stage: t(STAGES[next]), time: daysText(life.STAGE_DAYS[next] - age) }) : t('tabStageElder'));
+      }
+      renderMemories(pet);
     }
     fact(t('factFoodInPack'), String(Number.isFinite(state.food) ? state.food : 0));
     if (state.hotkeys) {

@@ -28,6 +28,9 @@ namespace MiniPets::ReactionWiring
         double g_lastChronicleMs = -1e18;
         double g_sleepReleaseAtMs = 0.0;
         bool g_playerDead = false;
+        // DMP-13: when each place last got a reaction (NowMs)
+        std::unordered_map<std::string, double> g_placeSeenMs;
+        constexpr double kPlaceRepeatMs = 10.0 * 60.0 * 1000.0;
         bool g_bleedingOut = false;
 
         double NowMs()
@@ -220,11 +223,37 @@ namespace MiniPets::ReactionWiring
         g_loadedAtMs = NowMs();
         g_lastOutfitMs = -1e18;
         g_lastChronicleMs = -1e18;
+        g_placeSeenMs.clear();
         {
             std::lock_guard lock(g_reactQueueLock);
             g_reactQueue.clear();
         }
         Card::Invoke("dragonbornXP.reactEnd", "{}");
+    }
+
+    // DMP-13: a raised, hatched pet notices where you are. The card part calls this when the place changes,
+    // never for the place a load starts in; the same place again only after ten minutes.
+    void OnPlaceChanged(std::string_view region, bool home, const std::string& name, bool test)
+    {
+        if (!PetSave::HasPet() || PetSave::PetIsEgg()) {
+            return;
+        }
+        Reactions::Reaction reaction;
+        if (!Reactions::FromPlace(region, home, name, reaction, test)) {
+            return;
+        }
+        const std::string key = home ? std::string("home") : std::string(region);
+        const double now = NowMs();
+        if (const auto seen = g_placeSeenMs.find(key); seen != g_placeSeenMs.end() && now - seen->second < kPlaceRepeatMs) {
+            return;
+        }
+        g_placeSeenMs[key] = now;
+        OfferReaction(reaction, false);
+    }
+
+    void ForgetPlaces()
+    {
+        g_placeSeenMs.clear();
     }
 
     // a kill DovahDamage counted: a boss gets a hop. True when it was a boss.
