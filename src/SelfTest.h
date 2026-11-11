@@ -8,7 +8,7 @@
 #include <string_view>
 
 // The in-game self-test (DMP-11): the step list, the expected reactions and the shared line format.
-// The game work lives in main.cpp; this part is standard library only, so tests/cpp checks it without
+// The game work lives in SelfTestRunner.cpp; this part is standard library only, so tests/cpp checks it without
 // the game. Lines go to MiniPets.log, and to DovahHub when its Diagnostics > Run self-test started it:
 //   SELFTEST pets <step> PASS|FAIL|SKIP <detail>
 //   SELFTEST pets DONE pass=N fail=N skip=N ms=N
