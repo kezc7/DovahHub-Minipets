@@ -57,10 +57,23 @@ xmake build
 
 The build puts the files in `dist/MiniPets_<version>/` and makes the MO2 zip in the repo root.
 
+The plugin's source is a small core and five parts, each owning its own state; `src/Plugin.h` lists what each offers the others:
+
+| File | What it does |
+|---|---|
+| `src/main.cpp` | The core: the settings file, small helpers, the game-thread pump, the 250 ms update and SKSE's entry points |
+| `src/CardBridge.cpp` | The HUD card (Prisma UI view): what is sent to it and read back, the overlay over menus, the settings window, the hotkeys |
+| `src/ReactionWiring.cpp` | Reactions: the game's events, DovahDamage, DovahHub's broadcasts and `React()`, through the gate in `Reactions.h` |
+| `src/SaveLoad.cpp` | The raised pet per save, the load and new-game steps, the co-save |
+| `src/HubAndApi.cpp` | The MiniPets tab in DovahHub and `MiniPets_API.h` for other mods |
+| `src/SelfTestRunner.cpp` | The in-game self-test (`SelfTest.h`) |
+
 Tests:
 
 ```powershell
 node --test "tests/*.test.js"
+xmake build MiniPets_tests
+xmake run MiniPets_tests
 ```
 
 ## Previewing in a browser

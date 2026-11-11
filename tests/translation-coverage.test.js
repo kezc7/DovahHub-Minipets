@@ -47,7 +47,7 @@ test('src/HubText.h holds only ASCII, so the compiler code page cannot change it
   assert.ok(bytes.every(byte => byte < 0x80), 'non-ASCII byte in HubText.h');
 });
 
-test('main.cpp builds DovahHub settings from HubText.h and sends them again when the language changes', () => {
+test('the plugin builds DovahHub settings from HubText.h and sends them again when the language changes', () => {
   const source = require('./plugin-source.js').pluginSource();
   assert.match(source, /#include "HubText.h"/);
   assert.match(source, /AddSettings\(g_hubModule, HubSettingsSchema\(\)\.c_str\(\)\)/);
