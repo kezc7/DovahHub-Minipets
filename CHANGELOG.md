@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.6-beta
+- The self-test's switch, `self_test=1` in MiniPets.ini, now sets itself back to 0 as its one run starts, so it no longer runs again after every restart
+- Under the hood, the plugin's code is split from one large file into a small core and five parts (the card, the reactions, save and load, DovahHub and the API, the self-test), each keeping its own state. Nothing else changes in game
+- Upgrading from 1.9.5-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.5-beta
 - An in-game self-test for testers: `self_test=1` in MiniPets.ini (once, after the first load), `/minipets selftest` in Chronicle, or DovahHub 0.98.0's Settings > Diagnostics > Run self-test. It checks the card, every reaction through the handlers the game uses, the reaction lines in your language and the save-to-save rules, writes one line per step to MiniPets.log, and puts everything back. It changes the save it runs on: use one you can throw away. TESTING.md has the steps
 - Nothing changes in a normal game: the self-test never runs unless started
