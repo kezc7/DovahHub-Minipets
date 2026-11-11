@@ -38,12 +38,19 @@ test('the game thread is the pump\'s, not RE::Main\'s threadID', () => {
   assert.match(cpp, /logger::info\("MiniPets: game thread \{\} \(the pump's/, 'logged once at load');
 });
 
-test('DovahGameThread.h and DovahHub_API.h are DovahHub\'s, unchanged', () => {
-  const hub = path.join(__dirname, '..', '..', 'DovahHub', 'src', 'api');
-  for (const file of ['DovahGameThread.h', 'DovahHub_API.h']) {
-    const theirs = path.join(hub, file);
-    if (!fs.existsSync(theirs)) continue;  // DovahHub's checkout isn't beside this one
-    assert.equal(fs.readFileSync(path.join(SRC, file), 'utf8'), fs.readFileSync(theirs, 'utf8'), file);
+// The shared headers are copied from a DovahHub commit, never its working tree (the suite's rule): the
+// current one is 429628b, shipped in DovahHub 0.98.0. Pinned by the SHA-256 of each file with LF endings.
+const HUB_COMMIT = '429628b';
+const HUB_HEADERS = {
+  'DovahGameThread.h': 'a67f5917f2eef85a23fc6ba0efdc1d85efa1da72abb0ed90725fac94dfc0175e',
+  'DovahHub_API.h': '05d3191953f413b86128c3be12ade1320a71b19acf293daa5baa04ac072c8900',
+};
+
+test(`DovahGameThread.h and DovahHub_API.h are DovahHub ${HUB_COMMIT}'s, unchanged`, () => {
+  const crypto = require('node:crypto');
+  for (const [file, sha] of Object.entries(HUB_HEADERS)) {
+    const text = fs.readFileSync(path.join(SRC, file), 'utf8').replace(/\r\n/g, '\n');
+    assert.equal(crypto.createHash('sha256').update(text).digest('hex'), sha, file);
   }
 });
 
