@@ -150,22 +150,6 @@ body.timelapse .sky-body { transition: none; }
 #dragonborn-xp.caption-name .xp-bar { opacity: 0; }
 .xp-bar span { display: block; width: 68%; height: 100%; background: linear-gradient(90deg, var(--flame), var(--gold)); transform-origin: left; animation: charge 1.2s ease-out both; }
 
-/* raise-a-pet panel in settings */
-.pet-life { margin-top: 6px; }
-.pet-life-name { margin: 2px 0 8px; color: #fff1be; font: 700 14px Georgia, serif; }
-.egg-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-.egg-choice { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px 4px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 6px; color: #e8f2e9; background: rgba(0, 0, 0, .2); font: 10px Arial, sans-serif; cursor: pointer; }
-.egg-choice:hover { border-color: #a8d47d; background: rgba(168, 212, 125, .12); }
-.need { display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 8px; margin: 5px 0; font: 12px Arial, sans-serif; color: #e8f2e9; }
-.need-bar { height: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .2); border-radius: 4px; background: rgba(0, 0, 0, .3); }
-.need-bar span { display: block; width: 0; height: 100%; background: #a8d47d; transition: width .3s ease; }
-#need-warmth { background: #f0a050; }
-#need-happiness { background: #e78aa8; }
-.pet-life.is-egg .need-food, .pet-life.is-egg .need-happiness, .pet-life:not(.is-egg) .need-warmth { display: none; }
-/* the buttons keep their labels on one line and wrap as whole buttons; French and German egg labels are long */
-.pet-life-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.pet-life-actions button { flex: 1 1 auto; white-space: nowrap; }
-.pet-life-actions button:disabled { opacity: .4; cursor: default; }
 .hidden { display: none !important; }
 
 /* clock banner (settings > clock), above the card */
@@ -195,7 +179,6 @@ body.timelapse .sky-body { transition: none; }
 #card-need-happiness { background: #e78aa8; }
 #dragonborn-xp .need-track span.low { background: #d8485a; }
 #dragonborn-xp.is-egg .need-line-food, #dragonborn-xp.is-egg .need-line-happiness, #dragonborn-xp:not(.is-egg) .need-line-warmth { display: none; }
-.settings-toggle { width: 18px; height: 18px; accent-color: #8cc46f; cursor: pointer; }
 
 /* .pet-position centres, .pet-motion moves, .pet-body breathes. only animate
    transform/opacity, prisma handles those fine */
@@ -344,34 +327,60 @@ body.settings-open.dragging-pet, body.settings-open.dragging-pet * { cursor: gra
 @keyframes sun-turn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @keyframes caption-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes charge { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-/* centred, clicks pass through so the pet can still be dragged */
-#settings-menu { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 20; display: grid; place-items: center; padding: 18px; pointer-events: none; }
+/* Companion settings (Shift+B) in the suite theme. theme/dovah-theme.css (DovahHub's kit, copied unchanged and
+   pinned) draws the panel, type, switches, selects, sliders, buttons, stats and keycaps; this only lays them
+   out, as the "MiniPets · Companion settings" mockup does. Centred; clicks pass through around the panel so
+   the pet can still be dragged. */
+#settings-menu { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 20; display: grid; place-items: center; padding: 2.2rem; pointer-events: none; }
 #settings-menu.hidden { display: none; }
-.settings-card { width: min(410px, 100%); max-height: calc(100vh - 36px); overflow-y: auto; pointer-events: auto; color: #e8f2e9; border: 1px solid rgba(192, 224, 187, .5); border-radius: 14px; background: linear-gradient(145deg, rgba(26, 53, 48, .98), rgba(18, 30, 42, .98)); box-shadow: 0 18px 42px rgba(0, 0, 0, .58), inset 0 0 0 1px rgba(255, 255, 255, .08); font-family: Georgia, "Times New Roman", serif; overflow: hidden; }
-.settings-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 12px; border-bottom: 1px solid rgba(255, 255, 255, .1); background: rgba(5, 16, 22, .35); }
-.settings-kicker { margin: 0 0 3px; color: #c9a85f; font: 700 10px/1 Arial, sans-serif; letter-spacing: .16em; }
-.settings-header h1 { margin: 0; color: #fff1be; font: 700 21px/1.1 Georgia, serif; }
-.settings-close { width: 28px; height: 28px; border: 1px solid rgba(255, 255, 255, .18); border-radius: 7px; color: rgba(255, 255, 255, .72); background: rgba(255, 255, 255, .06); font: 24px/20px Arial, sans-serif; cursor: pointer; }
-.settings-close:hover { color: #fff; background: rgba(255, 255, 255, .16); }
-.settings-help { margin: 14px 18px 5px; color: rgba(232, 242, 233, .76); font: 13px/1.35 Georgia, serif; }
-.settings-group { margin: 14px 18px 0; padding-top: 11px; border-top: 1px solid rgba(255, 255, 255, .1); }
-.settings-group h2 { margin: 0 0 9px; color: #c9a85f; font: 700 11px/1 Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
-.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 38px; color: #eef7e9; font: 14px/1.1 Georgia, serif; }
-.settings-row small { display: block; margin-top: 3px; color: rgba(232, 242, 233, .5); font: 11px/1 Arial, sans-serif; }
-.position-control { display: flex; align-items: center; gap: 8px; }
-.position-control input[type=range] { width: 130px; accent-color: #8cc46f; }
-.position-control input[type=number] { width: 64px; padding: 5px 6px; border: 1px solid rgba(255, 255, 255, .18); border-radius: 5px; color: #fff; background: rgba(0, 0, 0, .25); font: 12px Arial, sans-serif; }
-.settings-row select { min-width: 150px; padding: 6px 8px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 5px; color: #fff1be; background: rgba(0, 0, 0, .28); font: 12px Arial, sans-serif; }
-.settings-secondary, .settings-primary { padding: 7px 12px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 6px; color: #e8f2e9; background: rgba(255, 255, 255, .07); font: 12px Arial, sans-serif; cursor: pointer; }
-.settings-secondary:hover { background: rgba(255, 255, 255, .14); }
-.settings-primary { border-color: #8cc46f; color: #15251d; background: #a8d47d; font-weight: 700; }
-.settings-primary:hover { background: #c0e799; }
-#reset-position { margin-top: 8px; }
-.hotkey-capture { min-width: 110px; padding: 9px 14px; border: 1px solid rgba(201, 168, 95, .65); border-radius: 7px; color: #fff1be; background: rgba(0, 0, 0, .24); font: 700 14px Arial, sans-serif; cursor: pointer; }
-.hotkey-row .hotkey-capture { min-width: 104px; padding: 6px 10px; font-size: 12px; }
-.hotkey-capture.capturing { border-color: #a8d47d; color: #15251d; background: #a8d47d; }
-.settings-hint { min-height: 15px; margin: 7px 0 0; color: rgba(232, 242, 233, .52); font: 11px/1.2 Arial, sans-serif; }
-.settings-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 17px; padding: 12px 18px; border-top: 1px solid rgba(255, 255, 255, .1); background: rgba(5, 16, 22, .35); }
+.settings-card { display: flex; flex-direction: column; width: min(43rem, 100%); max-height: calc(100vh - 4.4rem); padding: 2.1rem 0 0; pointer-events: auto; }
+.settings-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 0 1.9rem 1rem; border-bottom: 1px solid var(--dv-line); }
+.settings-header .dv-kicker { margin-bottom: .35rem; }
+.settings-close { width: 2.2rem; min-height: 2.2rem; padding: 0; font-size: 1.35rem; letter-spacing: 0; }
+.settings-body { flex: 1 1 auto; min-height: 0; padding: 0 1.9rem 1rem; }
+.settings-help { margin: .9rem 0 0; color: var(--dv-muted); font-size: .98rem; line-height: 1.4; }
+.settings-group { margin-top: 1.4rem; }
+.settings-group > .dv-kicker { margin-bottom: .15rem; }
+.settings-row.dv-setting-row { gap: 1.5rem; padding: .7rem 0; }
+.settings-row .dv-setting-row__label { gap: .2rem; }
+.settings-row .dv-setting-row__label small { font-size: .88rem; line-height: 1.35; }
+
+/* the checkbox is the switch's input; the track and the word show it (syncToggles in app.js) */
+.dv-toggle { position: relative; cursor: pointer; }
+.dv-toggle input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; opacity: 0; }
+.dv-toggle input:focus-visible + .dv-toggle__track { outline: 2px solid var(--dv-accent-bright); outline-offset: 2px; }
+.toggle-state { min-width: 2.4rem; }
+
+/* a slider and its number, which reads as the value and can still be typed into */
+.position-control .dv-slider { width: 11rem; }
+.position-control input[type=number] { width: 3.8rem; padding: .15rem .25rem; border: 1px solid transparent; background: transparent; color: var(--dv-ink); font: 400 .95rem var(--dv-font); text-align: right; -moz-appearance: textfield; }
+.position-control input[type=number]::-webkit-inner-spin-button, .position-control input[type=number]::-webkit-outer-spin-button { margin: 0; -webkit-appearance: none; }
+.position-control input[type=number]:hover, .position-control input[type=number]:focus { border-color: var(--dv-line); background: var(--dv-control-fill); outline: none; }
+
+/* raise a pet: the egg tiles, the three needs side by side, and Feed, Play, Start over */
+.pet-life { padding: .2rem 0 .6rem; border-bottom: 1px solid var(--dv-line-soft); }
+.pet-life-name { margin: .5rem 0 .55rem; color: var(--dv-ink); font-size: 1.05rem; letter-spacing: .04em; }
+.egg-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .5rem; }
+.egg-choice { display: flex; flex-direction: column; align-items: center; gap: .3rem; min-width: 0; padding: .55rem .2rem .45rem; border: 1px solid var(--dv-line-soft); background: var(--dv-control-fill); color: var(--dv-ink-soft); font: 400 .82rem var(--dv-font); letter-spacing: .04em; cursor: pointer; }
+.egg-choice span { max-width: 100%; line-height: 1.15; text-align: center; overflow-wrap: anywhere; }
+.egg-choice:hover, .egg-choice:focus-visible { border-color: var(--dv-accent-bright); background: rgba(var(--dv-accent-rgb), .08); color: var(--dv-ink-bright); outline: none; }
+.pet-life-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 1.6rem; }
+.pet-life.is-egg .need-food, .pet-life.is-egg .need-happiness, .pet-life:not(.is-egg) .need-warmth { display: none; }
+.need-bar i { transition: width .3s ease; }
+/* the buttons keep their labels on one line and wrap as whole buttons; French and German egg labels are long */
+.pet-life-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .7rem; }
+.pet-life-actions button { flex: 0 1 auto; white-space: nowrap; }
+.settings-hint { min-height: 1rem; margin: .5rem 0 0; color: var(--dv-muted); font-size: .88rem; line-height: 1.35; }
+
+/* hotkeys: each box shows its key, and turns gold while it waits for one */
+.hotkey-capture { min-width: 7rem; letter-spacing: .04em; text-transform: none; }
+.hotkey-capture.capturing { border-color: var(--dv-accent-bright); background: rgba(var(--dv-accent-rgb), .26); color: var(--dv-ink-bright); }
+
+/* the mockup's row: keycap prompts on the left, Reset on the right; then Cancel and Save */
+.settings-footer { display: flex; flex-direction: column; gap: .8rem; padding: 1rem 1.9rem 1.3rem; border-top: 1px solid var(--dv-line); }
+.settings-footer__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1.4rem; }
+.settings-footer__row--end { justify-content: flex-end; }
+.settings-footer .dv-prompts { flex-wrap: wrap; gap: .6rem 1.4rem; }
 @media (max-width: 800px) { #dragonborn-xp { padding-right: 16px; } }
 #dragonborn-xp.animation-paused *, #dragonborn-xp.animation-paused *::before, #dragonborn-xp.animation-paused *::after { animation-play-state: paused !important; }
 @media (prefers-reduced-motion: reduce) {

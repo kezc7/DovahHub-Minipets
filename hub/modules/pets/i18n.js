@@ -243,6 +243,9 @@
       reactCurious: "{name} tilts its head, curious.",
       reactHop: "{name} hops for joy.",
       reactFanfare: "{name} sounds a little fanfare.",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "On",
+      toggleOff: "Off",
       days: { one: "{count} day", other: "{count} days" },
       months: { "Morning Star": "Morning Star", "Sun's Dawn": "Sun's Dawn", "First Seed": "First Seed", "Rain's Hand": "Rain's Hand", "Second Seed": "Second Seed", "Mid Year": "Mid Year", "Sun's Height": "Sun's Height", "Last Seed": "Last Seed", Heartfire: "Heartfire", Frostfall: "Frostfall", "Sun's Dusk": "Sun's Dusk", "Evening Star": "Evening Star" },
       weekdays: { Sundas: "Sundas", Morndas: "Morndas", Tirdas: "Tirdas", Middas: "Middas", Turdas: "Turdas", Fredas: "Fredas", Loredas: "Loredas" },
@@ -497,6 +500,9 @@
       reactCurious: "{name} penche la tête avec curiosité.",
       reactHop: "{name} saute de joie.",
       reactFanfare: "{name} sonne une petite fanfare.",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "Oui",
+      toggleOff: "Non",
       days: { one: "{count} jour", other: "{count} jours" },
       species: { mudcrab: "Vasard", skeever: "Ragnard", fox: "Renard", sabrecat: "Smilodon", "frostbite-spider": "Givrépeire", horker: "Horqueur", troll: "Troll", "flame-atronach": "Atronach de feu", "frost-atronach": "Atronach de glace", spriggan: "Spriggan", "dwarven-spider": "Araignée dwemer", chaurus: "Chaurus", netch: "Netch", mammoth: "Mammouth", "dragon-priest": "Prêtre-dragon", wisp: "Feu follet", "death-hound": "Chien de la mort", chicken: "Poulet" },
       months: { "Morning Star": "Primétoile", "Sun's Dawn": "Clairciel", "First Seed": "Semailles", "Rain's Hand": "Ondepluie", "Second Seed": "Plantaisons", "Mid Year": "Mi-l’An", "Sun's Height": "Hautzénith", "Last Seed": "Vifazur", Heartfire: "Atrefeu", Frostfall: "Soufflegivre", "Sun's Dusk": "Sombreciel", "Evening Star": "Soirétoile" },
@@ -751,6 +757,9 @@
       reactCurious: "{name} legt neugierig den Kopf schief.",
       reactHop: "{name} hüpft vor Freude.",
       reactFanfare: "{name} spielt eine kleine Fanfare.",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "An",
+      toggleOff: "Aus",
       days: { one: "{count} Tag", other: "{count} Tagen" },
       species: { mudcrab: "Schlammkrabbe", skeever: "Skeever", fox: "Fuchs", sabrecat: "Säbelzahntiger", "frostbite-spider": "Frostbissspinne", horker: "Horker", troll: "Troll", "flame-atronach": "Feuer-Atronach", "frost-atronach": "Frost-Atronach", spriggan: "Zweigling", "dwarven-spider": "Zwergenspinne", chaurus: "Chaurus", netch: "Netch", mammoth: "Mammut", "dragon-priest": "Drachenpriester", wisp: "Irrlicht", "death-hound": "Todeshund", chicken: "Huhn" },
       months: { "Morning Star": "Morgenstern", "Sun's Dawn": "Sonnenaufgang", "First Seed": "Erste Saat", "Rain's Hand": "Regenhand", "Second Seed": "Zweite Saat", "Mid Year": "Jahresmitte", "Sun's Height": "Sonnenhöhe", "Last Seed": "Letzte Saat", Heartfire: "Herzfeuer", Frostfall: "Eisherbst", "Sun's Dusk": "Sonnenuntergang", "Evening Star": "Abendstern" },
@@ -1005,6 +1014,9 @@
       reactCurious: "{name} inclina la testa con curiosità.",
       reactHop: "{name} salta di gioia.",
       reactFanfare: "{name} suona una piccola fanfara.",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "Sì",
+      toggleOff: "No",
       days: { one: "{count} giorno", other: "{count} giorni" },
       species: { mudcrab: "Granchio del fango", skeever: "Skeever", fox: "Volpe", sabrecat: "Tigre dai denti a sciabola", "frostbite-spider": "Ragno congelante", horker: "Horker", troll: "Troll", "flame-atronach": "Atronach della fiamma", "frost-atronach": "Atronach del gelo", spriggan: "Spriggan", "dwarven-spider": "Ragno nanico", chaurus: "Chaurus", netch: "Netch", mammoth: "Mammut", "dragon-priest": "Sacerdote del Drago", wisp: "Fuoco fatuo", "death-hound": "Segugio della morte", chicken: "Pollo" },
       months: { "Morning Star": "Stella del Mattino", "Sun's Dawn": "Luce dell’Alba", "First Seed": "Primo Seme", "Rain's Hand": "Mano della Pioggia", "Second Seed": "Secondo Seme", "Mid Year": "Metà Annata", "Sun's Height": "Luce del Cielo", "Last Seed": "Ultimo Seme", Heartfire: "Focolare", Frostfall: "Gelata", "Sun's Dusk": "Luce del Crepuscolo", "Evening Star": "Stella della Sera" },
@@ -1259,6 +1271,9 @@
       reactCurious: "{name} ladea la cabeza con curiosidad.",
       reactHop: "{name} salta de alegría.",
       reactFanfare: "{name} toca una pequeña fanfarria.",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "Sí",
+      toggleOff: "No",
       days: { one: "{count} día", other: "{count} días" },
       species: { mudcrab: "Cangrejo del barro", skeever: "Skeever", fox: "Zorro", sabrecat: "Gato sable", "frostbite-spider": "Araña congeladora", horker: "Horker", troll: "Trol", "flame-atronach": "Atronach de las llamas", "frost-atronach": "Atronach de la escarcha", spriggan: "Spriggan", "dwarven-spider": "Araña enana", chaurus: "Cauro", netch: "Netch", mammoth: "Mamut", "dragon-priest": "Sacerdote dragón", wisp: "Fuego fatuo", "death-hound": "Mastín de la muerte", chicken: "Pollo" },
       months: { "Morning Star": "Estrella del alba", "Sun's Dawn": "Amanecer", "First Seed": "Primera semilla", "Rain's Hand": "Mano de lluvia", "Second Seed": "Segunda semilla", "Mid Year": "Mitad de año", "Sun's Height": "Culminación solar", "Last Seed": "Última semilla", Heartfire: "Fuego hogar", Frostfall: "Otoño de escarcha", "Sun's Dusk": "Ocaso", "Evening Star": "Estrella vespertina" },
@@ -1513,6 +1528,9 @@
       reactCurious: "{name} z ciekawością przechyla głowę.",
       reactHop: "{name} podskakuje z radości.",
       reactFanfare: "{name} gra małą fanfarę.",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "Wł.",
+      toggleOff: "Wył.",
       days: { one: "{count} dzień", other: "{count} dni" },
       species: { mudcrab: "Krab błotny", skeever: "Ślizgacz", fox: "Lis", sabrecat: "Kot szablozębny", "frostbite-spider": "Pająk śnieżny", horker: "Horker", troll: "Troll", "flame-atronach": "Atronach ognia", "frost-atronach": "Atronach mrozu", spriggan: "Wiła", "dwarven-spider": "Krasnoludzki pająk", chaurus: "Chaurus", netch: "Parzydłak", mammoth: "Mamut", "dragon-priest": "Smoczy kapłan", wisp: "Ognik", "death-hound": "Ogar śmierci", chicken: "Kurczak" },
       months: { "Morning Star": "Gwiazda Poranna", "Sun's Dawn": "Wschodzące Słońce", "First Seed": "Pierwszy Siew", "Rain's Hand": "Deszczowa Dłoń", "Second Seed": "Drugi Siew", "Mid Year": "Śródrocze", "Sun's Height": "Pełnia Słońca", "Last Seed": "Ostatni Siew", Heartfire: "Domowe Ognisko", Frostfall: "Pierwsze Mrozy", "Sun's Dusk": "Zachodzące Słońce", "Evening Star": "Gwiazda Wieczorna" },
@@ -1767,6 +1785,9 @@
       reactCurious: "{name} merakla başını eğiyor.",
       reactHop: "{name} sevinçten zıplıyor.",
       reactFanfare: "{name} küçük bir fanfar çalıyor.",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "Açık",
+      toggleOff: "Kapalı",
       days: { one: "{count} gün", other: "{count} gün" },
       species: { mudcrab: "Çamur yengeci", skeever: "Skeever", fox: "Tilki", sabrecat: "Kılıçdişli kaplan", "frostbite-spider": "Ayaz örümceği", horker: "Horker", troll: "Trol", "flame-atronach": "Alev atronakı", "frost-atronach": "Ayaz atronakı", spriggan: "Spriggan", "dwarven-spider": "Dwemer örümceği", chaurus: "Chaurus", netch: "Netch", mammoth: "Mamut", "dragon-priest": "Ejderha rahibi", wisp: "Işık perisi", "death-hound": "Ölüm tazısı", chicken: "Tavuk" },
       months: { "Morning Star": "Sabah Yıldızı", "Sun's Dawn": "Güneşin Doğuşu", "First Seed": "İlk Tohum", "Rain's Hand": "Yağmurun Eli", "Second Seed": "İkinci Tohum", "Mid Year": "Yıl Ortası", "Sun's Height": "Güneşin Doruğu", "Last Seed": "Son Tohum", Heartfire: "Ocak Ateşi", Frostfall: "Ayaz Düşüşü", "Sun's Dusk": "Güneşin Batışı", "Evening Star": "Akşam Yıldızı" },
@@ -2021,6 +2042,9 @@
       reactCurious: "{name} 好奇地歪着头。",
       reactHop: "{name} 高兴得跳起来。",
       reactFanfare: "{name} 吹起小小的号角。",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "开",
+      toggleOff: "关",
       days: { one: "{count} 天", other: "{count} 天" },
       species: { mudcrab: "泥沼蟹", skeever: "恶鼠", fox: "狐狸", sabrecat: "剑齿虎", "frostbite-spider": "霜噬蜘蛛", horker: "海象", troll: "巨魔", "flame-atronach": "火焰元素", "frost-atronach": "寒霜元素", spriggan: "树精", "dwarven-spider": "矮人蜘蛛", chaurus: "巢蚁", netch: "耐区", mammoth: "长毛象", "dragon-priest": "龙祭司", wisp: "幽魂", "death-hound": "死亡地狱犬", chicken: "小鸡" },
       months: { "Morning Star": "晨星月", "Sun's Dawn": "日晓月", "First Seed": "初种月", "Rain's Hand": "雨手月", "Second Seed": "次种月", "Mid Year": "年中月", "Sun's Height": "日高月", "Last Seed": "末种月", Heartfire: "炉火月", Frostfall: "霜落月", "Sun's Dusk": "日暮月", "Evening Star": "夜星月" },
@@ -2275,6 +2299,9 @@
       reactCurious: "{name} は首をかしげています。",
       reactHop: "{name} は跳びはねて喜んでいます。",
       reactFanfare: "{name} がファンファーレ！",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "オン",
+      toggleOff: "オフ",
       days: { one: "{count}日", other: "{count}日" },
       species: { mudcrab: "マッドクラブ", skeever: "スキーヴァー", fox: "フォックス", sabrecat: "サーベルキャット", "frostbite-spider": "フロストバイト・スパイダー", horker: "ホーカー", troll: "トロール", "flame-atronach": "炎の精霊", "frost-atronach": "氷の精霊", spriggan: "スプリガン", "dwarven-spider": "ドワーフ・スパイダー", chaurus: "シャウラス", netch: "ネッチ", mammoth: "マンモス", "dragon-priest": "ドラゴン・プリースト", wisp: "ウィスプ", "death-hound": "デスハウンド", chicken: "鶏" },
       months: { "Morning Star": "暁星の月", "Sun's Dawn": "薄明の月", "First Seed": "蒔種の月", "Rain's Hand": "レインズ・ハンド", "Second Seed": "栽培の月", "Mid Year": "年央", "Sun's Height": "南中の月", "Last Seed": "収穫の月", Heartfire: "薪木の月", Frostfall: "降霜の月", "Sun's Dusk": "黄昏の月", "Evening Star": "星霜の月" },
@@ -2529,6 +2556,9 @@
       reactCurious: "{name}이(가) 고개를 갸웃합니다.",
       reactHop: "{name}이(가) 기뻐서 깡충 뜁니다.",
       reactFanfare: "{name}이(가) 작은 팡파르를 울립니다.",
+      // the suite theme's switches say what they are set to (1.9.4)
+      toggleOn: "켜짐",
+      toggleOff: "꺼짐",
       days: { one: "{count}일", other: "{count}일" },
       species: { mudcrab: "머드크랩", skeever: "스키버", fox: "여우", sabrecat: "검치호", "frostbite-spider": "서리거미", horker: "호커", troll: "트롤", "flame-atronach": "화염 아트로나크", "frost-atronach": "얼음 아트로나크", spriggan: "스프리건", "dwarven-spider": "드워븐 스파이더", chaurus: "샤우루스", netch: "네치", mammoth: "매머드", "dragon-priest": "드래곤 프리스트", wisp: "위스프", "death-hound": "데스 하운드", chicken: "닭" },
       months: { "Morning Star": "새벽별의 달", "Sun's Dawn": "해돋이의 달", "First Seed": "첫 씨앗의 달", "Rain's Hand": "비의 손길의 달", "Second Seed": "두 번째 씨앗의 달", "Mid Year": "한해 중간의 달", "Sun's Height": "한낮의 달", "Last Seed": "마지막 씨앗의 달", Heartfire: "화롯불의 달", Frostfall: "서리 내림의 달", "Sun's Dusk": "해거름의 달", "Evening Star": "저녁별의 달" },

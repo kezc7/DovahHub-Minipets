@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dv-scale">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MiniPets</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="pet-motion.css?v=65">
-  <link rel="stylesheet" href="styles.css?v=65">
+  <link rel="stylesheet" href="theme/dovah-theme.css?v=66">
+  <link rel="stylesheet" href="pet-motion.css?v=66">
+  <link rel="stylesheet" href="styles.css?v=66">
 </head>
 <body>
   <main id="dragonborn-xp" aria-live="polite" aria-atomic="true">
@@ -40,39 +41,42 @@
     </div>
   </main>
   <section id="settings-menu" class="hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-    <div class="settings-card">
+    <div class="settings-card dv-panel dv-page">
       <header class="settings-header">
         <div>
-          <p class="settings-kicker" data-i18n="settingsKicker">MINIPETS</p>
-          <h1 id="settings-title" data-i18n="settingsTitle">Companion settings</h1>
+          <p class="settings-kicker dv-kicker" data-i18n="settingsKicker">MINIPETS</p>
+          <h1 id="settings-title" class="dv-heading" data-i18n="settingsTitle">Companion settings</h1>
         </div>
-        <button id="settings-close" class="settings-close" type="button" aria-label="Close settings" data-i18n-attr="aria-label" data-i18n-attr-key="close">×</button>
+        <button id="settings-close" class="settings-close dv-button" type="button" aria-label="Close settings" data-i18n-attr="aria-label" data-i18n-attr-key="close">×</button>
       </header>
+      <div class="settings-body dv-list">
       <p class="settings-help" data-i18n="settingsHelp">Drag your companion anywhere on screen, or fine-tune its position below.</p>
       <div class="settings-group">
-        <h2 data-i18n="pet">Pet</h2>
-        <label class="settings-row" for="raise-pet">
-          <span><span data-i18n="raisePet">Raise a pet</span> <small data-i18n="raisePetHint">Start from an egg, feed it and play with it</small></span>
-          <input id="raise-pet" class="settings-toggle" type="checkbox">
+        <h2 class="dv-kicker" data-i18n="pet">Pet</h2>
+        <label class="settings-row dv-setting-row" for="raise-pet">
+          <span class="dv-setting-row__label"><b data-i18n="raisePet">Raise a pet</b><small data-i18n="raisePetHint">Start from an egg, feed it and play with it</small></span>
+          <span class="dv-setting-row__control"><span class="dv-toggle"><input id="raise-pet" class="settings-toggle" type="checkbox"><span class="dv-toggle__track"><i></i></span><span class="toggle-state" data-i18n="toggleOff">Off</span></span></span>
         </label>
         <div id="pet-life" class="pet-life hidden">
           <p id="pet-life-name" class="pet-life-name"></p>
           <div id="pet-life-eggs" class="egg-picker"></div>
           <div id="pet-life-needs">
-            <div class="need need-warmth"><span data-i18n="warmth">Warmth</span><span class="need-bar"><span id="need-warmth"></span></span></div>
-            <div class="need need-food"><span data-i18n="food">Food</span><span class="need-bar"><span id="need-food"></span></span></div>
-            <div class="need need-happiness"><span data-i18n="happiness">Happiness</span><span class="need-bar"><span id="need-happiness"></span></span></div>
+            <div class="pet-life-stats">
+              <div class="need need-warmth dv-stat"><span class="dv-stat__label" data-i18n="warmth">Warmth</span><b class="dv-stat__value" id="need-warmth-value"></b><span class="dv-stat__bar need-bar"><i id="need-warmth"></i></span></div>
+              <div class="need need-food dv-stat"><span class="dv-stat__label" data-i18n="food">Food</span><b class="dv-stat__value" id="need-food-value"></b><span class="dv-stat__bar need-bar"><i id="need-food"></i></span></div>
+              <div class="need need-happiness dv-stat"><span class="dv-stat__label" data-i18n="happiness">Happiness</span><b class="dv-stat__value" id="need-happiness-value"></b><span class="dv-stat__bar need-bar"><i id="need-happiness"></i></span></div>
+            </div>
             <div class="pet-life-actions">
-              <button id="pet-feed" class="settings-secondary" type="button" data-i18n="feed">Feed</button>
-              <button id="pet-play" class="settings-secondary" type="button" data-i18n="play">Play</button>
-              <button id="pet-reset" class="settings-secondary" type="button" data-i18n="startOver">Start over</button>
+              <button id="pet-feed" class="dv-button" type="button" data-i18n="feed">Feed</button>
+              <button id="pet-play" class="dv-button" type="button" data-i18n="play">Play</button>
+              <button id="pet-reset" class="dv-button" type="button" data-i18n="startOver">Start over</button>
             </div>
           </div>
           <p id="pet-life-hint" class="settings-hint"></p>
         </div>
-        <label id="pet-select-row" class="settings-row" for="pet-select">
-          <span><span data-i18n="chooseCompanion">Choose your companion</span> <small data-i18n="chooseCompanionHint">Switches your companion</small></span>
-          <select id="pet-select">
+        <label id="pet-select-row" class="settings-row dv-setting-row" for="pet-select">
+          <span class="dv-setting-row__label"><b data-i18n="chooseCompanion">Choose your companion</b><small data-i18n="chooseCompanionHint">Switches your companion</small></span>
+          <span class="dv-setting-row__control"><select id="pet-select" class="dv-select">
             <option value="dovahmin">Dovahmin</option>
             <option value="dovahpink">Dovahpink</option>
             <option value="mudcrab">Clack</option>
@@ -93,51 +97,50 @@
             <option value="wisp">Glowbug</option>
             <option value="death-hound">Gnasher</option>
             <option value="chicken">Pip</option>
-          </select>
+          </select></span>
         </label>
       </div>
       <div class="settings-group">
-        <h2 data-i18n="position">Position</h2>
-        <label class="settings-row" for="position-x">
-          <span><span data-i18n="xPosition">X position</span> <small data-i18n="leftEdge">left edge</small></span>
-          <span class="position-control"><input id="position-x" type="range" min="0" max="3000" step="1"><input id="position-x-value" type="number" min="0" max="3000" step="1"></span>
+        <h2 class="dv-kicker" data-i18n="position">Position</h2>
+        <label class="settings-row dv-setting-row" for="position-x">
+          <span class="dv-setting-row__label"><b data-i18n="xPosition">X position</b><small data-i18n="leftEdge">left edge</small></span>
+          <span class="dv-setting-row__control position-control"><input id="position-x" class="dv-slider" type="range" min="0" max="3000" step="1"><input id="position-x-value" class="dv-setting-row__value" type="number" min="0" max="3000" step="1"></span>
         </label>
-        <label class="settings-row" for="position-y">
-          <span><span data-i18n="yPosition">Y position</span> <small data-i18n="topEdge">top edge</small></span>
-          <span class="position-control"><input id="position-y" type="range" min="0" max="2000" step="1"><input id="position-y-value" type="number" min="0" max="2000" step="1"></span>
+        <label class="settings-row dv-setting-row" for="position-y">
+          <span class="dv-setting-row__label"><b data-i18n="yPosition">Y position</b><small data-i18n="topEdge">top edge</small></span>
+          <span class="dv-setting-row__control position-control"><input id="position-y" class="dv-slider" type="range" min="0" max="2000" step="1"><input id="position-y-value" class="dv-setting-row__value" type="number" min="0" max="2000" step="1"></span>
         </label>
-        <label class="settings-row" for="card-shape">
-          <span data-i18n="shape">Shape</span>
-          <select id="card-shape">
+        <label class="settings-row dv-setting-row" for="card-shape">
+          <span class="dv-setting-row__label"><b data-i18n="shape">Shape</b></span>
+          <span class="dv-setting-row__control"><select id="card-shape" class="dv-select">
             <option value="square" data-i18n="square">Square</option>
             <option value="wide" data-i18n="wide">Wide</option>
-          </select>
+          </select></span>
         </label>
-        <label class="settings-row" for="size-range">
-          <span><span data-i18n="size">Size</span> <small data-i18n="percent">percent</small></span>
-          <span class="position-control"><input id="size-range" type="range" min="50" max="200" step="5"><input id="size-value" type="number" min="50" max="200" step="1"></span>
+        <label class="settings-row dv-setting-row" for="size-range">
+          <span class="dv-setting-row__label"><b data-i18n="size">Size</b><small data-i18n="percent">percent</small></span>
+          <span class="dv-setting-row__control position-control"><input id="size-range" class="dv-slider" type="range" min="50" max="200" step="5"><input id="size-value" class="dv-setting-row__value" type="number" min="50" max="200" step="1"></span>
         </label>
-        <button id="reset-position" class="settings-secondary" type="button" data-i18n="resetPosition">Reset to top-right</button>
       </div>
       <div class="settings-group">
-        <h2 data-i18n="clock">Clock</h2>
-        <label class="settings-row" for="clock-enabled">
-          <span><span data-i18n="showClock">Show clock</span> <small data-i18n="showClockHint">In-game time and date above the card</small></span>
-          <input id="clock-enabled" class="settings-toggle" type="checkbox">
+        <h2 class="dv-kicker" data-i18n="clock">Clock</h2>
+        <label class="settings-row dv-setting-row" for="clock-enabled">
+          <span class="dv-setting-row__label"><b data-i18n="showClock">Show clock</b><small data-i18n="showClockHint">In-game time and date above the card</small></span>
+          <span class="dv-setting-row__control"><span class="dv-toggle"><input id="clock-enabled" class="settings-toggle" type="checkbox"><span class="dv-toggle__track"><i></i></span><span class="toggle-state" data-i18n="toggleOff">Off</span></span></span>
         </label>
-        <label class="settings-row" for="clock-style">
-          <span data-i18n="clockStyle">Clock style</span>
-          <select id="clock-style">
+        <label class="settings-row dv-setting-row" for="clock-style">
+          <span class="dv-setting-row__label"><b data-i18n="clockStyle">Clock style</b></span>
+          <span class="dv-setting-row__control"><select id="clock-style" class="dv-select">
             <option value="plate" data-i18n="plate">Plate</option>
             <option value="ribbon" data-i18n="ribbon">Ribbon</option>
-          </select>
+          </select></span>
         </label>
       </div>
       <div class="settings-group">
-        <h2 data-i18n="language">Language</h2>
-        <label class="settings-row" for="language-select">
-          <span data-i18n="language">Language</span>
-          <select id="language-select" aria-label="Language" data-i18n-attr="aria-label" data-i18n-attr-key="language">
+        <h2 class="dv-kicker" data-i18n="language">Language</h2>
+        <label class="settings-row dv-setting-row" for="language-select">
+          <span class="dv-setting-row__label"><b data-i18n="language">Language</b><small data-i18n="machineTranslationNote">Translations other than English are machine translations; corrections welcome.</small></span>
+          <span class="dv-setting-row__control"><select id="language-select" class="dv-select" aria-label="Language" data-i18n-attr="aria-label" data-i18n-attr-key="language">
             <option value="en">English</option>
             <option value="fr">Français</option>
             <option value="de">Deutsch</option>
@@ -148,21 +151,30 @@
             <option value="zh-CN">简体中文</option>
             <option value="ja">日本語</option>
             <option value="ko">한국어</option>
-          </select>
+          </select></span>
         </label>
-        <p class="settings-hint" data-i18n="machineTranslationNote">Translations other than English are machine translations; corrections welcome.</p>
       </div>
       <div class="settings-group">
-        <h2 data-i18n="hotkeys">Hotkeys</h2>
-        <div class="settings-row hotkey-row"><span data-i18n="openMenu">Open this menu</span><button id="settings-hotkey" class="hotkey-capture" type="button" data-hotkey="settings">Shift+B</button></div>
-        <div class="settings-row hotkey-row"><span data-i18n="hidePet">Hide or show the pet</span><button id="hide-hotkey" class="hotkey-capture" type="button" data-hotkey="hide">Shift+V</button></div>
-        <div class="settings-row hotkey-row pet-hotkey"><span data-i18n="feedPet">Feed your pet</span><button id="feed-hotkey" class="hotkey-capture" type="button" data-hotkey="feed">Shift+N</button></div>
-        <div class="settings-row hotkey-row pet-hotkey"><span id="play-hotkey-label" data-i18n="playPet">Play with your pet</span><button id="play-hotkey" class="hotkey-capture" type="button" data-hotkey="play">Shift+K</button></div>
+        <h2 class="dv-kicker" data-i18n="hotkeys">Hotkeys</h2>
+        <div class="settings-row dv-setting-row hotkey-row"><span class="dv-setting-row__label"><b data-i18n="openMenu">Open this menu</b></span><button id="settings-hotkey" class="hotkey-capture dv-button" type="button" data-hotkey="settings">Shift+B</button></div>
+        <div class="settings-row dv-setting-row hotkey-row"><span class="dv-setting-row__label"><b data-i18n="hidePet">Hide or show the pet</b></span><button id="hide-hotkey" class="hotkey-capture dv-button" type="button" data-hotkey="hide">Shift+V</button></div>
+        <div class="settings-row dv-setting-row hotkey-row pet-hotkey"><span class="dv-setting-row__label"><b data-i18n="feedPet">Feed your pet</b></span><button id="feed-hotkey" class="hotkey-capture dv-button" type="button" data-hotkey="feed">Shift+N</button></div>
+        <div class="settings-row dv-setting-row hotkey-row pet-hotkey"><span class="dv-setting-row__label"><b id="play-hotkey-label" data-i18n="playPet">Play with your pet</b></span><button id="play-hotkey" class="hotkey-capture dv-button" type="button" data-hotkey="play">Shift+K</button></div>
         <p id="hotkey-hint" class="settings-hint" data-i18n="hotkeyHint">Click a key box, then press a key (Shift optional).</p>
       </div>
+      </div>
       <footer class="settings-footer">
-        <button id="settings-cancel" class="settings-secondary" type="button" data-i18n="cancel">Cancel</button>
-        <button id="settings-save" class="settings-primary" type="button" data-i18n="save">Save settings</button>
+        <div class="settings-footer__row">
+          <div class="dv-prompts">
+            <span class="dv-prompt"><span class="dv-keycap" id="settings-footer-key">Shift+B</span><span data-i18n="openMenu">Open this menu</span></span>
+            <span class="dv-prompt"><span class="dv-keycap">Esc</span><span data-i18n="cancel">Cancel</span></span>
+          </div>
+          <button id="reset-position" class="dv-button" type="button" data-i18n="resetPosition">Reset to top-right</button>
+        </div>
+        <div class="settings-footer__row settings-footer__row--end">
+          <button id="settings-cancel" class="dv-button" type="button" data-i18n="cancel">Cancel</button>
+          <button id="settings-save" class="dv-button dv-button--primary" type="button" data-i18n="save">Save settings</button>
+        </div>
       </footer>
     </div>
   </section>
@@ -194,14 +206,14 @@
     </div>
   </section>
   <section id="pet-sheet" class="hidden" aria-label="All companions" data-i18n-attr="aria-label" data-i18n-attr-key="allCompanions"></section>
-  <script src="animation-state.js?v=65"></script>
-  <script src="i18n.js?v=65"></script>
-  <script src="pet-sprites.js?v=65"></script>
-  <script src="clock.js?v=65"></script>
-  <script src="pet-life.js?v=65"></script>
-  <script src="reactions.js?v=65"></script>
-  <script src="regions.js?v=65"></script>
-  <script src="sky.js?v=65"></script>
-  <script src="app.js?v=65"></script>
+  <script src="animation-state.js?v=66"></script>
+  <script src="i18n.js?v=66"></script>
+  <script src="pet-sprites.js?v=66"></script>
+  <script src="clock.js?v=66"></script>
+  <script src="pet-life.js?v=66"></script>
+  <script src="reactions.js?v=66"></script>
+  <script src="regions.js?v=66"></script>
+  <script src="sky.js?v=66"></script>
+  <script src="app.js?v=66"></script>
 </body>
 </html>

@@ -1,12 +1,15 @@
-/* MiniPets' tab inside DovahHub. Everything is scoped under .pets-module; the shared
-   classes (hearth-proof-button, hearth-detail-kicker, hearth-facts) come from DovahHub,
-   the keyframes from pet-motion.css (a copy of the HUD card's). */
-.pets-module { color: var(--ink); }
+/* MiniPets' tab inside DovahHub, in the suite theme. DovahHub's page already loads the kit
+   (theme/dovah-theme.css) and maps its --dv-* tokens to the open DovahHub theme (Skyrim and its colours), so
+   this uses only the kit's classes and tokens and never sets a token or a colour of its own: the tab follows
+   whichever theme the player picked. Everything is scoped under .pets-module; the keyframes come from
+   pet-motion.css (a copy of the HUD card's). The little scene is the pet's art and keeps its own sky. */
+.pets-module { color: var(--dv-ink); }
 .pets-module__columns { display: grid; grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr); gap: 2.4rem; align-items: start; }
 .pets-module__pet { display: flex; flex-direction: column; gap: .7rem; }
+.pets-module .dv-kicker { margin-bottom: .2rem; }
 
-/* the little scene the sprite stands in */
-.pets-scene { position: relative; height: 13rem; overflow: hidden; border: 1px solid var(--line-soft); background: linear-gradient(180deg, rgba(90, 140, 200, .22), rgba(40, 60, 90, .12) 62%, rgba(46, 96, 54, .28) 62%); }
+/* the little scene the sprite stands in: art, not UI */
+.pets-scene { position: relative; height: 13rem; overflow: hidden; border: 1px solid var(--dv-line-soft); background: linear-gradient(180deg, rgba(90, 140, 200, .22), rgba(40, 60, 90, .12) 62%, rgba(46, 96, 54, .28) 62%); }
 .pets-scene__ground { position: absolute; left: 0; right: 0; bottom: 0; height: 38%; background: linear-gradient(180deg, rgba(60, 120, 70, .45), rgba(34, 70, 44, .6)); }
 .pets-sprite { position: absolute; left: 50%; bottom: 34%; transform: translateX(-50%); }
 .pets-sprite.archetype-hover { bottom: 38%; }
@@ -35,36 +38,40 @@
 .pets-module .role-wing-a, .pets-module .role-wing-b { animation: pet-wing-rest 2.8s ease-in-out infinite alternate; }
 .pets-module .role-wing-b { animation-delay: -1.4s; }
 
-.pets-name { margin: .4rem 0 0; font: 400 1.7rem/1.1 var(--font-display); letter-spacing: .04em; }
-.pets-stage { margin: 0; color: var(--ink-soft); font-size: .92rem; }
+.pets-name { margin-top: .4rem; }
+.pets-stage { margin: 0; color: var(--dv-muted); font-size: .95rem; }
+.pets-note { min-height: 1.4rem; margin: .3rem 0 0; color: var(--dv-muted); font-size: .95rem; line-height: 1.4; }
 
-.pets-needs { display: flex; flex-direction: column; gap: .45rem; margin-top: .3rem; }
-.pets-need { display: grid; grid-template-columns: 6rem minmax(0, 1fr) 2.4rem; align-items: center; gap: .8rem; color: var(--muted); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
+/* the needs: the kit's stat bars, red-tinged when low */
+.pets-needs { display: flex; flex-direction: column; margin-top: .1rem; }
 .pets-need[hidden] { display: none; }
-.pets-need__track { position: relative; display: block; height: .55rem; border: 1px solid var(--line-soft); background: rgba(0, 0, 0, .35); }
-.pets-need__track span { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(var(--accent-rgb), .7); transition: width .3s ease; }
-.pets-need__track span.is-low { background: rgba(197, 106, 93, .85); }
-.pets-need b { font-weight: 400; text-align: right; color: var(--ink-soft); letter-spacing: 0; font-variant-numeric: tabular-nums; }
-.pets-need b.is-low { color: rgb(197, 106, 93); }
+.pets-need .dv-stat__bar i { transition: width .3s ease; }
+.pets-need .dv-stat__bar i.is-low { background: var(--dv-bad); }
+.pets-need .dv-stat__value.is-low { color: var(--dv-bad); }
 
 .pets-actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: .5rem; }
 /* one line per label; a long one (French and German egg Feed) takes its own row */
-.pets-actions .hearth-proof-button { flex: 1 1 auto; justify-content: center; white-space: nowrap; }
-.pets-actions .hearth-proof-button:disabled { opacity: .4; pointer-events: none; }
-.pets-result { min-height: 1.4rem; }
+.pets-actions .dv-button { flex: 1 1 auto; white-space: nowrap; }
+
+/* About: label and value per line, the kit's hairline between */
+.pets-facts { margin: 0; }
+.pets-facts > div { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; padding: .55rem 0; border-bottom: 1px solid var(--dv-line-soft); }
+.pets-facts dt { color: var(--dv-muted); font-size: .95rem; letter-spacing: .04em; }
+.pets-facts dd { margin: 0; color: var(--dv-ink); font-size: .98rem; text-align: right; }
 
 .pets-module__picker-kicker { margin-top: 1.6rem; }
 .pets-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.2rem, 1fr)); gap: .5rem; margin-top: .6rem; }
-.pets-picker button { display: flex; flex-direction: column; align-items: center; gap: .35rem; padding: .6rem .3rem .5rem; border: 1px solid var(--line-soft); background: rgba(0, 0, 0, .25); color: var(--ink-soft); font: inherit; font-size: .78rem; cursor: pointer; }
-.pets-picker button:hover, .pets-picker button:focus-visible { border-color: var(--accent); color: var(--ink); }
-.pets-picker button[aria-pressed="true"] { border-color: var(--accent); background: rgba(var(--accent-rgb), .16); color: var(--ink); }
+.pets-picker button { display: flex; flex-direction: column; align-items: center; gap: .35rem; padding: .6rem .3rem .5rem; border: 1px solid var(--dv-line-soft); background: var(--dv-control-fill); color: var(--dv-ink-soft); font: 500 .85rem var(--dv-font); letter-spacing: .04em; cursor: pointer; }
+.pets-picker button:hover, .pets-picker button:focus-visible { border-color: var(--dv-line-strong); color: var(--dv-ink); outline: none; }
+/* the chosen companion: the kit's selection, a gold wash with the inset bar */
+.pets-picker button[aria-pressed="true"] { border-color: var(--dv-line-strong); background: var(--dv-select); box-shadow: inset .2rem 0 var(--dv-accent); color: var(--dv-accent-bright); }
 .pets-picker .pets-thumb { position: relative; height: 3.4rem; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
 .pets-picker[hidden] { display: none; }
 .pets-picker-toggle { margin-top: .6rem; }
 .pets-picker-toggle[hidden] { display: none; }
 /* what the click did, in words */
-.pets-picker-current { margin: .6rem 0 0; color: var(--ink-soft); font-size: .92rem; }
-.pets-picker-current b { color: var(--ink); font-weight: 400; }
+.pets-picker-current { margin: .6rem 0 0; color: var(--dv-ink-soft); font-size: .95rem; }
+.pets-picker-current b { color: var(--dv-ink); font-weight: 500; }
 
 /* the thumbnails idle too, slower and smaller */
 .pets-picker .pet-body { animation-duration: 4.5s; }

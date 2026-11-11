@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# the suite theme kit is pinned by hash: keep its bytes as DovahHub ships them
+view/theme/dovah-theme.css -text
