@@ -42,7 +42,7 @@ const NAMES = [
   'Moss', 'Tinker', 'Skitter', 'Bloop', 'Tusker', 'Masky', 'Glowbug', 'Gnasher', 'Pip',
   'Sundas', 'Morndas', 'Tirdas', 'Middas', 'Turdas', 'Fredas', 'Loredas',
   'MiniPets', 'DovahHub', 'DragonbornXP', 'Skyrim', 'SKSE', 'Plugins', 'PrismaUI', 'views', 'dll', 'Data',
-  'HUD', 'XP', 'Shift', 'Shift+', 'Enter', 'Tab', 'F1', 'F12', 'Dwemer', 'MINIPETS',
+  'HUD', 'XP', 'Shift', 'Shift+', 'Enter', 'Tab', 'Esc', 'F1', 'F12', 'Dwemer', 'MINIPETS',
   // the suite's other mods, named in the reaction settings (1.9.0)
   'DovahDamage', 'Chronicle',
   // each language's own name, shown in that language in the picker

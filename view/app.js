@@ -345,6 +345,31 @@
     positionYRange.value = positionYValue.value = String(shown.y);
     sizeRange.value = sizeValue.value = String(cardScale);
     document.querySelector('#card-shape').value = cardShape;
+    syncSliders();
+  }
+
+  // the suite theme's slider fills to --dv-value (a percentage of the range)
+  function syncSliders() {
+    document.querySelectorAll('#settings-menu .dv-slider').forEach(slider => {
+      const min = Number(slider.min) || 0;
+      const max = Number(slider.max) || 100;
+      const share = max > min ? ((Number(slider.value) - min) / (max - min)) * 100 : 0;
+      slider.style.setProperty('--dv-value', `${Math.max(0, Math.min(100, share))}%`);
+    });
+  }
+
+  // the suite theme's square switch shows the checkbox inside it: on, off, and the word for it
+  function syncToggles() {
+    document.querySelectorAll('#settings-menu .dv-toggle').forEach(toggle => {
+      const input = toggle.querySelector('input');
+      const word = toggle.querySelector('.toggle-state');
+      if (!input) return;
+      toggle.classList.toggle('is-on', input.checked);
+      if (word) {
+        word.dataset.i18n = input.checked ? 'toggleOn' : 'toggleOff';
+        word.textContent = t(word.dataset.i18n);
+      }
+    });
   }
 
   function setPosition(x, y) {
@@ -897,6 +922,8 @@
     clockStyleSelect.value = clockStyle;
     clockStyleSelect.disabled = !showClock;
     raisePetInput.checked = raisePet;
+    syncToggles();
+    document.querySelector('#settings-footer-key').textContent = settingsHotkey;
     renderPetPanel();
   }
 
@@ -1164,9 +1191,12 @@
     const species = localizedSpecies(petLife.species);
     const stage = petLifeRules.growth(petLife, gameHours ?? petLife.laidAt);
     petLifeName.textContent = egg ? `${t('eggName', { name })}${species ? ` (${species})` : ''}` : t('petStage', { name, stage: t({ baby: 'stageBaby', young: 'stageYoung', adult: 'stageAdult' }[stage]) });
-    document.querySelector('#need-warmth').style.width = `${Math.round(petLifeRules.eggProgress(petLife) * 100)}%`;
-    document.querySelector('#need-food').style.width = `${Math.round(petLife.hunger)}%`;
-    document.querySelector('#need-happiness').style.width = `${Math.round(petLife.happiness)}%`;
+    const needs = { warmth: petLifeRules.eggProgress(petLife) * 100, food: petLife.hunger, happiness: petLife.happiness };
+    Object.entries(needs).forEach(([name, value]) => {
+      const shown = Math.round(Math.max(0, Math.min(100, value)));
+      document.querySelector(`#need-${name}`).style.width = `${shown}%`;
+      document.querySelector(`#need-${name}-value`).textContent = `${shown}%`;
+    });
     document.querySelector('#pet-feed').disabled = egg;
     // eggs can't eat, say so rather than looking like the key is taken
     document.querySelector('#pet-feed').textContent = egg ? t('feedAfterHatching') : `${t('feed')} (${feedHotkey})`;
@@ -1475,6 +1505,8 @@
     }
   }
   sizeRange.addEventListener('input', event => setScale(event.target.value));
+  document.querySelectorAll('#settings-menu .dv-slider').forEach(slider => slider.addEventListener('input', syncSliders));
+  [raisePetInput, clockEnabledInput].forEach(input => input.addEventListener('change', syncToggles));
   sizeRange.addEventListener('change', event => setScale(event.target.value));
   sizeValue.addEventListener('change', event => setScale(event.target.value));
   clockStyleSelect.addEventListener('change', event => setClock(showClock, event.target.value));
@@ -1513,6 +1545,7 @@
     if (!captureButton) return;
     captureButton.classList.remove('capturing');
     captureButton.textContent = getHotkey(captureButton.dataset.hotkey);
+    document.querySelector('#settings-footer-key').textContent = settingsHotkey;
     captureButton = null;
     capturingHotkey = false;
   }

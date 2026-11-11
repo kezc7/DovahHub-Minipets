@@ -18,4 +18,8 @@ The plugin DLL is built with the following, which are compiled into it:
 [Prisma UI example plugin](https://github.com/PrismaUI-SKSE/example-skse-plugin), which
 provides them for modders to copy into their own projects.
 
+The settings window uses the Dovah suite's theme (`view/theme/dovah-theme.css`, from DovahHub, GPL-3.0-or-later) with the
+[Barlow Condensed](https://github.com/jpt/barlow) font (copyright The Barlow Project Authors), under the SIL Open Font License 1.1
+(`view/theme/fonts/OFL-BarlowCondensed.txt`, shipped beside the font files).
+
 Prisma UI itself, SKSE and Address Library are separate downloads and aren't included.

@@ -23,6 +23,18 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
+## Suite theme (1.9.4)
+
+The companion settings (Shift+B) wear the Dovah suite's theme; the MiniPets tab inside DovahHub follows DovahHub's own theme.
+
+1. Press Shift+B. The settings are a dark panel with gold diamond corners, headings in spaced capitals, square gold switches with On or Off beside them, gold sliders with the number at the end, selects with a gold arrow, and outlined buttons. At the bottom: `Shift+B Open this menu` and `Esc Cancel` as keycaps, Reset to top-right on the right, then Cancel and Save settings.
+2. Click a switch, drag a slider, pick from a select, press a hotkey box and a key: each works as before. Esc still cancels.
+3. With Raise a pet on: the egg tiles show their names on one or two lines; once hatched, Food and Happiness are side by side with their numbers.
+4. Set the language to Français, then 日本語: nothing runs past the panel's edge, and the Japanese text is drawn (no boxes).
+5. Open DovahHub on the MiniPets tab in its Skyrim theme, then switch DovahHub to a colour (red, pink, green or blue): the tab's bars, buttons and the chosen companion take that colour. With a controller, the ring shows on each button and companion tile.
+
+Pass: every control works as in 1.9.3, the settings look like the mockup, and the tab follows DovahHub's colour.
+
 ## Game thread (1.9.3)
 
 Nothing to do but play; check `MiniPets.log` afterwards. Try it once with DovahHub 0.97.4-beta or later installed and once without DovahHub.
