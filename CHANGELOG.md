@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.4-beta
+- The companion settings (Shift+B) wear the Dovah suite's look, as DovahHub and DovahMenu do: a dark panel with the gold corners, Barlow Condensed in spaced capitals, square switches, gold sliders and selects, outlined buttons and keycap prompts. The pet card and its art are unchanged, and every setting works as before
+- Raising a pet, the settings show Warmth or Food and Happiness side by side with their numbers; Reset to top-right sits at the bottom with Cancel and Save
+- The MiniPets tab in DovahHub follows DovahHub's theme: Skyrim, or the red, pink, green or blue variant
+- Upgrading from 1.9.3-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.3-beta
 - MiniPets' work with the game and the card now runs from the game's own frame update, the one place that is always the game's main thread. With DovahHub 0.97.4-beta or later it shares DovahHub's; without DovahHub, MiniPets hooks the frame update itself, so it works on its own as before
 - 1.9.2's queue turned out to run on other threads in some load orders too, so it is no longer used
