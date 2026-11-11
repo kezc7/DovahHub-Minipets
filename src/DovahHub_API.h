@@ -172,14 +172,15 @@ namespace DOVAHHUB_API
     // when made from another thread;
     // GetOutfitsJson returns {"error":"called off the game thread"}.
     //
-    // "The game thread" is the game's main thread, RE::Main::GetSingleton()->threadID. In some load orders
-    // SKSE's AddTask runs tasks on other threads as well, so being in a task proves nothing. DovahHub calls
-    // your onRequest, onEvent and every SKSE message on the game thread (from 0.97.2 also in those load orders).
-    // To call DovahHub from your own code: call it from those callbacks, or queue the work with SKSE's
-    // AddUITask (UI tasks run on the game thread), or check RE::Main's threadID yourself; not from AddTask.
-    // From 0.97.4: in some load orders UI tasks run on worker threads too, so the game thread is the thread the
-    // game's frame update runs on, as DovahHub's pump sees it (GameThreadId). Queue work with RunOnGameThread,
-    // or with DovahGameThread.h, which does that for you; never with SKSE's AddTask or AddUITask.
+    // "The game thread" is the thread the game's frame update runs on, as DovahHub's pump sees it
+    // (GameThreadId, from 0.97.4). Neither of SKSE's task queues is sure to reach it: in some load orders
+    // AddTask runs its tasks on worker threads, in others AddUITask does, so being in a task proves nothing.
+    // DovahHub calls your onRequest, onEvent and every SKSE message on the game thread.
+    // To call DovahHub from your own code: call it from those callbacks, or queue the work with
+    // RunOnGameThread (after HasPump), or with DovahGameThread.h beside this header, which does that for you
+    // and hooks the frame itself when DovahHub isn't there. IsGameThread says whether you're on it already.
+    // Never queue game work with SKSE's AddTask or AddUITask. (Before 0.97.4 DovahHub judged the game thread
+    // by RE::Main::GetSingleton()->threadID.)
     struct DovahHubApi1
     {
         std::uint32_t apiVersion;        // = kApiVersion1
