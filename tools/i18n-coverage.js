@@ -214,7 +214,8 @@ function auditBypass() {
   const files = [
     ['view/index.html', auditHtml], ['view/app.js', auditScript],
     ['hub/modules/pets/index.html', auditHtml], ['hub/modules/pets/pets.js', auditScript],
-    ['src/main.cpp', auditCpp],
+    // the plugin: its core and the five parts (DMP-12), each where it exists
+    ...['main.cpp', 'CardBridge.cpp', 'ReactionWiring.cpp', 'SaveLoad.cpp', 'HubAndApi.cpp', 'SelfTestRunner.cpp'].map(file => [`src/${file}`, auditCpp]),
   ];
   const result = {};
   for (const [file, audit] of files) if (fs.existsSync(path.join(ROOT, file))) result[file] = audit(file);

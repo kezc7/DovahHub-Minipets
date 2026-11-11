@@ -30,7 +30,9 @@ for (const [file, found] of Object.entries(report.bypass)) {
 }
 
 test('the audit scans the HUD page, the DovahHub tab and the plugin', () => {
-  assert.deepEqual(Object.keys(report.bypass), ['view/index.html', 'view/app.js', 'hub/modules/pets/index.html', 'hub/modules/pets/pets.js', 'src/main.cpp']);
+  const plugin = require('./plugin-source.js').PLUGIN_FILES.filter(file => file.endsWith('.cpp') && require('node:fs').existsSync(path.join(__dirname, '..', 'src', file)));
+  assert.deepEqual(Object.keys(report.bypass), ['view/index.html', 'view/app.js', 'hub/modules/pets/index.html', 'hub/modules/pets/pets.js', ...plugin.map(file => `src/${file}`)]);
+  assert.ok(plugin.includes('main.cpp'));
 });
 
 test('src/HubText.h matches the catalogue', () => {
@@ -46,7 +48,7 @@ test('src/HubText.h holds only ASCII, so the compiler code page cannot change it
 });
 
 test('main.cpp builds DovahHub settings from HubText.h and sends them again when the language changes', () => {
-  const source = require('node:fs').readFileSync(path.join(__dirname, '..', 'src', 'main.cpp'), 'utf8');
+  const source = require('./plugin-source.js').pluginSource();
   assert.match(source, /#include "HubText.h"/);
   assert.match(source, /AddSettings\(g_hubModule, HubSettingsSchema\(\)\.c_str\(\)\)/);
   assert.doesNotMatch(source, /kHubSettingsSchema/);

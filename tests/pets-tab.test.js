@@ -327,7 +327,7 @@ test('the idle keyframes live in pet-motion.css only, and both pages use them', 
 });
 
 test('the plugin\'s companion table matches pet-sprites.js', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'main.cpp'), 'utf8');
+  const source = require('./plugin-source.js').pluginSource();
   const table = source.slice(source.indexOf('kCompanions{'), source.indexOf('} };', source.indexOf('kCompanions{')));
   const native = [...table.matchAll(/\{ "([a-z-]+)", "([A-Za-z]+)" \}/g)].map(match => ({ id: match[1], name: match[2] }));
   assert.deepEqual(native, companions);

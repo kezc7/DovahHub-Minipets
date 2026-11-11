@@ -82,7 +82,7 @@ test('every language names all twelve months and seven days', () => {
 });
 
 test('the plugin sends the month and weekday by number', () => {
-  const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src', 'main.cpp'), 'utf8');
+  const source = require('./plugin-source.js').pluginSource();
   assert.match(source, /"weekdayIndex\\":" \+ std::to_string\(calendar->GetDayOfWeek\(\)\)/);
   assert.match(source, /"monthIndex\\":" \+ std::to_string\(month\)/);
 });
