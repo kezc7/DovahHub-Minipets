@@ -101,7 +101,7 @@ namespace
         int reactionCooldown = Reactions::kDefaultCooldownSeconds;
         bool careMoments = false;
         bool chronicleLines = false;
-        // self_test=1: run the self-test once, ten seconds after the first game loads (DMP-11)
+        // self_test=1: run the self-test once, ten seconds after the first game loads, then back to 0 (DMP-11)
         bool selfTest = false;
     };
 
@@ -2721,13 +2721,16 @@ namespace
         }
     }
 
-    // self_test=1: once per game session, ten seconds after the first load or new game
+    // self_test=1: one run, ten seconds after the first load or new game. The switch goes back to 0 in
+    // the file as the run is set up, so it never runs again by itself (not even after a crash mid-run).
     void MaybeStartSelfTestFromIni()
     {
         if (!g_settings.selfTest || g_selfTestIniDone.exchange(true)) {
             return;
         }
-        logger::info("MiniPets: self_test=1, the self-test starts in 10 s");
+        g_settings.selfTest = false;
+        SaveSettings();
+        logger::info("MiniPets: self_test=1, the self-test starts in 10 s; self_test is set back to 0");
         StartSelfTest({}, false, 10);
     }
 

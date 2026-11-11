@@ -62,7 +62,8 @@ test('the test giant is spawned disabled and removed in the same job', () => {
 test('it starts only when asked: the INI switch once after the first load, Chronicle, or DovahHub', () => {
   const starts = [...code.matchAll(/StartSelfTest\(/g)].length;
   assert.equal(starts, 4, 'the definition, the INI switch, Chronicle and DovahHub');
-  assert.match(cpp, /if \(!g_settings\.selfTest \|\| g_selfTestIniDone\.exchange\(true\)\)/);
+  assert.match(cpp, /if \(!g_settings\.selfTest \|\| g_selfTestIniDone\.exchange\(true\)\) \{\s*return;\s*\}\s*g_settings\.selfTest = false;\s*SaveSettings\(\);/,
+    'the switch sets itself back to 0 as the one run starts (team rule)');
   assert.match(cpp, /else if \(key == "self_test"\) \{\s*g_settings\.selfTest = ParseFlag\(value\);/);
   assert.match(cpp, /if \(g_settings\.selfTest\) \{\s*output << "self_test=1\\n";/, 'kept in the file only while it is on');
   assert.match(cpp, /bool selfTest = false;/, 'off by default');

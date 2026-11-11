@@ -28,7 +28,7 @@ Pass: each reaction appears once, reads in the chosen language, never covers a m
 MiniPets checks itself in game: the card, every reaction, and the save-to-save rules. **It changes the save it runs on** (it simulates a new game and puts the pet back), so load a save you can throw away first.
 
 **Starting it**, any one of:
-- `self_test=1` in `Data/SKSE/Plugins/MiniPets.ini` (MO2: the copy in Overwrite). It runs once, ten seconds after the first save loads or a new game starts, and not again until the game restarts. Set it back to 0 afterwards.
+- `self_test=1` in `Data/SKSE/Plugins/MiniPets.ini` (MO2: the copy in Overwrite). It runs once, ten seconds after the first save loads or a new game starts. MiniPets sets it back to 0 in the file as the run starts, so set it to 1 again for another run.
 - With Chronicle: type `/minipets selftest` in Chronicle's input bar. Chronicle answers when it starts, and posts the DONE line at the end.
 - With DovahHub 0.98.0 or later and `[Debug] bSelfTest=1` in DovahHub.ini: Settings > Diagnostics > Run self-test runs MiniPets' with the other mods' (MiniPets is module `pets`).
 
