@@ -2603,6 +2603,13 @@
     return result === undefined ? key : result;
   }
 
+  // true when the language's own catalogue has the line; value() and t() fall back to English
+  function has(key, id = current) {
+    let result = ui[language(id)];
+    for (const part of key.split('.')) result = result && result[part];
+    return result !== undefined;
+  }
+
   function interpolate(template, vars = {}) {
     return String(template).replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) => vars[name] === undefined ? match : vars[name]);
   }
@@ -2681,5 +2688,5 @@
     });
   }
 
-  return Object.freeze({ languages: Object.freeze(Object.keys(languageNames)), languageNames: Object.freeze(languageNames), get current() { return current; }, t, plural, value, setLanguage, caption, petName, species, dateWord, formatDate, apply });
+  return Object.freeze({ languages: Object.freeze(Object.keys(languageNames)), languageNames: Object.freeze(languageNames), get current() { return current; }, t, plural, value, has, setLanguage, caption, petName, species, dateWord, formatDate, apply });
 });

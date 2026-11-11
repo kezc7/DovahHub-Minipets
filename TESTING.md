@@ -23,6 +23,45 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
+## Self-test (1.9.5)
+
+MiniPets checks itself in game: the card, every reaction, and the save-to-save rules. **It changes the save it runs on** (it simulates a new game and puts the pet back), so load a save you can throw away first.
+
+**Starting it**, any one of:
+- `self_test=1` in `Data/SKSE/Plugins/MiniPets.ini` (MO2: the copy in Overwrite). It runs once, ten seconds after the first save loads or a new game starts, and not again until the game restarts. Set it back to 0 afterwards.
+- With Chronicle: type `/minipets selftest` in Chronicle's input bar. Chronicle answers when it starts, and posts the DONE line at the end.
+- With DovahHub 0.98.0 or later and `[Debug] bSelfTest=1` in DovahHub.ini: Settings > Diagnostics > Run self-test runs MiniPets' with the other mods' (MiniPets is module `pets`).
+
+**Where the lines land:** `MiniPets.log`, one line per step, then the totals:
+```
+SELFTEST pets react.sleep PASS shown sleep reactSleeping (held); the card plays it
+SELFTEST pets DONE pass=14 fail=0 skip=0 ms=21480
+```
+In DovahHub's run the same steps also go to DovahHub's list, `DovahHub.log` and `DovahSuite-SelfTest-<runId>.log`. A run takes about 20 to 40 seconds; it stops starting new steps after 150.
+
+**The steps:**
+
+| Step | Checks |
+|---|---|
+| `pet.summon` | A test companion (Pip the chicken, or Ember the fox if Pip is yours) is put on the card, and the card draws it. Raise-a-pet is paused for the test. |
+| `pet.follow` | The card's pose follows the player: standing idle, moving, or in combat. |
+| `pet.listed` | MiniPets' API state (what the DovahHub tab reads) names the test companion. |
+| `react.lowhealth` | The health handler, given 20% health, offers cower with "Careful!". |
+| `react.sleep` | The sleep-start handler offers the held sleep pose. |
+| `react.boss` | A giant from the load order is placed beside you, disabled in the same frame, so it never appears; the kill handler counts it as a boss and offers the hop. It is deleted straight after. SKIP when the load order has no giant. |
+| `react.death` | The death handler, given the player's death, offers the held sad pose. |
+| `react.milestone` | DovahHub's story event "Horse Master I" through MiniPets' DovahHub message handler offers the fanfare. |
+| `react.lines` | All 22 reaction lines are in the current language's own catalogue (not English stand-ins). |
+| `save.stale` | A pet state from another save, one without a session, and one sent during a load are refused; this save's is taken. |
+| `save.newgame` | A new game's revert clears the pet and the card and refuses the old save's state; the pet is then put back. |
+| `pump` | Which pump ran the work (DovahHub's, or MiniPets' own frame hook without DovahHub), and that every step ran on the game thread. |
+| `cleanup` | Your companion and raise-a-pet are as they were, no pose is held, the test giant is gone. |
+| `cleanup.page` | The card draws your own pet or companion again. |
+
+Each reaction step checks what the handler offered. When the card is on screen, it also checks the card plays it; when the card is hidden (DovahHub or another menu is open, or Shift+V), the line says "not shown: the card is hidden", and that counts as a pass. Run it from the INI switch with no menu open to see the card play each one. "React to other mods" off shows as "not shown" for the boss and the milestone.
+
+Pass: `DONE ... fail=0`. Afterwards your companion, your raised pet and its bars are as before, and no giant is anywhere near you.
+
 ## Suite theme (1.9.4)
 
 The companion settings (Shift+B) wear the Dovah suite's theme; the MiniPets tab inside DovahHub follows DovahHub's own theme.

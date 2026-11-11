@@ -72,7 +72,9 @@ test('a held reaction from the last save ends with the load', () => {
 });
 
 test('the plugin: Revert and kPreLoadGame start a new session; loading clears every per-playthrough value', () => {
-  const revert = cpp.slice(cpp.indexOf('static void OnRevert('), cpp.indexOf('static void SKSEMessageHandler('));
+  // OnRevert calls RevertSave, which the self-test's new-game step calls too
+  assert.match(cpp.slice(cpp.indexOf('static void OnRevert('), cpp.indexOf('static void SKSEMessageHandler(')), /RevertSave\(\);/);
+  const revert = cpp.slice(cpp.indexOf('void RevertSave()'), cpp.indexOf('void MaybeStartSelfTestFromIni();'));
   assert.match(revert, /g_petState\.clear\(\);/);
   assert.match(revert, /g_bestHit = 0\.0f;/);
   assert.match(revert, /BeginLoad\(\);/);

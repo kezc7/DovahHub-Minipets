@@ -1269,6 +1269,18 @@
     react(data) {
       react(data);
     },
+    // the plugin's self-test (DMP-11) asks what the card draws: the pet, its pose, the reaction playing,
+    // the save session, and which of the reaction lines it was given aren't in this language's own catalogue
+    selfTest(data) {
+      if (typeof window.selfTestAnswer !== 'function') return;
+      const keys = data && Array.isArray(data.keys) ? data.keys : [];
+      const missing = keys.filter(key => typeof petI18n.has !== 'function' || !petI18n.has(key));
+      const playing = reactionPlayer ? reactionPlayer.current() : null;
+      window.selfTestAnswer(JSON.stringify({
+        id: data && data.id, species: shownSpecies() || '', raisePet, base: current.base, session: petSession,
+        hasPet: Boolean(petLife), reaction: playing ? playing.mood : '', language, missing: missing.join(', ')
+      }));
+    },
     // a held reaction ends (waking up, getting up), or every reaction on a load ({})
     reactEnd(data) {
       if (reactionPlayer) reactionPlayer.end(data && data.mood);
