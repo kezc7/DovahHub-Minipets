@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.8-beta
+- DovahMenu opens MiniPets' settings directly when you pick it, instead of pressing Shift+B for you. That was the cause of the settings sometimes not opening from DovahMenu, mostly with a controller. If a closing menu still covers the card for a moment, the settings open as soon as it has gone. Needs DovahMenu 0.5.6-beta or later; older DovahMenu versions keep pressing the key as before
+- Shift+B, or whatever key you bound, works as before
+- Upgrading from 1.9.7-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.7-beta
 - A raised pet lives longer: after baby, young and adult it becomes seasoned (20 in-game days) and then an elder (60), and the card celebrates each time it grows. A pet you already have takes its stage quietly
 - It remembers what it saw with you: the first dragon, the bosses you bring down, your DovahHub milestones, every tenth level, and the first time in each city, realm and at home. Now and then, at most once an in-game day, it brings one up. The MiniPets tab in DovahHub lists the newest five
