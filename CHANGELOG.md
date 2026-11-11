@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.5-beta
+- An in-game self-test for testers: `self_test=1` in MiniPets.ini (once, after the first load), `/minipets selftest` in Chronicle, or DovahHub 0.98.0's Settings > Diagnostics > Run self-test. It checks the card, every reaction through the handlers the game uses, the reaction lines in your language and the save-to-save rules, writes one line per step to MiniPets.log, and puts everything back. It changes the save it runs on: use one you can throw away. TESTING.md has the steps
+- Nothing changes in a normal game: the self-test never runs unless started
+- Upgrading from 1.9.4-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.4-beta
 - The companion settings (Shift+B) wear the Dovah suite's look, as DovahHub and DovahMenu do: a dark panel with the gold corners, Barlow Condensed in spaced capitals, square switches, gold sliders and selects, outlined buttons and keycap prompts. The pet card and its art are unchanged, and every setting works as before
 - Raising a pet, the settings show Warmth or Food and Happiness side by side with their numbers; Reset to top-right sits at the bottom with Cancel and Save
