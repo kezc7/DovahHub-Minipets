@@ -23,6 +23,19 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
+## Opened from DovahMenu (1.9.8)
+
+DovahMenu opens MiniPets' settings itself instead of pressing Shift+B (DMP-14, DovahMenu's DMN-31 rule). This needs DovahMenu 0.5.6-beta or later.
+
+1. **Registration.** Load a save. `MiniPets.log` has `DovahMenu entry registered (opens MiniPets' settings directly)`. `DovahMenu.log` no longer lists MiniPets under "opened by a key press, not their own callback".
+2. **Opening.** Open DovahMenu and pick MiniPets: the settings open. `MiniPets.log` has one of these:
+   - `settings opened from DovahMenu`;
+   - `settings asked for by DovahMenu while the overlay is hidden; opening once it's shown`, followed by `overlay shown; opening the settings DovahMenu asked for`.
+
+   `DovahMenu.log` has `launching "MiniPets" (callback)`. Try it several times, and also with the pad, which goes through Magelight's focus menu: it opens every time.
+3. **The key.** Shift+B still opens the settings on its own. Rebind it in the settings (for example to Shift+J), then open DovahMenu: MiniPets is still listed and still opens.
+4. **Without DovahMenu.** Disable DovahMenu: MiniPets loads, and the log has `DovahMenu not found, no DovahMenu entry`.
+
 ## A raised pet's longer life (1.9.7)
 
 Stages, memories and places (DMP-13). Use a save with a hatched raised pet, and play these in order. Nothing here happens to an egg or to a companion you aren't raising.

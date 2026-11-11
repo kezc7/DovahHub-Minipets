@@ -2,11 +2,21 @@
 // and MiniPets_API.h for other mods (feed, play, companion, card, clock, listeners, React).
 #include "Plugin.h"
 #include "HubText.h"
+#include "DovahMenu_API.h"
 
 namespace MiniPets::Hub
 {
     namespace
     {
+        // DMN-31: MiniPets' entry in DovahMenu, so DovahMenu opens the settings directly instead of pressing Shift+B
+        const DOVAHMENU_API::DovahMenuApi1* g_menu = nullptr;
+        DOVAHMENU_API::EntryId g_menuEntry = 0;
+
+        void OpenFromDovahMenu(void*)  // DovahMenu calls this on the game thread as it closes
+        {
+            Card::OpenSettingsFromDovahMenu();
+        }
+
         // --- DovahHub's MiniPets tab and the MiniPets API ------------------------------------------------
         //
         // The pet rules stay in the HUD page. The tab (hub/modules/pets/, shipped inside DovahHub's view
@@ -504,6 +514,40 @@ namespace MiniPets::Hub
         g_miniPetsApi.AddListener = &ApiAddListener;
         g_miniPetsApi.RemoveListener = &ApiRemoveListener;
         g_miniPetsApi.React = &ApiReact;
+    }
+
+    // DovahMenu's entry: the id is the PrismaUI view folder, so it replaces the one DovahMenu's scan finds
+    // (view/dovahmenu.json stays, for its name and key). DovahMenu then calls MiniPets instead of pressing Shift+B.
+    void RegisterWithDovahMenu()
+    {
+        g_menu = DOVAHMENU_API::RequestApi();
+        if (!g_menu) {
+            logger::info("MiniPets: DovahMenu not found, no DovahMenu entry");
+            return;
+        }
+        DOVAHMENU_API::EntryDesc desc{};
+        desc.size = sizeof(desc);
+        desc.id = "MiniPets";
+        desc.name = "MiniPets";
+        desc.hotkey = g_settings.settingsHotkeyName.c_str();
+        desc.framework = DOVAHMENU_API::Framework::PrismaUI;
+        desc.onOpen = &OpenFromDovahMenu;
+        desc.user = nullptr;
+        const auto result = g_menu->Register(&desc, &g_menuEntry);
+        logger::info("MiniPets: DovahMenu entry {}", result == DOVAHMENU_API::Result::Ok ? std::string("registered (opens MiniPets' settings directly)") :
+                                                        "not registered (" + std::to_string(static_cast<int>(result)) + ")");
+        if (result != DOVAHMENU_API::Result::Ok) {
+            g_menu = nullptr;
+            g_menuEntry = 0;
+        }
+    }
+
+    // The settings key changed: DovahMenu's key picker (FindKeyOwner) should know.
+    void UpdateDovahMenuHotkey()
+    {
+        if (g_menu && g_menuEntry) {
+            (void)g_menu->SetHotkey(g_menuEntry, g_settings.settingsHotkeyName.c_str());
+        }
     }
 
     const void* Api()
