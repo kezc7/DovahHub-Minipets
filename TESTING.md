@@ -25,7 +25,7 @@ Pass: each reaction appears once, reads in the chosen language, never covers a m
 
 ## Opened from DovahMenu (1.9.8)
 
-DovahMenu opens MiniPets' settings itself instead of pressing Shift+B (DMP-14, DovahMenu's DMN-31 rule). This needs DovahMenu 0.5.6-beta or later.
+DovahMenu opens MiniPets' settings itself instead of pressing Shift+B (DMP-14, DovahMenu's DMN-31 rule). DovahMenu 0.5.0-beta or later uses it; check 1's DovahMenu.log line needs 0.5.6-beta.
 
 1. **Registration.** Load a save. `MiniPets.log` has `DovahMenu entry registered (opens MiniPets' settings directly)`. `DovahMenu.log` no longer lists MiniPets under "opened by a key press, not their own callback".
 2. **Opening.** Open DovahMenu and pick MiniPets: the settings open. `MiniPets.log` has one of these:

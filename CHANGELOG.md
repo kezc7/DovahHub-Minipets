@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.9.8-beta
-- DovahMenu opens MiniPets' settings directly when you pick it, instead of pressing Shift+B for you. That was the cause of the settings sometimes not opening from DovahMenu, mostly with a controller. If a closing menu still covers the card for a moment, the settings open as soon as it has gone. Needs DovahMenu 0.5.6-beta or later; older DovahMenu versions keep pressing the key as before
+- DovahMenu opens MiniPets' settings directly when you pick it, instead of pressing Shift+B for you. That was the cause of the settings sometimes not opening from DovahMenu, mostly with a controller. If a closing menu still covers the card for a moment, the settings open as soon as it has gone. With DovahMenu 0.5.0-beta or later; older versions keep pressing the key as before
 - Shift+B, or whatever key you bound, works as before
 - Upgrading from 1.9.7-beta: install over it in your mod manager; nothing else changes
 
