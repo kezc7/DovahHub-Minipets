@@ -179,6 +179,7 @@ namespace MiniPets
         void StoreKeys();
         bool CreateView();
         void RegisterEvents();
+        void OpenSettingsFromDovahMenu();  // DovahMenu's entry (DMN-31): opens now, or once the overlay is shown again
     }
 
     // ---- the reaction wiring (ReactionWiring.cpp) ----
@@ -263,6 +264,8 @@ namespace MiniPets
         bool Present();
         DOVAHHUB_API::Result ReportSelfTestStep(const char* stepJson);
         DOVAHHUB_API::Result FinishSelfTest();
+        void RegisterWithDovahMenu();
+        void UpdateDovahMenuHotkey();
     }
 
     // ---- the self-test runner (SelfTestRunner.cpp) ----

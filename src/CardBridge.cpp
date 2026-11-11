@@ -22,6 +22,15 @@ namespace MiniPets::Card
         PetKey g_hideKey;
         std::atomic_bool g_shiftDown = false;
         std::atomic_bool g_overlayHiddenForMenus = true;
+        // DovahMenu asked for settings while the overlay was hidden for a menu that is closing: open them as
+        // soon as the overlay is shown again, if that's within 2 s (steady-clock ms; 0 = nothing waiting).
+        std::atomic<std::int64_t> g_openSettingsWhenShownUntil = 0;
+        constexpr std::int64_t kDovahMenuWaitMs = 2000;
+
+        std::int64_t SteadyMs()
+        {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        }
         std::string g_lastCompanionState;
         std::string g_lastWorldMood;
         // DMP-13: the place the pet last noticed ("" after a load: the place a load starts in says nothing)
@@ -372,6 +381,7 @@ namespace MiniPets::Card
                 StorePetKey(g_hideKey, hideKey);
                 g_settingsHotkey.store(hotkey);
                 g_settingsHotkeyRequiresShift.store(requiresShift);
+                Hub::UpdateDovahMenuHotkey();
                 WarnAboutDuplicateHotkeys();
                 SaveSettings();
                 Hub::PushPetsState();
@@ -560,6 +570,31 @@ namespace MiniPets::Card
         else if (viewHidden) {
             g_prismaUI->Show(g_view);
         }
+
+        // DMN-31: the settings DovahMenu asked for while a closing menu still hid the overlay
+        if (changed && !shouldHide) {
+            if (const auto until = g_openSettingsWhenShownUntil.exchange(0); until != 0) {
+                if (SteadyMs() <= until) {
+                    logger::info("MiniPets: overlay shown; opening the settings DovahMenu asked for");
+                    OpenSettings();
+                }
+                else {
+                    logger::info("MiniPets: the settings DovahMenu asked for were dropped: the overlay stayed hidden over 2 s");
+                }
+            }
+        }
+    }
+
+    // DMN-31: DovahMenu's entry (game thread, as DovahMenu closes). Opens now, or once the overlay is shown again.
+    void OpenSettingsFromDovahMenu()
+    {
+        if (!g_overlayHiddenForMenus.load()) {
+            logger::info("MiniPets: settings opened from DovahMenu");
+            OpenSettings();
+            return;
+        }
+        g_openSettingsWhenShownUntil.store(SteadyMs() + kDovahMenuWaitMs);
+        logger::info("MiniPets: settings asked for by DovahMenu while the overlay is hidden; opening once it's shown");
     }
 
     // DMP-13: the player's own house, and the place as the game names it

@@ -74,6 +74,8 @@ namespace MiniPets
             if (!Card::CreateView()) {
                 return;
             }
+            // DMN-31: there is a view to open, so DovahMenu can open it directly
+            Hub::RegisterWithDovahMenu();
 
             Card::RegisterEvents();
             ReactionWiring::RegisterEvents();
