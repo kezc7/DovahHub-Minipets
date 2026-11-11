@@ -26,7 +26,7 @@ Press **Shift+B** in game. You can pick your companion, drag the card wherever y
 
 DovahHub's Settings tab has the reaction options: React to other mods (on), Time between reactions (8 seconds by default; one gap for every reaction), Shared moments count as care (off: each of the first three big moments of a game day makes a raised pet a little happier), and Your companion speaks in Chronicle (off: one line in Chronicle's chat at most once a minute). Without DovahHub they are `react_to_mods`, `reaction_cooldown`, `care_moments` and `chronicle_lines` in the INI.
 
-For testers, `self_test=1` in the INI runs MiniPets' in-game self-test once after the first load (also `/minipets selftest` in Chronicle, or DovahHub's Diagnostics). It changes the save it runs on; see TESTING.md, "Self-test".
+For testers, `self_test=1` in the INI runs MiniPets' in-game self-test once after the first load, then switches itself back to 0 (also `/minipets selftest` in Chronicle, or DovahHub's Diagnostics). It changes the save it runs on; see TESTING.md, "Self-test".
 
 Setting `debug_preview_keys=1` in the INI turns on two test keys: F6 for an XP popup and F7 for a level-up.
 
