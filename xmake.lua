@@ -23,6 +23,8 @@ add_rules("plugin.vsxmake.autoupdate")
 
 target(PLUGIN_NAME)
     add_deps("commonlibsse-ng")
+    -- the release runs every test file before it zips (the suite's rule): the C++ ones are built first
+    add_deps("MiniPets_tests")
     add_rules("commonlibsse-ng.plugin", {
         name = PLUGIN_NAME,
         author = "KezC7",
@@ -75,12 +77,32 @@ target(PLUGIN_NAME)
 
         cprint("${bright green}created distribution folder: ${clear}dist/%s_%s", PLUGIN_NAME, PLUGIN_VERSION)
 
+        -- every test file in the repo, before anything is zipped; any failure stops the build
+        import("core.project.project")
+        local nodetests = os.files(path.join(os.projectdir(), "tests", "*.test.js"))
+        table.sort(nodetests)
+        local nodeargs = {"--test"}
+        for _, file in ipairs(nodetests) do
+            table.insert(nodeargs, file)
+        end
+        os.execv("node", nodeargs)
+        local cpptests = os.files(path.join(os.projectdir(), "tests", "cpp", "*.cpp"))
+        os.execv(project.target("MiniPets_tests"):targetfile())
+        local pytests = os.files(path.join(os.projectdir(), "tools", "test-*.py"))
+        for _, file in ipairs(pytests) do
+            os.execv("python", {file})
+        end
+        cprint("${bright green}ran every test file: ${clear}%d of %d (%d node, %d C++ in MiniPets_tests, %d Python)",
+            #nodetests + #cpptests + #pytests, #nodetests + #cpptests + #pytests, #nodetests, #cpptests, #pytests)
+
         -- zip for MO2, SKSE/ and PrismaUI/ at the root
         import("utils.archive")
         local zipname = PACKAGE_NAME .. PLUGIN_VERSION .. ".zip"
         local zipfile = path.join(os.projectdir(), zipname)
         os.tryrm(zipfile)
         archive.archive(zipfile, {"SKSE", "PrismaUI"}, {curdir = distdir, recurse = true})
+        -- no compiled Papyrus script may carry the compiling PC's names; MiniPets ships none
+        os.execv("python", {path.join(os.projectdir(), "tools", "pex-header.py"), "check", "--allow-none", zipfile})
         cprint("${bright green}created MO2 package: ${clear}%s", zipname)
     end)
 
