@@ -218,7 +218,13 @@ namespace MiniPets::SelfTestRunner
             return nullptr;
         }
 
-        const char* PumpName()
+        // the plugin's state for the player, in words for the pet.follow line
+    std::string PlayerStateWords(const std::string& state)
+    {
+        return state == "combat" ? "in combat" : state == "flying" ? "moving" : state == "idle" ? "standing still" : "'" + state + "'";
+    }
+
+    const char* PumpName()
         {
             const auto& pump = DovahGameThread::detail::S();
             switch (pump.mode.load()) {
@@ -295,10 +301,10 @@ namespace MiniPets::SelfTestRunner
                         SelfTestReport(*run, "pet.follow", Result::Fail, kNoAnswer);
                     }
                     else if (SelfTest::PoseFollows(run->companionState, base)) {
-                        SelfTestReport(*run, "pet.follow", Result::Pass, "the player is " + run->companionState + ", the card's pose is " + base);
+                        SelfTestReport(*run, "pet.follow", Result::Pass, "the player is " + PlayerStateWords(run->companionState) + ", the card's pose is " + base);
                     }
                     else {
-                        SelfTestReport(*run, "pet.follow", Result::Fail, "the player is " + run->companionState + ", but the card's pose is '" + base + "'");
+                        SelfTestReport(*run, "pet.follow", Result::Fail, "the player is " + PlayerStateWords(run->companionState) + ", but the card's pose is '" + base + "'");
                     }
                 }
                 if (!outOfTime("pet.listed")) {
