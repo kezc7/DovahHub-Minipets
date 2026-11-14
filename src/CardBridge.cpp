@@ -897,9 +897,10 @@ namespace MiniPets::Card
                     taskInterface->Queue([]() { FeedFromPack(); });
                 }
             });
-            // new page, resend everything
+            // new page, resend everything, the player's pose included
             g_lastWorldMood.clear();
             g_lastClockMinute = -1;
+            g_lastCompanionState.clear();
             Invoke("dragonbornXP.initialize", "{}");
             Invoke("dragonbornXP.applySettings", SettingsPayload());
             PetSave::SendPetState();

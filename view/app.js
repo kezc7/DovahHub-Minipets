@@ -741,13 +741,22 @@
     shell.append(emblem);
   }
 
+  // A new sprite (another companion, raise-a-pet on or off, hatching, a new stage) drops any one-shot, but
+  // keeps the pose: the plugin only sends a pose when the player's state changes, so a pet redrawn mid-fight
+  // must go on fighting rather than stand idle until the fight ends (the 14 Nov self-test's pet.follow)
+  function resetPose() {
+    const base = current.base;
+    controller.reset();
+    if (base !== 'idle') controller.setBase(base);
+  }
+
   function setPet(nextPet) {
     const resolved = nextPet === 'pinky' ? 'dovahpink' : petNames[nextPet] ? nextPet : 'dovahmin';
     if (resolved === pet && spriteHost.childElementCount) return false;
     pet = resolved;
     idleVariationIndex = 0;
     renderSprite();
-    controller.reset();
+    resetPose();
     return true;
   }
 
@@ -1072,7 +1081,7 @@
     if (force || petVisualKey() !== shownPetKey) {
       idleVariationIndex = 0;
       renderSprite();
-      controller.reset();
+      resetPose();
     } else {
       // leave any caption that's showing alone, just keep the name plate current
       applySceneClasses();
