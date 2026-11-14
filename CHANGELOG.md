@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.9-beta
+- The companion no longer stands idle in the middle of a fight after it is drawn again: picking another companion, switching raise-a-pet on or off, a hatch or a new stage now keeps the fighting (or moving) pose. The self-test found it
+- The self-test's pose line reads "in combat", "moving" or "standing still"
+- Upgrading from 1.9.8-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.8-beta
 - DovahMenu opens MiniPets' settings directly when you pick it, instead of pressing Shift+B for you. That was the cause of the settings sometimes not opening from DovahMenu, mostly with a controller. If a closing menu still covers the card for a moment, the settings open as soon as it has gone. With DovahMenu 0.5.0-beta or later; older versions keep pressing the key as before
 - Shift+B, or whatever key you bound, works as before

@@ -23,6 +23,14 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
+## The pose after a redraw (1.9.9)
+
+DMP-15: a pet that is drawn again (another companion, raise-a-pet switched on or off, hatching, a new stage) keeps the pose it had.
+
+1. Start a fight. While it goes on, open the settings (Shift+B) and pick another companion, then Save: the new companion is in its fighting pose straight away, not standing idle.
+2. Run the self-test during a fight (followers fighting is enough): `pet.follow` is PASS with "the player is in combat, the card's pose is combat".
+3. End the fight: the card goes back to idle.
+
 ## Opened from DovahMenu (1.9.8)
 
 DovahMenu opens MiniPets' settings itself instead of pressing Shift+B (DMP-14, DovahMenu's DMN-31 rule). DovahMenu 0.5.0-beta or later uses it; check 1's DovahMenu.log line needs 0.5.6-beta.
