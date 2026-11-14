@@ -2,3 +2,6 @@
 * text=auto
 # the suite theme kit is pinned by hash: keep its bytes as DovahHub ships them
 view/theme/dovah-theme.css -text
+# DovahFollowerControl's Papyrus header tools, copied unchanged: keep their bytes
+tools/pex-header.py -text
+tools/test-pex-header.py -text
