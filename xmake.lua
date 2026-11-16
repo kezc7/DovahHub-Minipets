@@ -112,6 +112,13 @@ target(PLUGIN_NAME)
         archive.archive(zipfile, {"SKSE", "PrismaUI"}, {curdir = distdir, recurse = true})
         -- no compiled Papyrus script may carry the compiling PC's names; MiniPets ships none
         os.execv("python", {path.join(os.projectdir(), "tools", "pex-header.py"), "check", "--allow-none", zipfile})
+        -- only MiniPets' own files ship: every entry is checked against tools/zip-allowlist.txt (DMP-19)
+        local allowlist = path.join(os.projectdir(), "tools", "zip-allowlist.py")
+        local own = try { function () os.execv("python", {"-I", allowlist, path.join(os.projectdir(), "tools", "zip-allowlist.txt"), zipfile}) return true end }
+        if not own then
+            os.tryrm(zipfile)
+            raise("an entry in the zip is not in tools/zip-allowlist.txt; the zip was deleted")
+        end
         -- no entry, the DLL included, may hold a user-folder path or the name of whoever ran this build (read from
         -- the environment by the tool, never written down); tools/build-release.ps1 keeps both out of the build
         local scan = path.join(os.projectdir(), "tools", "zip-user-scan.py")

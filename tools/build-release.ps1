@@ -5,7 +5,8 @@ param(
 
 # Builds MiniPets.dll and its MO2 zip the way a release must be built: xmake's packages and every temporary
 # file are kept outside the user's own folder, so no path in the DLL (or a debug file, if one is ever shipped)
-# names who built it. xmake.lua does the rest: every test file, the zip, and the two zip checks.
+# names who built it. xmake.lua does the rest: every test file, the zip, and the three zip checks. The zip this
+# script reports is checked against tools/zip-allowlist.txt once more before its SHA-256 is printed.
 #   powershell -File tools\build-release.ps1 -Clean
 # The version is PLUGIN_VERSION in xmake.lua; this script only reads it.
 
@@ -86,6 +87,9 @@ try {
 } finally {
     $archive.Dispose()
 }
+# only MiniPets' own files ship (DMP-19): the zip being reported holds nothing outside the allowlist
+& python -I (Join-Path $root 'tools\zip-allowlist.py') (Join-Path $root 'tools\zip-allowlist.txt') $zip
+if ($LASTEXITCODE -ne 0) { throw "The zip holds an entry outside tools\zip-allowlist.txt (named above)" }
 Write-Host "DLL file version $dllVersion ($($info.FileVersion)), written $($item.LastWriteTime.ToString('HH:mm:ss'))"
 Write-Host "Package complete: $zip (SHA-256 $((Get-FileHash -LiteralPath $zip).Hash))"
 } finally {

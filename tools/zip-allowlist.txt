@@ -1,0 +1,27 @@
+# What a MiniPets zip may hold, and nothing else (the suite's rule: only the mod's own files ship).
+# tools/zip-allowlist.py checks every entry of the finished zip against this file; one stray entry stops the build.
+#
+# A line is one of:
+#   <path>                    one file, exactly as the zip names it
+#   <folder>/ <ext> <ext> ... any file at any depth in that folder with one of these extensions
+# Folders above an allowed path (SKSE/, PrismaUI/views/ and so on) may appear as folder entries; their other files
+# may not. A name with a backslash, a "..", a leading "/" or a part starting with "." (.git, .vs) is never allowed.
+
+# the plugin, and its debug file if a build ships one (CrashLogger reads it)
+SKSE/plugins/MiniPets.dll
+SKSE/plugins/MiniPets.pdb
+
+# licence and notice files, by name
+SKSE/plugins/MiniPets-licenses/LICENSE.txt
+SKSE/plugins/MiniPets-licenses/THIRD-PARTY-NOTICES.md
+SKSE/plugins/MiniPets-licenses/CommonLibSSE-NG-EXCEPTIONS.md
+SKSE/plugins/MiniPets-licenses/CommonLibSSE-original-MIT.txt
+SKSE/plugins/MiniPets-licenses/DirectXMath-LICENSE.txt
+SKSE/plugins/MiniPets-licenses/DirectXTK-LICENSE.txt
+SKSE/plugins/MiniPets-licenses/rapidcsv-LICENSE.txt
+SKSE/plugins/MiniPets-licenses/spdlog-LICENSE.txt
+PrismaUI/views/MiniPets/theme/fonts/OFL-BarlowCondensed.txt
+
+# the HUD card and its settings (view/), and the MiniPets tab inside DovahHub's view folder (hub/modules/pets/)
+PrismaUI/views/MiniPets/ .html .js .css .json .ttf
+PrismaUI/views/DovahHub/modules/pets/ .html .js .css
