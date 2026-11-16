@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.10-beta
+- Work with the game only ever runs on the game's own thread. If neither DovahHub's frame update nor MiniPets' own hook is running (an unusual load order or game version), that work now waits for the game's thread instead of going to SKSE's UI tasks, which can run on another one. With DovahHub, or with MiniPets' hook in place, nothing changes
+- The download includes MiniPets.pdb beside MiniPets.dll, so a crash log can name MiniPets' functions
+- The licence notes name the CommonLibSSE-NG version MiniPets is built with (7.5.4) and include its licence text unchanged
+- Upgrading from 1.9.9-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.9-beta
 - The companion no longer stands idle in the middle of a fight after it is drawn again: picking another companion, switching raise-a-pet on or off, a hatch or a new stage now keeps the fighting (or moving) pose. The self-test found it
 - The self-test's pose line reads "in combat", "moving" or "standing still"

@@ -23,6 +23,16 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
+## The game thread's fallback (1.9.10)
+
+DMP-18: when no pump runs, MiniPets' work waits for the game thread instead of going to SKSE's UI tasks. Nothing to do but play; check `MiniPets.log` afterwards, once with DovahHub and once without.
+
+1. **With DovahHub:** near the top, `MiniPets: game-thread work goes to DovahHub <version>'s pump`. A self-test's `pump` step reads PASS with "DovahHub's pump".
+2. **Without DovahHub:** `MiniPets: game-thread pump: hooked the main loop's call to Main::Update ...`, then `first frame on thread <n>`. The pet still reacts (a skill increase shows "XP gained"). A self-test's `pump` step reads PASS with "MiniPets' own frame hook (no DovahHub pump)".
+3. **Either way:** after the first load, `MiniPets: game thread <n> (the pump's), first update ran on <n>`, with no "not pumping" after "the pump's". Search the log for `fallback in use`, `not the game thread` and `jobs are already waiting`: none should be there.
+
+Pass: the lines above, and the pet reacts as before. Fail: send the `game-thread` lines.
+
 ## The pose after a redraw (1.9.9)
 
 DMP-15: a pet that is drawn again (another companion, raise-a-pet switched on or off, hatching, a new stage) keeps the pose it had.
