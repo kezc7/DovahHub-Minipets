@@ -83,8 +83,9 @@ $started = Get-Date
 # higher are a newer Visual Studio's.
 $env:MINIPETS_LINKER = '14.4'
 $env:MINIPETS_BUILD_BELOW = '35700'
-# (--vs=2022 alone: naming the msvc toolchain as well makes xmake skip its prebuilt DirectXTK and build it from source)
-& xmake f -P $root -y -m release --vs=2022
+# (the platform named, or a shell from Git for Windows passes for mingw; --vs=2022 without naming the msvc toolchain,
+# which would make xmake skip its prebuilt DirectXTK and build it from source)
+& xmake f -P $root -y -p windows -a x64 -m release --vs=2022
 if ($LASTEXITCODE -ne 0) { throw "xmake configuration failed with exit code $LASTEXITCODE" }
 # configure must not re-pin the package recipes: a change to xmake-requires.lock is committed on purpose, never here
 & git -C $root diff --ignore-cr-at-eol --quiet HEAD -- xmake-requires.lock

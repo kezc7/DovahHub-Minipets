@@ -124,7 +124,7 @@ test('a release is built by Visual Studio 2022 throughout, checked before the zi
   }
 
   const script = fs.readFileSync(path.join(ROOT, 'tools', 'build-release.ps1'), 'utf8');
-  assert.match(script, /\$env:MINIPETS_LINKER = '14\.4'\r?\n\$env:MINIPETS_BUILD_BELOW = '35700'\r?\n[^\n]*\r?\n& xmake f -P \$root -y -m release --vs=2022\r?\n/);
+  assert.match(script, /\$env:MINIPETS_LINKER = '14\.4'\r?\n\$env:MINIPETS_BUILD_BELOW = '35700'\r?\n(#[^\n]*\r?\n)+& xmake f -P \$root -y -p windows -a x64 -m release --vs=2022\r?\n/);
   // --vs=2022 alone: --toolchain=msvc makes xmake build DirectXTK from source
   assert.doesNotMatch(script, /--toolchain/);
   // MiniPets' own package folder, not one shared with other builds
