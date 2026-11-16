@@ -230,7 +230,7 @@ namespace MiniPets::SelfTestRunner
             switch (pump.mode.load()) {
             case DovahGameThread::detail::kHub: return "DovahHub's pump";
             case DovahGameThread::detail::kHook: return "MiniPets' own frame hook (no DovahHub pump)";
-            case DovahGameThread::detail::kFallback: return "SKSE's UI tasks (no pump installed)";
+            case DovahGameThread::detail::kFallback: return "no pump installed: work waits for the game thread";
             default: return "no pump yet";
             }
         }

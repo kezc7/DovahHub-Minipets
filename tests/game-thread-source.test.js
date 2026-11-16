@@ -39,11 +39,11 @@ test('the game thread is the pump\'s, not RE::Main\'s threadID', () => {
 });
 
 // The shared headers are copied from a DovahHub commit, never its working tree (the suite's rule): the
-// current one is 429628b, shipped in DovahHub 0.98.0. Pinned by the SHA-256 of each file with LF endings.
-const HUB_COMMIT = '429628b';
+// current one is 025314d (the fallback never runs game work off the game thread). Pinned by the SHA-256 of each file with LF endings.
+const HUB_COMMIT = '025314d';
 const HUB_HEADERS = {
-  'DovahGameThread.h': 'a67f5917f2eef85a23fc6ba0efdc1d85efa1da72abb0ed90725fac94dfc0175e',
-  'DovahHub_API.h': '05d3191953f413b86128c3be12ade1320a71b19acf293daa5baa04ac072c8900',
+  'DovahGameThread.h': '46f138d65685ca4a6ea261d4d7317c0b1418a2a89a16b6259f300b48be6c342d',
+  'DovahHub_API.h': 'c8c2d7c34078c5bfdeb9ade11798f40f9921992558c0ac736469371b566ce05f',
 };
 
 test(`DovahGameThread.h and DovahHub_API.h are DovahHub ${HUB_COMMIT}'s, unchanged`, () => {

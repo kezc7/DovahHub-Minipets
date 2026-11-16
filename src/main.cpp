@@ -50,7 +50,7 @@ namespace MiniPets
                         taskInterface->Queue([]() {
                             if (!g_threadLogged.exchange(true)) {
                                 logger::info("MiniPets: game thread {} (the pump's{}), first update ran on {}", GameThreadId(),
-                                             DovahGameThread::Pumping() ? "" : "; not pumping, SKSE's UI tasks instead", REX::W32::GetCurrentThreadId());
+                                             DovahGameThread::Pumping() ? "" : "; not pumping, work waits for the game thread", REX::W32::GetCurrentThreadId());
                             }
                             Card::UpdateOverlayMenuVisibility();
                             Card::UpdateCompanionState();

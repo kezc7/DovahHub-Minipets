@@ -19,6 +19,13 @@
 // and the page's mod.requestPreview, mod.showPreview and mod.capturePreview.
 // DovahHub 0.98.0 appends the suite self-test: RegisterSelfTest, ReportSelfTestStep and FinishSelfTest
 // (HasSelfTest), run from Settings > Diagnostics > Run self-test when DovahHub.ini [Debug] bSelfTest=1.
+// DovahHub 0.98.2 lets go of unused preview copies built from records, so "base" previews have no looks limit
+// (HasFreedPreviews). Nothing in the table changes.
+// DovahHub 0.98.3 appends GetFamilyJson (HasFamily): the spouse and children of DovahHub's Family tab, and sends
+// kMsgFamilyChanged when they change.
+// DovahHub 0.99.0 appends the player's loadouts (HasLoadouts), what phones may ask of a module (SetRemote, HasRemote),
+// map layers and Ledger entries (AddMapLayer, AddLedgerEntry, HasAtlas), the "now" section tab, the bestiary section's
+// foe keys, kMsgLoadoutChanged, and the Family page's "familyGallery" section tab (kHostWithFamilyGallery).
 //
 // DovahHub is the suite's character hub: one page with tabs grouped under People, Character,
 // Journey, Collections, Integrations and Settings, drawn on Magelight UI or PrismaUI. A PrismaUI view can only be
@@ -172,6 +179,60 @@ namespace DOVAHHUB_API
     inline constexpr std::uint32_t kHostWithPump = 9704;  // PackVersion(0, 97, 4): RunOnGameThread, IsGameThread, GameThreadId
     inline constexpr std::uint32_t kHostWithPreviews = 9707;  // PackVersion(0, 97, 7): RequestPreview to ReleasePreview
     inline constexpr std::uint32_t kHostWithSelfTest = 9800;  // PackVersion(0, 98, 0): RegisterSelfTest, ReportSelfTestStep, FinishSelfTest
+    inline constexpr std::uint32_t kHostWithFreedPreviews = 9802;  // PackVersion(0, 98, 2): no looks limit on "base" previews
+    inline constexpr std::uint32_t kHostWithFamily = 9803;  // PackVersion(0, 98, 3): GetFamilyJson, kMsgFamilyChanged
+    // PackVersion(0, 98, 7): AddSection on the Family page, and rows that are buttons, on any section tab.
+    //   - AddSection(module, "family", title): DovahHub calls onRequest("section", ...) on the game thread each time
+    //     the Family page's details show someone, with
+    //     {"tab":"family","actor":"Skyrim.esm|0x13BAB","role":"spouse"|"child"|"parent","language":"en"}
+    //     ("parent": another parent of a child, not a spouse). A record with no NPC isn't asked about. Older hosts
+    //     return InvalidArgument for "family".
+    //   - A row may carry "action", a slug [a-z0-9_-] of 1..32 chars:
+    //     {"label":"Arms","value":"Edit their arms","action":"edit"}. The value is drawn as a button. A press
+    //     calls onRequest("sectionAction", {"tab":...,"actor":...,"action":"edit","language":"en"}) on the game
+    //     thread; reply {} or {"message":"Done."} (shown under your rows). The tab then asks for its rows again.
+    //     Older hosts show the value as text.
+    inline constexpr std::uint32_t kHostWithFamilySection = 9807;
+    // PackVersion(0, 99, 0): SaveLoadout, EquipLoadout, GetLoadoutsJson and kMsgLoadoutChanged (the player's loadouts).
+    // kMsgOutfitChanged gains the reason "loadout": a loadout that names one of the player's outfits put it on.
+    inline constexpr std::uint32_t kHostWithLoadouts = 9900;
+    // PackVersion(0, 99, 0): SetRemote, what a phone or tablet paired with web access may ask of your module.
+    //   - Every browser call through your page's relay now carries "origin":"remote" in the payload DovahHub hands your
+    //     onRequest when it came from a phone or tablet (never from the in-game page or this PC's browser).
+    //   - From a phone or tablet DovahHub passes on only "settings" (your page's settings read), the reads you list, and
+    //     the actions you list; anything else gets {"error":...} without reaching you.
+    //   - An action runs only when that device's Actions switch is on (DovahHub's Settings), and only once the game allows
+    //     it (a save loaded, no game menu open, not in dialogue); one that can't run within 5 seconds is dropped and the
+    //     phone is told why. "confirm": the phone asks first. Your reply's "message" (or "error") is shown on the phone.
+    //   - Actions are also the phone's quick actions on its Now page, unless "quick":false.
+    inline constexpr std::uint32_t kHostWithRemote = 9900;
+    // PackVersion(0, 99, 0): AddMapLayer (your layer on DovahHub's Map), AddLedgerEntry (your gold changes in the Ledger),
+    // the "now" section tab (rows on a phone's Now page), and the bestiary section's foe keys:
+    //   - AddSection(module, "bestiary", title)'s request gains "raceKey" (the foe's race at the kill, so a beast form
+    //     is keyed under its beast race: "Skyrim.esm|0x13797") and, for a unique foe, "baseKey" (its base NPC; for a
+    //     leveled unique the real NPC, never a 0xFF form), beside "actor" and "race". Both are recorded at the kill: a
+    //     Kill Log entry from before 0.99.0 has neither until its next kill, and they're left out rather than guessed.
+    //     Two race forms with one name (NordRace, NordRaceVampire) are separate entries. GetBestiaryJson's items carry
+    //     the same "raceKey" and "baseKey" when they have them. Older hosts send neither.
+    //   - AddSection(module, "now", title): while a phone or tablet has web access open, DovahHub asks onRequest("section",
+    //     {"tab":"now","language":"en"}) on the game thread, at most once a second, and shows the rows on the phone's Now
+    //     page. Return [] for nothing. A module that doesn't answer keeps its last rows, marked "not updated" after 5
+    //     seconds. Nothing is asked while no browser is connected. Older hosts return InvalidArgument for "now".
+    //   - AddSection(module, "ledger", title): when the Ledger shows Assets, DovahHub asks onRequest("section",
+    //     {"tab":"ledger","language":"en"}) on the game thread. Rows of {"label":"Frost","value":1000} (a whole number
+    //     of gold) are listed under your title and counted in the net worth. Older hosts return InvalidArgument.
+    inline constexpr std::uint32_t kHostWithAtlas = 9900;
+    // PackVersion(0, 99, 0): AddSection(module, "familyGallery", title), a block under the Family page's tree that isn't
+    // about one person (DovahHeraldry's arms of everyone else given arms). The full shape is in DHR-FAMILY-GALLERY-HOOK.md.
+    //   - DovahHub asks onRequest("section", {"tab":"familyGallery","language":"en"}) on the game thread (no "actor") when
+    //     the Family page opens, after DovahHub's language changes, after a press, and on DovahHeraldry's kMsgArmsChanged.
+    //   - Reply [{"key":"player"|"Skyrim.esm|0xA2C94","name":"Lydia","caption":"Follower","blazon":"...",
+    //     "action":"edit","actionLabel":"Edit their arms"}], at most 40; [] for nothing. key and name are required; the
+    //     key is what DovahHub passes to GetArmsSvg(key, "shield") to draw the shield. An action needs its label.
+    //   - A press calls onRequest("sectionAction", {"tab":"familyGallery","actor":<key>,"action":...,"language":"en"});
+    //     reply {} or {"message":"..."}. The gallery is then asked again.
+    //   - Older hosts return InvalidArgument for "familyGallery".
+    inline constexpr std::uint32_t kHostWithFamilyGallery = 9900;
 
     // A module that hasn't called FinishSelfTest this many seconds after its start gets one FAIL "timed out".
     inline constexpr std::uint32_t kSelfTestTimeoutSeconds = 180;
@@ -402,8 +463,9 @@ namespace DOVAHHUB_API
         // with everything else posted there. Each frame runs what was queued when it started: work posted from
         // inside fn waits for the next frame, so nothing chains within one. Work posted before the first frame
         // (at kDataLoaded, during the first load) waits for it. fn is a plain function pointer: box what it needs
-        // on the heap, pass it as ctx and free it in fn; it must not throw. If DovahHub couldn't install its hook
-        // (the log says why), the work goes to SKSE's UI tasks instead. Ok; InvalidArgument for a null fn.
+        // on the heap, pass it as ctx and free it in fn; it must not throw. If DovahHub's hook isn't running (the
+        // log says why), the work waits for the game thread; it never runs on another. Ok; InvalidArgument for a
+        // null fn; Busy (from 0.99.8) when thousands of jobs already wait: then fn won't run and ctx is yours.
         Result (*RunOnGameThread)(void (*fn)(void* ctx), void* ctx);
         // Any thread. True only on the thread the frame update runs on; false everywhere before the first frame.
         bool (*IsGameThread)();
@@ -493,6 +555,97 @@ namespace DOVAHHUB_API
         // Any thread. Your module's run is over; DovahHub writes its DONE line and moves on to the next module.
         // Ok; InvalidModule; NotReady (no run is on your module).
         Result (*FinishSelfTest)(ModuleId module);
+
+        // ---- from 0.98.2: check HasFreedPreviews(api) --------------------------------------------------------------
+        // No new calls. The 0.97.7 limits above change for copies built from records ("base"):
+        //   - there is no limit on looks: RequestPreview no longer answers Refused for the 49th;
+        //   - DovahHub keeps your module's 8 most recently used looks for reuse, and lets go of older ones once no handle
+        //     names them and they're off screen (about half a second later). Asking for one again builds it again.
+        //   - a copy that shares skin data with the game's model cache is still kept for the session (DovahHub.log says
+        //     so), because freeing it could free the cache's own data.
+        // Copies of a loaded actor's live 3D ("actor") are unchanged: never freed, at most 2 actors per module.
+        // Handles, ShowPreview, CapturePreview and ReleasePreview work as before.
+
+        // ---- appended in 0.98.3: check HasFamily(api) first ------------------------------------------------------
+        // Game thread. The loaded character's family as DovahHub's Family tab has it: what the player set there, and
+        // what DovahHub read from marriage, Hearthfire adoption and Fertility Mode Reloaded. People the player
+        // removed from Family aren't listed. kMsgFamilyChanged (below) says when to read it again.
+        //   {"spouses":[{"key":"Skyrim.esm|0x13BAB","name":"Lydia","dead":false,"source":"Marriage quest"}],
+        //    "children":[{"key":"Skyrim.esm|0x1A2B3","name":"Lucia","stage":"child","parentage":"adopted",
+        //                 "adopted":true,"otherParent":"Skyrim.esm|0x13BAB","birthOrder":null,"dead":false,
+        //                 "source":"Hearthfire"}]}
+        // key: the actor, "" when the family has a child with no actor yet (a Fertility Mode baby). otherParent: the
+        // child's other parent, "" when not set. stage: "baby", "child", "training", "adult" or "unspecified".
+        // parentage: "biological", "adopted" or "unspecified"; adopted: taken into the household (a biological child
+        // can be both). birthOrder: 1 for the eldest, when the source records it (Fertility Mode Reloaded's
+        // registry), else null; children are listed eldest first where it's known, then in the order DovahHub met
+        // them. source: "Manual", "Marriage quest", "Hearthfire" or "Fertility Mode Reloaded". Several spouses can be
+        // listed when the player set them so.
+        // {"error":"called off the game thread"} off it; {"error":"no save loaded"} before a save is in the world.
+        // The pointer is valid until the next call on the game thread.
+        const char* (*GetFamilyJson)();
+
+        // ---- appended in 0.99.0: check HasLoadouts(api) first ----------------------------------------------------
+        // The player's loadouts: what's in the hands (right, left, ammo, shout or power), and optionally one of the
+        // player's outfits, put on first. actorKey is "player"; any other key is NotFound (follower loadouts are not
+        // DovahHub's yet). Ids are kept per save, in DovahHub's co-save.
+        //
+        // Game thread. Save what the player holds now as a loadout with that name; an existing name (any case) is
+        // updated in place, keeping its key and outfit. InvalidArgument for an empty name or when 32 are kept.
+        Result (*SaveLoadout)(const char* actorKey, const char* name, std::uint32_t* outLoadoutId);
+        // Game thread. Equip a loadout: queued to the game thread, one hand per frame. Ok when it's under way;
+        // Busy when it can't be now (a kill move, a stagger, a swing or cast, mounted with a part that can't be used
+        // mounted, another loadout still going on) and nothing changes; NotFound for an unknown id. Parts that
+        // aren't carried or known are skipped. kMsgLoadoutChanged says when it's done.
+        Result (*EquipLoadout)(const char* actorKey, std::uint32_t loadoutId);
+        // Game thread. {"loadouts":[{"id":3,"name":"Archer","temporary":false,"key":"2","icon":1234}],"last":3}
+        // icon: the form id of the right hand's item or spell (0 when none), for a picture. key: the key's name, ""
+        // when none. last: the loadout last equipped. {"error":"..."} for another actor, before a save is loaded, or
+        // off the game thread. The pointer is valid until the next call on the game thread.
+        const char* (*GetLoadoutsJson)(const char* actorKey);
+
+        // ---- appended in 0.99.0: check HasRemote(api) first ------------------------------------------------------
+        // Any thread. What a phone or tablet may ask of your module (see kHostWithRemote above). The last call wins; "{}"
+        // takes everything back. A page-only module puts the same object under "remote" in its module.json.
+        //   {"reads":["status"],
+        //    "actions":[{"request":"dumpAll","title":"Dump all","confirm":true,"confirmText":"Everything not worn goes in.",
+        //                "payload":{"from":"phone"},"quick":true}]}
+        // reads and request: [A-Za-z0-9_.-], 1..64 chars; "setting", "action" and "sectionAction" can't be reads. title: up to
+        // 40 bytes, required. payload: a JSON object up to 2 KiB, sent with the request. At most 32 reads and 16 actions.
+        // InvalidArgument for anything malformed (nothing changes); InvalidModule for an unknown module.
+        Result (*SetRemote)(ModuleId module, const char* remoteJson);
+
+        // ---- appended in 0.99.0: check HasAtlas(api) first ----------------------------------------------------------
+        // Any thread. A layer of yours on DovahHub's Map: a switch in its layer list, titled `title`, remembered per
+        // character (on until the player turns it off). layerId: [a-z0-9_-], 1..32. An empty title removes the layer.
+        // While the layer is on and the Map shows a world, DovahHub asks, on the game thread,
+        //   onRequest("mapLayer", {"layer":"horses","worldspace":"Skyrim.esm|0x3C","language":"en"})
+        // and you answer from positions you keep, never by looking references up in the request:
+        //   {"pins":[{"x":1234.5,"y":-678.9,"title":"Frost","icon":"horse","open":"stable"}],
+        //    "lines":[{"points":[[x,y],[x,y]],"style":"link"}]}
+        // x and y are world units in that worldspace (DovahHub projects them). icon: one of "horse", "chest", "home",
+        // "camp", "flag", "person", "trophy", "star", "dot" (DovahHub draws it; no text in icons, DovahHub draws the
+        // title). open: a tab id, yours or DovahHub's, opened when the pin is clicked. style: "link" (dashed) or "route".
+        // At most 500 pins, 100 lines and 500 points a line; the rest is left out. When your pins move, PushJson
+        // {"mapLayerChanged":"horses"} and the Map asks again. NotFound when DovahHub's Map isn't installed; carry on.
+        Result (*AddMapLayer)(ModuleId module, const char* layerId, const char* title);
+        // Any thread. A gold change of yours, for the Ledger. The JSON is copied and queued, and matched on the game
+        // thread:
+        //   {"amount":-1000,"category":"horses","note":"Bought Frost","key":"horse:Skyrim.esm|0x109C5"}
+        // An entry that arrives within a moment of a gold change of that amount labels the change with your category
+        // and note (the Ledger lists it under your category). One with no matching change (credits, a foal born) is
+        // kept for the Ledger's Assets only. category: [a-z0-9_-], 1..32; note and key up to 120 bytes; amount: whole
+        // gold, + received and - spent. InvalidArgument for anything else; NoSave before a save is loaded; Busy when
+        // 64 wait.
+        Result (*AddLedgerEntry)(ModuleId module, const char* entryJson);
+        // Game thread. Every map layer's pins in a worldspace, from the same provider answers the Map draws (AddMapLayer),
+        // so a mod describes its positions once and another mod (DovahHUD's compass) can show them too:
+        //   {"worldspace":"Skyrim.esm|0x3C","layers":[{"module":"stable","layer":"horses","title":"Horses",
+        //     "pins":[{"x":..,"y":..,"title":"Frost","icon":"horse","open":"stable"}],"lines":[...]}]}
+        // worldspace: a root worldspace's key; nullptr or "" for the player's. Answers are kept for 2 seconds, so calling
+        // it every frame asks each provider at most twice a second. {"error":"called off the game thread"} off it. The
+        // pointer is valid until the next call on the game thread.
+        const char* (*GetMapPinsJson)(const char* worldspace);
     };
 
     // True when the host serves the 0.95.0 calls (Close, AddStoryEvent, AddSection, SetSettingStatus) and
@@ -535,10 +688,41 @@ namespace DOVAHHUB_API
                api->FinishSelfTest;
     }
 
+    // True when the host lets go of unused "base" preview copies (no looks limit; see the 0.98.2 note in the table).
+    inline bool HasFreedPreviews(const DovahHubApi1* api)
+    {
+        return HasPreviews(api) && api->hostVersionNumber >= kHostWithFreedPreviews;
+    }
+
+    // True when the host serves GetFamilyJson and sends kMsgFamilyChanged.
+    inline bool HasFamily(const DovahHubApi1* api)
+    {
+        return api && api->hostVersionNumber >= kHostWithFamily && api->GetFamilyJson;
+    }
+
     // True when the host sends kMsgStoryEvent and the player's outfit fields in kMsgOutfitChanged.
     inline bool HasStoryMessages(const DovahHubApi1* api)
     {
         return api && api->hostVersionNumber >= kHostWithStoryMessages;
+    }
+
+    // True when the host serves SaveLoadout, EquipLoadout and GetLoadoutsJson and sends kMsgLoadoutChanged.
+    inline bool HasLoadouts(const DovahHubApi1* api)
+    {
+        return api && api->hostVersionNumber >= kHostWithLoadouts && api->SaveLoadout && api->EquipLoadout && api->GetLoadoutsJson;
+    }
+
+    // True when the host serves AddMapLayer, AddLedgerEntry and GetMapPinsJson, the "now" and "ledger" section tabs and the
+    // bestiary foe keys.
+    inline bool HasAtlas(const DovahHubApi1* api)
+    {
+        return api && api->hostVersionNumber >= kHostWithAtlas && api->AddMapLayer && api->AddLedgerEntry && api->GetMapPinsJson;
+    }
+
+    // True when the host serves SetRemote and tells modules a browser call came from a phone ("origin":"remote").
+    inline bool HasRemote(const DovahHubApi1* api)
+    {
+        return api && api->hostVersionNumber >= kHostWithRemote && api->SetRemote;
     }
 
     inline std::uint32_t PackVersion(std::uint32_t major, std::uint32_t minor, std::uint32_t patch)
@@ -599,4 +783,14 @@ namespace DOVAHHUB_API
     // the count it was earned at. subject is "" when there's none. text is the story's English sentence;
     // dates are the game's English. Ids only grow within a save.
     inline constexpr std::uint32_t kMsgStoryEvent = 0x44484205;
+    // 'DHB' 6   from 0.98.3: the loaded character's family changed: {"reason":"edit"|"found"|"load"}. "edit": the player
+    // changed Family; "found": DovahHub read a new spouse or child from the game or Fertility Mode; "load": a save was
+    // loaded (or a new game started). Read GetFamilyJson again. On the game thread, at most once per change.
+    inline constexpr std::uint32_t kMsgFamilyChanged = 0x44484206;
+    // 'DHB' 7   from 0.99.0: a loadout finished going on:
+    //   {"actor":"player","loadoutId":3,"name":"Archer","reason":"wardrobe","skipped":["Elven Dagger"]}
+    // reason: "wardrobe" (the Wardrobe tab), "key" (its key or Next loadout), "api" (EquipLoadout), "remote" (web
+    // access) or "restore" (a temporary loadout's hands put back on the sheathe; loadoutId 0). skipped: parts that
+    // weren't carried or known. When the loadout names an outfit, that outfit's kMsgOutfitChanged comes first.
+    inline constexpr std::uint32_t kMsgLoadoutChanged = 0x44484207;
 }

@@ -1,7 +1,7 @@
 Shared files copied from other Dovah suite repositories, unchanged.
 
-src/DovahHub_API.h        DovahHub 429628b (DovahHub 0.98.0), LF SHA-256 05d3191953f413b86128c3be12ade1320a71b19acf293daa5baa04ac072c8900
-src/DovahGameThread.h     DovahHub 429628b, LF SHA-256 a67f5917f2eef85a23fc6ba0efdc1d85efa1da72abb0ed90725fac94dfc0175e
+src/DovahHub_API.h        DovahHub 025314d, LF SHA-256 c8c2d7c34078c5bfdeb9ade11798f40f9921992558c0ac736469371b566ce05f
+src/DovahGameThread.h     DovahHub 025314d, LF SHA-256 46f138d65685ca4a6ea261d4d7317c0b1418a2a89a16b6259f300b48be6c342d
 src/DovahMenu_API.h       DovahMenu 8f585b8 (DovahMenu 0.5.6-beta), LF SHA-256 ebc1a6b849421eb4ef43df6ff15d71142d20377bdb947ec34061f3b2555db200
 tools/pex-header.py       DovahFollowerControl 61986ee, SHA-256 f63013642cc2ca3935503dffec6a38dfb803a78370dcd5aab583c81dce79c27f
 tools/test-pex-header.py  DovahFollowerControl 61986ee, SHA-256 67a79d99a7bc0e3c568980a37379df5e325e77a6c4ff8c084feb27e433e251c9
