@@ -103,6 +103,14 @@ target(PLUGIN_NAME)
         archive.archive(zipfile, {"SKSE", "PrismaUI"}, {curdir = distdir, recurse = true})
         -- no compiled Papyrus script may carry the compiling PC's names; MiniPets ships none
         os.execv("python", {path.join(os.projectdir(), "tools", "pex-header.py"), "check", "--allow-none", zipfile})
+        -- no entry, the DLL included, may hold a user-folder path or the name of whoever ran this build (read from
+        -- the environment by the tool, never written down); tools/build-release.ps1 keeps both out of the build
+        local scan = path.join(os.projectdir(), "tools", "zip-user-scan.py")
+        local clean = try { function () os.execv("python", {"-I", scan, zipfile}) return true end }
+        if not clean then
+            os.tryrm(zipfile)
+            raise("an entry in the zip names the build's user or a user folder; the zip was deleted")
+        end
         cprint("${bright green}created MO2 package: ${clear}%s", zipname)
     end)
 

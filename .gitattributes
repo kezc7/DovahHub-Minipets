@@ -5,3 +5,5 @@ view/theme/dovah-theme.css -text
 # DovahFollowerControl's Papyrus header tools, copied unchanged: keep their bytes
 tools/pex-header.py -text
 tools/test-pex-header.py -text
+# DovahCamp's zip scan for the build user's name, copied unchanged: keep its bytes
+tools/zip-user-scan.py -text
