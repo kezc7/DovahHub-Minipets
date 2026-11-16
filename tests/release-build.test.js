@@ -40,6 +40,26 @@ test('the zip is named dovahhub-minipets-<version>.zip, by the build and by the 
   assert.match(script, /\$zip = Join-Path \$root "dovahhub-minipets-\$version\.zip"/);
 });
 
+test('the release script builds only a committed tree, never deletes a worktree, and keeps the lock as committed', () => {
+  const script = fs.readFileSync(path.join(ROOT, 'tools', 'build-release.ps1'), 'utf8').replace(/\r\n/g, '\n');
+  const configured = script.indexOf('& xmake f ');
+  const built = script.indexOf('& xmake build ');
+  // nothing uncommitted: a zip must be rebuildable from its tag
+  const dirty = script.indexOf('& git -C $root diff --ignore-cr-at-eol --quiet HEAD --\n');
+  const untracked = script.indexOf('& git -C $root ls-files --others --exclude-standard');
+  assert.ok(dirty > 0 && untracked > 0 && dirty < configured && untracked < configured, 'checked before xmake runs');
+  // every worktree is checked against both folders before either is deleted
+  const guard = script.indexOf('(& git -C $root worktree list --porcelain)');
+  const removed = script.indexOf('Remove-Item -LiteralPath $path -Recurse -Force');
+  assert.ok(guard > 0 && guard < removed, 'the worktree guard comes before anything is deleted');
+  assert.match(script, /if \(\$tree\.StartsWith\(\$inside, \[StringComparison\]::OrdinalIgnoreCase\)\) \{\s+throw "A git worktree lies inside/);
+  assert.doesNotMatch(script, /worktree prune/);
+  // configure must not re-pin package recipes; checked after configure and after the build
+  const lock = [...script.matchAll(/& git -C \$root diff --ignore-cr-at-eol --quiet HEAD -- xmake-requires\.lock\nif \(\$LASTEXITCODE -ne 0\) \{ throw /g)].map(m => m.index);
+  assert.equal(lock.length, 2);
+  assert.ok(lock[0] > configured && lock[0] < built && lock[1] > built);
+});
+
 // a made-up DLL: a DOS header, a Rich header holding the given [build, product, count] entries, and a PE header
 function fakeDll(linker, entries) {
   const key = 0x5ca1ab1e;
@@ -94,7 +114,9 @@ test('a release is built by Visual Studio 2022 throughout, checked before the zi
   }
 
   const script = fs.readFileSync(path.join(ROOT, 'tools', 'build-release.ps1'), 'utf8');
-  assert.match(script, /\$env:MINIPETS_LINKER = '14\.4'\r?\n\$env:MINIPETS_BUILD_BELOW = '35700'\r?\n& xmake f -P \$root -y -m release --vs=2022 --toolchain=msvc/);
+  assert.match(script, /\$env:MINIPETS_LINKER = '14\.4'\r?\n\$env:MINIPETS_BUILD_BELOW = '35700'\r?\n[^\n]*\r?\n& xmake f -P \$root -y -m release --vs=2022\r?\n/);
+  // --vs=2022 alone: --toolchain=msvc makes xmake build DirectXTK from source
+  assert.doesNotMatch(script, /--toolchain/);
   // MiniPets' own package folder, not one shared with other builds
   assert.match(script, /Join-Path \(\[IO\.Path\]::GetPathRoot\(\$root\)\) 'xmake-global\\MiniPets'/);
   const checked = afterBuild.indexOf('"tools", "dll-toolset.py"), target:targetfile()');

@@ -48,7 +48,25 @@ New-Item -ItemType Directory -Force -Path $globalDir, $env:XMAKE_PKG_INSTALLDIR,
 Write-Host "xmake global, package and temporary folders: $globalDir"
 Write-Host "Building MiniPets $version"
 
+# A zip must be rebuildable from its tag: nothing tracked may differ from the commit (line endings aside, which
+# a build can rewrite in xmake-requires.lock), and nothing untracked may sit outside .gitignore
+& git -C $root diff --ignore-cr-at-eol --quiet HEAD --
+if ($LASTEXITCODE -ne 0) { throw "The working tree differs from the commit: commit or put back every change before a release build" }
+$untracked = & git -C $root ls-files --others --exclude-standard
+if ($untracked) { throw "Untracked files would not be in the tag: $($untracked -join ', ')" }
+
+# A clean build never deletes a git worktree: stop, naming it, if one lies inside a folder about to go
 if ($Clean) {
+    foreach ($folder in 'build', '.xmake') {
+        $inside = (Join-Path $root $folder).TrimEnd('\') + '\'
+        foreach ($line in (& git -C $root worktree list --porcelain)) {
+            if ($line -notlike 'worktree *') { continue }
+            $tree = [IO.Path]::GetFullPath($line.Substring(9)).TrimEnd('\') + '\'
+            if ($tree.StartsWith($inside, [StringComparison]::OrdinalIgnoreCase)) {
+                throw "A git worktree lies inside $folder\: $tree. Move or remove it with the PO first; nothing was deleted"
+            }
+        }
+    }
     foreach ($folder in 'build', '.xmake') {
         $path = Join-Path $root $folder
         if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Recurse -Force }
@@ -65,10 +83,16 @@ $started = Get-Date
 # higher are a newer Visual Studio's.
 $env:MINIPETS_LINKER = '14.4'
 $env:MINIPETS_BUILD_BELOW = '35700'
-& xmake f -P $root -y -m release --vs=2022 --toolchain=msvc
+# (--vs=2022 alone: naming the msvc toolchain as well makes xmake skip its prebuilt DirectXTK and build it from source)
+& xmake f -P $root -y -m release --vs=2022
 if ($LASTEXITCODE -ne 0) { throw "xmake configuration failed with exit code $LASTEXITCODE" }
+# configure must not re-pin the package recipes: a change to xmake-requires.lock is committed on purpose, never here
+& git -C $root diff --ignore-cr-at-eol --quiet HEAD -- xmake-requires.lock
+if ($LASTEXITCODE -ne 0) { throw "Configure changed xmake-requires.lock; see git diff. A recipe change is committed on purpose, with its reason" }
 & xmake build -P $root -y MiniPets
 if ($LASTEXITCODE -ne 0) { throw "xmake build failed with exit code $LASTEXITCODE (a failed test or zip check stops it too)" }
+& git -C $root diff --ignore-cr-at-eol --quiet HEAD -- xmake-requires.lock
+if ($LASTEXITCODE -ne 0) { throw "The build changed xmake-requires.lock; see git diff" }
 
 # the DLL that was packed must be the one just built for this version
 $dll = Join-Path $root 'build\windows\x64\release\MiniPets.dll'
