@@ -103,6 +103,9 @@ if ($item.LastWriteTime -lt $started) { throw "MiniPets.dll was not rebuilt by t
 $info = $item.VersionInfo
 $dllVersion = "$($info.FileMajorPart).$($info.FileMinorPart).$($info.FileBuildPart).$($info.FilePrivatePart)"
 if ($dllVersion -ne $fileVersion) { throw "MiniPets.dll's file version is $dllVersion, not $fileVersion" }
+# the FileVersion text reads the same numbers, with no label (the label stays in ProductVersion)
+if ($info.FileVersion -ne $fileVersion) { throw "MiniPets.dll's FileVersion text is '$($info.FileVersion)', not '$fileVersion'" }
+if (-not $info.ProductVersion.StartsWith($version)) { throw "MiniPets.dll's ProductVersion is '$($info.ProductVersion)', not $version" }
 if (-not (Test-Path -LiteralPath $zip)) { throw "The build made no zip: $zip" }
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 $archive = [System.IO.Compression.ZipFile]::OpenRead($zip)

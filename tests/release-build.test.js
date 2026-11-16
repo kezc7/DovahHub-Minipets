@@ -60,6 +60,19 @@ test('the release script builds only a committed tree, never deletes a worktree,
   assert.ok(lock[0] > configured && lock[0] < built && lock[1] > built);
 });
 
+test('the DLL\'s FileVersion is numbers only, its ProductVersion keeps the label, and the release script checks both', () => {
+  assert.match(xmake, /local PLUGIN_FILE_VERSION = PLUGIN_VERSION:match\("\^\(%d\+%\.%d\+%\.%d\+\)"\)/);
+  const version = xmake.match(/local PLUGIN_VERSION = "([^"]+)"/)[1];
+  assert.ok(/^\d+\.\d+\.\d+$/.test(version.match(/^(\d+\.\d+\.\d+)/)[1]), 'PLUGIN_VERSION starts with three numbers');
+  // the project keeps the labelled version (ProductVersion, the zip and dist names); the plugin target takes the numbers
+  assert.match(xmake, /\nset_version\(PLUGIN_VERSION\)\n/);
+  const target = xmake.slice(xmake.indexOf('target(PLUGIN_NAME)'), xmake.indexOf('target("MiniPets_tests")'));
+  assert.match(target, /\n\s+set_version\(PLUGIN_FILE_VERSION\)\n/);
+  const script = fs.readFileSync(path.join(ROOT, 'tools', 'build-release.ps1'), 'utf8');
+  assert.match(script, /if \(\$info\.FileVersion -ne \$fileVersion\) \{ throw /);
+  assert.match(script, /if \(-not \$info\.ProductVersion\.StartsWith\(\$version\)\) \{ throw /);
+});
+
 test('the PDB is built and ships beside the DLL, checked by the release script', () => {
   const target = xmake.slice(xmake.indexOf('target(PLUGIN_NAME)'), xmake.indexOf('after_build(function (target)'));
   assert.match(target, /set_symbols\("debug"\)\s+add_ldflags\("\/OPT:REF", "\/OPT:ICF", \{force = true\}\)/);

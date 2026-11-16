@@ -5,6 +5,8 @@ includes("lib/commonlibsse-ng")
 local PLUGIN_NAME = "MiniPets"
 -- bump this for releases
 local PLUGIN_VERSION = "1.9.10-beta"
+-- the DLL's FileVersion is numbers only (1.9.10.0); ProductVersion keeps the label, from the project's version
+local PLUGIN_FILE_VERSION = PLUGIN_VERSION:match("^(%d+%.%d+%.%d+)")
 local PACKAGE_NAME = "dovahhub-minipets"
 local VIEW_NAME = "MiniPets"
 -- the MiniPets tab lives inside DovahHub's view folder
@@ -30,6 +32,8 @@ target(PLUGIN_NAME)
         author = "KezC7",
         description = "Pixel-art HUD companions that celebrate your XP and level-ups"
     })
+    -- the DLL's own version: numbers only, so FileVersion reads 1.9.10.0
+    set_version(PLUGIN_FILE_VERSION)
     -- the PDB ships beside the DLL so crash logs name functions (the suite's rule); /DEBUG would turn the linker's
     -- unused-code removal off, so it is asked for again
     set_symbols("debug")
