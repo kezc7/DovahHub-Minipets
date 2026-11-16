@@ -14,6 +14,7 @@ SKSE/plugins/MiniPets.pdb
 # licence and notice files, by name
 SKSE/plugins/MiniPets-licenses/LICENSE.txt
 SKSE/plugins/MiniPets-licenses/THIRD-PARTY-NOTICES.md
+SKSE/plugins/MiniPets-licenses/CommonLibSSE-NG-COPYING.txt
 SKSE/plugins/MiniPets-licenses/CommonLibSSE-NG-EXCEPTIONS.md
 SKSE/plugins/MiniPets-licenses/CommonLibSSE-original-MIT.txt
 SKSE/plugins/MiniPets-licenses/DirectXMath-LICENSE.txt
