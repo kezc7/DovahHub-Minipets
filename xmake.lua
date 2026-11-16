@@ -30,6 +30,10 @@ target(PLUGIN_NAME)
         author = "KezC7",
         description = "Pixel-art HUD companions that celebrate your XP and level-ups"
     })
+    -- the PDB ships beside the DLL so crash logs name functions (the suite's rule); /DEBUG would turn the linker's
+    -- unused-code removal off, so it is asked for again
+    set_symbols("debug")
+    add_ldflags("/OPT:REF", "/OPT:ICF", {force = true})
     add_files("src/**.cpp", "keyhandler/**.cpp")
     add_headerfiles("src/**.h", "keyhandler/**.h")
     add_includedirs("src", "keyhandler")

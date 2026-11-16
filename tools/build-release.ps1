@@ -108,6 +108,10 @@ $archive = [System.IO.Compression.ZipFile]::OpenRead($zip)
 try {
     $entry = $archive.Entries | Where-Object { $_.FullName -match '^SKSE[\/]plugins[\/]MiniPets\.dll$' }
     if (-not $entry -or $entry.Length -ne $item.Length) { throw "The zip's MiniPets.dll is not the one just built" }
+    # its PDB ships beside it, so crash logs can name functions
+    $pdb = Get-Item -LiteralPath (Join-Path $root 'build\windows\x64\release\MiniPets.pdb')
+    $pdbEntry = $archive.Entries | Where-Object { $_.FullName -match '^SKSE[\/]plugins[\/]MiniPets\.pdb$' }
+    if (-not $pdbEntry -or $pdbEntry.Length -ne $pdb.Length -or $pdb.LastWriteTime -lt $started) { throw "The zip's MiniPets.pdb is missing or not the one just built" }
 } finally {
     $archive.Dispose()
 }

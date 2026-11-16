@@ -60,6 +60,16 @@ test('the release script builds only a committed tree, never deletes a worktree,
   assert.ok(lock[0] > configured && lock[0] < built && lock[1] > built);
 });
 
+test('the PDB is built and ships beside the DLL, checked by the release script', () => {
+  const target = xmake.slice(xmake.indexOf('target(PLUGIN_NAME)'), xmake.indexOf('after_build(function (target)'));
+  assert.match(target, /set_symbols\("debug"\)\s+add_ldflags\("\/OPT:REF", "\/OPT:ICF", \{force = true\}\)/);
+  assert.match(afterBuild, /local symbolfile = target:symbolfile\(\)\s+if symbolfile and os\.isfile\(symbolfile\) then\s+os\.cp\(symbolfile, plugindir\)/);
+  const script = fs.readFileSync(path.join(ROOT, 'tools', 'build-release.ps1'), 'utf8');
+  assert.match(script, /'\^SKSE\[\\\/\]plugins\[\\\/\]MiniPets\\\.pdb\$'/);
+  assert.match(script, /The zip's MiniPets\.pdb is missing or not the one just built/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'tools', 'zip-allowlist.txt'), 'utf8'), /\nSKSE\/plugins\/MiniPets\.pdb\r?\n/);
+});
+
 // a made-up DLL: a DOS header, a Rich header holding the given [build, product, count] entries, and a PE header
 function fakeDll(linker, entries) {
   const key = 0x5ca1ab1e;
