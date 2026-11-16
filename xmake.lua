@@ -97,7 +97,7 @@ target(PLUGIN_NAME)
 
         -- zip for MO2, SKSE/ and PrismaUI/ at the root
         import("utils.archive")
-        local zipname = PACKAGE_NAME .. PLUGIN_VERSION .. ".zip"
+        local zipname = PACKAGE_NAME .. "-" .. PLUGIN_VERSION .. ".zip"
         local zipfile = path.join(os.projectdir(), zipname)
         os.tryrm(zipfile)
         archive.archive(zipfile, {"SKSE", "PrismaUI"}, {curdir = distdir, recurse = true})

@@ -32,3 +32,10 @@ test('the zip is checked for Papyrus headers with DovahFollowerControl\'s tool, 
   assert.match(fs.readFileSync(path.join(ROOT, '.gitattributes'), 'utf8'), /tools\/pex-header\.py -text/);
   assert.match(fs.readFileSync(path.join(ROOT, 'third_party', 'dovah-api', 'SOURCE'), 'utf8'), /tools\/pex-header\.py\s+DovahFollowerControl 61986ee/);
 });
+
+test('the zip is named dovahhub-minipets-<version>.zip, by the build and by the release script alike', () => {
+  assert.match(xmake, /local PACKAGE_NAME = "dovahhub-minipets"/);
+  assert.match(afterBuild, /local zipname = PACKAGE_NAME \.\. "-" \.\. PLUGIN_VERSION \.\. "\.zip"/);
+  const script = fs.readFileSync(path.join(ROOT, 'tools', 'build-release.ps1'), 'utf8');
+  assert.match(script, /\$zip = Join-Path \$root "dovahhub-minipets-\$version\.zip"/);
+});

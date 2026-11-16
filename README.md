@@ -33,7 +33,7 @@ Setting `debug_preview_keys=1` in the INI turns on two test keys: F6 for an XP p
 
 ## Installing
 
-Install `dovahhub-minipets<version>.zip` with your mod manager, or copy its `SKSE` and `PrismaUI` folders into Skyrim's `Data` folder. It contains `SKSE/Plugins/MiniPets.dll`, `PrismaUI/views/MiniPets/` and the DovahHub tab under `PrismaUI/views/DovahHub/modules/pets/`.
+Install `dovahhub-minipets-<version>.zip` with your mod manager, or copy its `SKSE` and `PrismaUI` folders into Skyrim's `Data` folder. It contains `SKSE/Plugins/MiniPets.dll`, `PrismaUI/views/MiniPets/` and the DovahHub tab under `PrismaUI/views/DovahHub/modules/pets/`.
 
 ### Upgrading from 1.7.x
 

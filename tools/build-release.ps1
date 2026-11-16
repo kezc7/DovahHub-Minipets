@@ -50,7 +50,7 @@ if ($Clean) {
     Write-Host "Removed build\ and .xmake\: everything is compiled again"
 }
 
-$zip = Join-Path $root "dovahhub-minipets$version.zip"
+$zip = Join-Path $root "dovahhub-minipets-$version.zip"
 Remove-Item -Force -ErrorAction SilentlyContinue -LiteralPath $zip
 $started = Get-Date
 & xmake f -P $root -y -m release
