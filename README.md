@@ -93,7 +93,7 @@ The in-game browser is WebKit based and doesn't support some newer CSS (like `in
 
 The version is `PLUGIN_VERSION` in `xmake.lua`. Bump it, add a line to `CHANGELOG.md`, build, and tag the commit (`v0.10.0` and so on). Zips aren't committed, so build from a tag if you need an old one.
 
-Build a release with `powershell -File tools\build-release.ps1 -Clean`. It keeps XMake's packages and temporary files in `xmake-global` at the top of the drive (or wherever `XMAKE_GLOBALDIR` points), outside your user folder, so nothing in the zip names who built it. Every build then scans its zip for a user-folder path or the Windows user name and deletes the zip if it finds one.
+Build a release with `powershell -File tools\build-release.ps1 -Clean`. It builds with Visual Studio 2022 and keeps XMake's packages and temporary files in `xmake-globalMiniPets` at the top of the drive (or wherever `XMAKE_GLOBALDIR` points), outside your user folder, so nothing in the zip names who built it. Every build then scans its zip for a user-folder path or the Windows user name and deletes the zip if it finds one.
 
 ## License
 

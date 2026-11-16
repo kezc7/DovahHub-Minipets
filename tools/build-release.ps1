@@ -21,9 +21,11 @@ $fileVersion = "$($Matches[2]).0"
 
 # xmake keeps its packages (spdlog and the rest) in its global folder, which is under the user's own folder
 # unless it is told otherwise, and the compiler records the paths it read. So the build uses a global folder
-# outside it: XMAKE_GLOBALDIR when it is set, else "xmake-global" at the top of this drive. The first build
-# with a new folder fetches the packages again, at the versions xmake-requires.lock pins.
-if (-not $env:XMAKE_GLOBALDIR) { $env:XMAKE_GLOBALDIR = Join-Path ([IO.Path]::GetPathRoot($root)) 'xmake-global' }
+# outside it, and MiniPets' own: XMAKE_GLOBALDIR when it is set, else "xmake-global\MiniPets" at the top of this
+# drive. A folder shared with other builds can stall when two configure at once, and can hold packages another
+# Visual Studio compiled. The first build with a new folder fetches the packages again, at the versions
+# xmake-requires.lock pins, and compiles them with the Visual Studio named below.
+if (-not $env:XMAKE_GLOBALDIR) { $env:XMAKE_GLOBALDIR = Join-Path ([IO.Path]::GetPathRoot($root)) 'xmake-global\MiniPets' }
 $globalDir = [IO.Path]::GetFullPath($env:XMAKE_GLOBALDIR)
 $userHome = [IO.Path]::GetFullPath($env:USERPROFILE).TrimEnd('\') + '\'
 if (($globalDir.TrimEnd('\') + '\').StartsWith($userHome, [StringComparison]::OrdinalIgnoreCase) -or $root.StartsWith($userHome, [StringComparison]::OrdinalIgnoreCase)) {
@@ -38,6 +40,9 @@ $buildTemp = Join-Path $globalDir 'tmp'
 $env:XMAKE_TMPDIR = $buildTemp
 $env:TMP = $buildTemp
 $env:TEMP = $buildTemp
+# DirectXTK's package build runs a script from its own folder by bare name. A shell that sets
+# NoDefaultCurrentDirectoryInExePath stops cmd finding it, and the install fails with an empty log.
+$env:NoDefaultCurrentDirectoryInExePath = $null
 New-Item -ItemType Directory -Force -Path $globalDir, $env:XMAKE_PKG_INSTALLDIR, $env:XMAKE_PKG_CACHEDIR, $buildTemp | Out-Null
 Write-Host "xmake global, package and temporary folders: $globalDir"
 Write-Host "Building MiniPets $version"
@@ -53,7 +58,13 @@ if ($Clean) {
 $zip = Join-Path $root "dovahhub-minipets-$version.zip"
 Remove-Item -Force -ErrorAction SilentlyContinue -LiteralPath $zip
 $started = Get-Date
-& xmake f -P $root -y -m release
+# Visual Studio 2022 (MSVC 14.4x), named: with a newer Visual Studio beside it, a configure from an empty folder
+# picks the newer one, and its DLL needs a newer Visual C++ runtime on the player's PC. Before it zips, xmake.lua
+# checks the DLL's linker version and every build number in its Rich header (tools/dll-toolset.py): 35700 and
+# higher are a newer Visual Studio's.
+$env:MINIPETS_LINKER = '14.4'
+$env:MINIPETS_BUILD_BELOW = '35700'
+& xmake f -P $root -y -m release --vs=2022 --toolchain=msvc
 if ($LASTEXITCODE -ne 0) { throw "xmake configuration failed with exit code $LASTEXITCODE" }
 & xmake build -P $root -y MiniPets
 if ($LASTEXITCODE -ne 0) { throw "xmake build failed with exit code $LASTEXITCODE (a failed test or zip check stops it too)" }

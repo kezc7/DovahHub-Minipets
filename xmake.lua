@@ -95,6 +95,15 @@ target(PLUGIN_NAME)
         cprint("${bright green}ran every test file: ${clear}%d of %d (%d node, %d C++ in MiniPets_tests, %d Python)",
             #nodetests + #cpptests + #pytests, #nodetests + #cpptests + #pytests, #nodetests, #cpptests, #pytests)
 
+        -- a release is built by Visual Studio 2022 (MSVC 14.4x) throughout: a newer toolset, or one object a newer
+        -- one compiled, needs a newer Visual C++ runtime on the player's PC. tools/build-release.ps1 names the
+        -- version it wants and the DLL is checked before anything is zipped; a plain build is not checked
+        local wanted = os.getenv("MINIPETS_LINKER")
+        if wanted and wanted ~= "" then
+            os.execv("python", {"-I", path.join(os.projectdir(), "tools", "dll-toolset.py"), target:targetfile(),
+                "--linker", wanted, "--below", os.getenv("MINIPETS_BUILD_BELOW") or "35700"})
+        end
+
         -- zip for MO2, SKSE/ and PrismaUI/ at the root
         import("utils.archive")
         local zipname = PACKAGE_NAME .. "-" .. PLUGIN_VERSION .. ".zip"
