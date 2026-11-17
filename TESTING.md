@@ -23,6 +23,18 @@ Play these in order on one character. Each step names the card's caption and the
 
 Pass: each reaction appears once, reads in the chosen language, never covers a menu, and the death pose lasts only until the load. Fail: note the step, the caption, and the `MiniPets reaction` lines around it.
 
+## The settings on a pad, and the lists (DMP-21)
+
+The settings (Shift+B) have no native dropdowns: the companion, card shape, clock style and language each open the suite's list. With a controller, the D-pad or left stick goes through the page row by row.
+
+1. **The lists, by keyboard and mouse.** Click a choice: its list opens in the suite's look. Arrows move without changing anything; Enter or a click chooses, and the card changes at once; Escape closes the list and leaves the settings open.
+2. **The pad.** Open the settings (with DovahMenu, or the key) and pick up the controller. A gold ring marks the highlighted control. Down goes row by row to the bottom (Reset to top-right, then Save); Left and Right move along a row (X position's slider and box). With Raise a pet on, Down from it goes into the eggs, and moves through them line by line before going on.
+3. **A and B.** A on a choice opens its list: Up and Down move, A chooses, B closes it with nothing changed. A on a switch flips it. A on a slider or number starts changing it with Left and Right; A or B ends that. A on a hotkey starts a capture; B ends it without changing the key. B anywhere else is Cancel: the settings close and every change since they opened goes back.
+4. **Saved and read back.** Change the companion, shape, clock style and language by pad, then A on Save. `MiniPets.log` has a `MiniPets setting <key>: <old> -> <new>` line for each. Quit and start the game again: the settings show the same four.
+5. **Closed, the pad is the game's.** With the settings closed, the controller does nothing on the card.
+
+Pass: every control is reached and works on the pad, and nothing changes until a choice is made. Fail: note the control and the button, and send `MiniPets.log`.
+
 ## The game thread's fallback (1.9.10)
 
 DMP-18: when no pump runs, MiniPets' work waits for the game thread instead of going to SKSE's UI tasks. Nothing to do but play; check `MiniPets.log` afterwards, once with DovahHub and once without.

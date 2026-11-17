@@ -8,3 +8,4 @@ tools/test-pex-header.py  DovahFollowerControl 61986ee, SHA-256 67a79d99a7bc0e3c
 tools/zip-user-scan.py    DovahCamp d665e39, SHA-256 069bb912ac449c85045de3d4b0639eeea0be09f92a92e3e90b76711dfdbddafd
 view/theme/dropdowns.js   DovahHub 8c5d9fe (web/dropdowns.js, DHUB-134), SHA-256 fc6808025309ab2dfa72e893305aae719d1182a768cdf055f5fe50114ac32653
 view/theme/dropdowns.css  DovahHub 8c5d9fe (web/dropdowns.css, DHUB-134), SHA-256 a8c7e1d0cf3ba62753b511def846d561c5604c371582ad525bacb9db3e42795d
+view/theme/controller.js  DovahHub 8c5d9fe (web/controller.js, DHUB-134), SHA-256 87d00a2bf0dff1938d7ec2c36ce71ab5b9f110220e7f6554fa97e98e16087790

@@ -10,3 +10,4 @@ tools/zip-user-scan.py -text
 # DovahHub's list for every choice (DMP-21), copied unchanged: keep its bytes
 view/theme/dropdowns.js -text
 view/theme/dropdowns.css -text
+view/theme/controller.js -text

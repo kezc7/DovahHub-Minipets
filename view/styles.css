@@ -544,3 +544,5 @@ body.settings-open.dragging-pet, body.settings-open.dragging-pet * { cursor: gra
 .dv-choice { text-align: left; text-transform: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dv-choice:disabled { opacity: .45; cursor: default; }
 #animation-lab .dv-choice { min-width: 0; height: auto; padding: 2px 1.6rem 2px 6px; font-size: 12px; }
+/* DMP-21: with the pad, a switch's ring goes on its track (the checkbox itself is the 1px one above) */
+html[data-meridian-input="gamepad"] .dv-toggle input[data-meridian-focused] + .dv-toggle__track { outline: 2px solid var(--dv-accent-bright); outline-offset: 2px; box-shadow: var(--dv-ring); }

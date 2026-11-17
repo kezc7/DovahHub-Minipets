@@ -1049,6 +1049,7 @@
     }
     flushNativeSettingsChanged();
     settingsOpen = false;
+    stopPad();
     applySceneClasses();
     document.body.classList.remove('settings-open');
     settingsMenu.classList.add('hidden');
@@ -1064,6 +1065,119 @@
     document.body.classList.add('settings-open');
     settingsMenu.classList.remove('hidden');
     syncSettingsFields();
+    startPad();
+  }
+
+  // DMP-21: the pad runs the settings (the suite's pad rule), through DovahHub's controller layer (theme/controller.js,
+  // copied unchanged; Prisma UI gives the page the pad as a standard gamepad). The D-pad or left stick moves the
+  // highlight from control to control; A presses a button, flips a switch or opens a choice's list (Up and Down in
+  // it, A chooses, B closes it); A on a slider or number starts changing it with Left and Right, and A or B ends that;
+  // B ends a hotkey capture, else cancels the settings as Esc does. The pad is read only while the settings are open.
+  // The page goes by rows, as DovahHub's own settings do (its DHUB-113): Up and Down move to the row above or below
+  // in the page's order, onto the control nearest across, and Left and Right stay in the row. The egg picker is a grid
+  // the D-pad moves around in before it leaves it. A slider or number being changed takes Left and Right itself.
+  let padStop = null;
+  let padEditing = null;
+  const PAD_CONTROLS = 'button, input, [tabindex]';
+  function padItems(root) {
+    return Array.from(root.querySelectorAll(PAD_CONTROLS)).filter(el => el.tabIndex >= 0 && !el.disabled && !el.closest('[hidden]') &&
+      getComputedStyle(el).visibility !== 'hidden' && el.getClientRects().length > 0);
+  }
+  function padRowOf(el) {
+    return el.closest('.egg-picker') || el.closest('.settings-row, .settings-header, .settings-footer__row') || el.parentElement;
+  }
+  function padCentre(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+  // the nearest item that way, by where it is on screen (inside the egg grid, and along a row)
+  function padNearest(from, items, direction) {
+    const c = padCentre(from);
+    const horizontal = direction === 'left' || direction === 'right';
+    const sign = direction === 'right' || direction === 'down' ? 1 : -1;
+    let best = null;
+    items.forEach(el => {
+      if (el === from) return;
+      const p = padCentre(el);
+      const along = (horizontal ? p.x - c.x : p.y - c.y) * sign;
+      if (along <= 1) return;
+      const score = along + Math.abs(horizontal ? p.y - c.y : p.x - c.x) * 2;
+      if (!best || score < best.score) best = { el, score };
+    });
+    return best ? best.el : null;
+  }
+  // focus, and focusin said outright, as dropdowns.js does: the controller layer moves its ring on focusin, which a
+  // page without the window's focus doesn't get from focus() alone
+  function padFocus(el) {
+    padEditing = null;
+    el.focus({ preventScroll: true });
+    el.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  function padMove(root, direction) {
+    const current = document.activeElement;
+    const items = padItems(root);
+    if (!current || items.indexOf(current) < 0) return false;
+    const row = padRowOf(current);
+    const inRow = items.filter(el => padRowOf(el) === row);
+    if (direction === 'left' || direction === 'right' || row.classList.contains('egg-picker')) {
+      const next = padNearest(current, inRow, direction);
+      if (next) { padFocus(next); return true; }
+      if (direction === 'left' || direction === 'right') return true;  // the row's end: stay
+    }
+    const rows = [];
+    items.forEach(el => { const r = padRowOf(el); if (rows.indexOf(r) < 0) rows.push(r); });
+    const target = rows[rows.indexOf(row) + (direction === 'down' ? 1 : -1)];
+    if (!target) return true;  // the first or last row: stay
+    const x = padCentre(current).x;
+    const candidates = items.filter(el => padRowOf(el) === target);
+    // into the egg grid from above or below: its nearest row first, then across
+    const edge = candidates.reduce((y, el) => direction === 'down' ? Math.min(y, padCentre(el).y) : Math.max(y, padCentre(el).y), direction === 'down' ? Infinity : -Infinity);
+    const onEdge = candidates.filter(el => Math.abs(padCentre(el).y - edge) < 4);
+    const next = onEdge.reduce((best, el) => !best || Math.abs(padCentre(el).x - x) < Math.abs(padCentre(best).x - x) ? el : best, null);
+    if (next) padFocus(next);
+    return true;
+  }
+  function startPad() {
+    const input = window.MeridianInput;
+    if (padStop || !input || typeof input.attachNavigation !== 'function') return;
+    const root = settingsMenu.querySelector('.settings-card') || settingsMenu;
+    padEditing = null;
+    padStop = input.attachNavigation({
+      root,
+      initialFocus: () => (raisePet ? document.querySelector('#raise-pet') : petChoice) || document.querySelector('#raise-pet'),
+      onAction: event => {
+        if (event.phase !== 'press' && event.phase !== 'repeat') return false;
+        const selected = document.activeElement;
+        if (event.action === 'accept') {
+          // the controller layer starts and ends changing a slider or number on A; follow it
+          if (event.phase === 'press' && selected && selected.matches('input[type=range], input[type=number]')) padEditing = padEditing === selected ? null : selected;
+          return false;
+        }
+        if (event.action === 'cancel') {
+          if (padEditing) { padEditing = null; return false; }
+          return false;
+        }
+        if (['up', 'down', 'left', 'right'].indexOf(event.action) < 0) return false;
+        if (padEditing && padEditing === selected) return false;  // Left and Right change it, as the layer does
+        padEditing = null;
+        return padMove(root, event.action);
+      },
+      onBack: () => {
+        if (captureButton) stopCapture();
+        else closeSettings(false);
+        return true;
+      }
+    });
+    if (typeof window.dovahhubInputPaused === 'function') window.dovahhubInputPaused(false);
+  }
+  function stopPad() {
+    if (window.DovahHubChoices && window.DovahHubChoices.isOpen()) window.DovahHubChoices.close();
+    if (padStop) {
+      padStop();
+      padStop = null;
+    }
+    if (typeof window.dovahhubInputPaused === 'function') window.dovahhubInputPaused(true);
   }
 
   function applyNativeSettings(data) {
@@ -1777,6 +1891,8 @@
   document.addEventListener('visibilitychange', () => applySceneClasses());
 
   setupChoices();
+  // the pad is the game's until the settings open
+  if (typeof window.dovahhubInputPaused === 'function') window.dovahhubInputPaused(true);
   setLanguage(language, false);
   renderFrame();
   ['iconFood', 'iconHeart'].forEach(name => {
