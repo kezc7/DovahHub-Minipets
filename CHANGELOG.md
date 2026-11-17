@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.11-beta
+- MiniPets.dll's file version reads in numbers only, 1.9.11.0, as Windows and mod tools expect. The product version keeps the beta label. Nothing changes in game
+- Upgrading from 1.9.10-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.10-beta
 - Work with the game only ever runs on the game's own thread. If neither DovahHub's frame update nor MiniPets' own hook is running (an unusual load order or game version), that work now waits for the game's thread instead of going to SKSE's UI tasks, which can run on another one. With DovahHub, or with MiniPets' hook in place, nothing changes
 - The download includes MiniPets.pdb beside MiniPets.dll, so a crash log can name MiniPets' functions

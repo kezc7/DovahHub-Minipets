@@ -4,7 +4,7 @@ includes("lib/commonlibsse-ng")
 
 local PLUGIN_NAME = "MiniPets"
 -- bump this for releases
-local PLUGIN_VERSION = "1.9.10-beta"
+local PLUGIN_VERSION = "1.9.11-beta"
 -- the DLL's FileVersion is numbers only (1.9.10.0); ProductVersion keeps the label, from the project's version
 local PLUGIN_FILE_VERSION = PLUGIN_VERSION:match("^(%d+%.%d+%.%d+)")
 local PACKAGE_NAME = "dovahhub-minipets"
