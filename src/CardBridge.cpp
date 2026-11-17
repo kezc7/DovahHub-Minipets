@@ -361,6 +361,26 @@ namespace MiniPets::Card
                 }
 
                 const auto previousPet = g_settings.pet;
+                // the suite's rule (DMP-21): each setting that changes is logged once as it is saved, old and new
+                const auto noteChange = [](std::string_view name, const std::string& before, const std::string& after) {
+                    if (before != after) {
+                        logger::info("MiniPets setting {}: {} -> {}", name, before, after);
+                    }
+                };
+                const auto flag = [](bool on) { return std::string(on ? "1" : "0"); };
+                noteChange("position_x", std::to_string(g_settings.positionX), std::to_string(x));
+                noteChange("position_y", std::to_string(g_settings.positionY), std::to_string(y));
+                noteChange("settings_hotkey", g_settings.settingsHotkeyName, hotkeyName);
+                noteChange("pet", g_settings.pet, pet);
+                noteChange("show_clock", flag(g_settings.showClock), flag(showClock));
+                noteChange("clock_style", g_settings.clockStyle, clockStyle);
+                noteChange("scale", std::to_string(g_settings.scale), std::to_string(scale));
+                noteChange("raise_pet", flag(g_settings.raisePet), flag(raisePet));
+                noteChange("feed_hotkey", g_settings.feedHotkeyName, feedKey);
+                noteChange("play_hotkey", g_settings.playHotkeyName, playKey);
+                noteChange("card_shape", g_settings.cardShape, cardShape);
+                noteChange("hide_hotkey", g_settings.hideHotkeyName, hideKey);
+                noteChange("language", g_settings.language, language);
                 g_settings.positionX = x;
                 g_settings.positionY = y;
                 g_settings.settingsHotkey = hotkey;

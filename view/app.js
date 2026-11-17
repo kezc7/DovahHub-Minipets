@@ -15,7 +15,12 @@
   const cardScaler = document.querySelector('.card-scale');
   const settingsHotkeyButton = document.querySelector('#settings-hotkey');
   const hotkeyHint = document.querySelector('#hotkey-hint');
-  const petSelect = document.querySelector('#pet-select');
+  // DMP-21: the four choices in the settings (and the animation lab's) are buttons that open DovahHub's list, made by
+  // setupChoices() once the page has its language
+  let petChoice = null;
+  let shapeChoice = null;
+  let clockStyleChoice = null;
+  let languageChoice = null;
   const petSelectRow = document.querySelector('#pet-select-row');
   const raisePetInput = document.querySelector('#raise-pet');
   const petLifePanel = document.querySelector('#pet-life');
@@ -27,14 +32,12 @@
   const petEmote = document.querySelector('.pet-emote');
   const petLifeRules = window.PetLife;
   const clockEnabledInput = document.querySelector('#clock-enabled');
-  const clockStyleSelect = document.querySelector('#clock-style');
   const clockTime = document.querySelector('#clock-time');
   const clockDate = document.querySelector('#clock-date');
   const petClock = window.PetClock;
   // i18n.js can be missing (a hand-copied install that kept an older view folder); the card then
   // stays in English instead of stopping on the first missing call
   const petI18n = window.PetI18n || englishOnlyI18n();
-  const languageSelect = document.querySelector('#language-select');
   const petSky = window.PetSky;
   const petRegions = window.PetRegions;
   // room the clock needs above the card and the pet bars need below it, for clamping
@@ -354,7 +357,7 @@
     positionXRange.value = positionXValue.value = String(shown.x);
     positionYRange.value = positionYValue.value = String(shown.y);
     sizeRange.value = sizeValue.value = String(cardScale);
-    document.querySelector('#card-shape').value = cardShape;
+    if (shapeChoice) shapeChoice.setChoice(cardShape);
     syncSliders();
   }
 
@@ -892,14 +895,86 @@
     return species ? `${name} — ${species}` : name;
   }
 
+  // DMP-21: a choice is a button that opens DovahHub's list (theme/dropdowns.js, copied unchanged from DovahHub), never
+  // a native <select>: Enter or Space opens it, the arrows move, Enter or a click chooses, Escape closes with nothing
+  // changed. Each choice is { value, label } or { value, key } (a catalogue key, read in the current language).
+  // Without dropdowns.js (a hand-copied install that kept an older view folder) a press steps to the next choice.
+  const madeChoices = [];
+  const labChoices = {};
+  let reportedNoChoiceList = false;
+  const LANGUAGE_CHOICES = [['en', 'English'], ['fr', 'Français'], ['de', 'Deutsch'], ['it', 'Italiano'], ['es', 'Español'],
+    ['pl', 'Polski'], ['tr', 'Türkçe'], ['zh-CN', '简体中文'], ['ja', '日本語'], ['ko', '한국어']].map(([value, label]) => ({ value, label }));
+
+  function companionChoices() {
+    return Object.keys(petNames).map(id => ({ value: id, companion: true }));
+  }
+
+  function steppingChoiceButton(choices, value, onChoose) {
+    if (!reportedNoChoiceList && typeof window.viewLog === 'function') {
+      reportedNoChoiceList = true;
+      window.viewLog('dropdowns.js missing, a choice steps to the next on each press');
+    }
+    const button = document.createElement('button');
+    button.type = 'button';
+    let current = value;
+    button.setChoice = next => {
+      current = next;
+      const choice = choices.find(c => String(c.value) === String(next));
+      button.dataset.value = String(next);
+      button.textContent = choice ? String(choice.label) : '';
+    };
+    button.addEventListener('click', () => {
+      if (button.disabled || !choices.length) return;
+      const at = choices.findIndex(c => String(c.value) === String(current));
+      const next = choices[(at + 1) % choices.length];
+      button.setChoice(next.value);
+      onChoose(next.value, next);
+    });
+    return button;
+  }
+
+  function makeChoice(slot, id, choices, value, labelKey, onChoose) {
+    choices.forEach(choice => { if (choice.label === undefined) choice.label = choice.value; });
+    const list = window.DovahHubChoices;
+    const button = list && typeof list.button === 'function'
+      ? list.button({ choices, value, label: t(labelKey), onChoose })
+      : steppingChoiceButton(choices, value, onChoose);
+    button.id = id;
+    button.classList.add('dv-select', 'dv-choice');
+    if (!button.setChoice) button.setChoice = () => {};
+    button.setChoice(value);
+    const host = document.querySelector(`[data-choice="${slot}"]`);
+    if (host && typeof host.replaceWith === 'function') host.replaceWith(button);
+    madeChoices.push({ button, choices, labelKey });
+    return button;
+  }
+
+  // the labels follow the language: catalogue keys, companion names with their species, the aria-label
+  function relabelChoices() {
+    madeChoices.forEach(({ button, choices, labelKey }) => {
+      choices.forEach(choice => {
+        if (choice.companion) choice.label = companionOptionLabel(choice.value);
+        else if (choice.key) choice.label = t(choice.key);
+      });
+      button.setAttribute('aria-label', t(labelKey));
+      button.setChoice(button.dataset.value);
+    });
+  }
+
+  function setupChoices() {
+    petChoice = makeChoice('pet', 'pet-choice', companionChoices(), pet, 'chooseCompanion', value => {
+      if (setPet(value)) queueNativeSettingsChanged();
+    });
+    shapeChoice = makeChoice('shape', 'card-shape', [{ value: 'square', key: 'square' }, { value: 'wide', key: 'wide' }], cardShape, 'shape', chooseShape);
+    clockStyleChoice = makeChoice('clock-style', 'clock-style', [{ value: 'plate', key: 'plate' }, { value: 'ribbon', key: 'ribbon' }], clockStyle, 'clockStyle',
+      value => setClock(showClock, value));
+    clockStyleChoice.disabled = !showClock;
+    languageChoice = makeChoice('language', 'language-choice', LANGUAGE_CHOICES.map(c => ({ ...c })), language, 'language', value => setLanguage(value));
+    relabelChoices();
+  }
+
   function localizeCompanionOptions() {
-    if (petSelect) {
-      Array.from(petSelect.options).forEach(option => { option.textContent = companionOptionLabel(option.value); });
-    }
-    const labPet = document.querySelector('#animation-lab-pet');
-    if (labPet && labPet.options.length) {
-      Array.from(labPet.options).forEach(option => { option.textContent = companionOptionLabel(option.value); });
-    }
+    relabelChoices();
     document.querySelectorAll('[data-pet-label]').forEach(label => {
       label.textContent = companionOptionLabel(label.dataset.petLabel);
     });
@@ -909,7 +984,7 @@
     language = petI18n.setLanguage(next);
     petI18n.apply(document);
     localizeCompanionOptions();
-    if (languageSelect) languageSelect.value = language;
+    if (languageChoice) languageChoice.setChoice(language);
     renderPetPanel();
     if (lastClockData) {
       clockTime.textContent = petClock.formatTime(lastClockData.hour, lastClockData.minute);
@@ -934,14 +1009,17 @@
   function syncSettingsFields() {
     syncPositionFields();
     settingsHotkeyButton.textContent = settingsHotkey;
-    petSelect.value = pet;
-    languageSelect.value = language;
+    if (petChoice) petChoice.setChoice(pet);
+    if (languageChoice) languageChoice.setChoice(language);
     document.querySelector('#feed-hotkey').textContent = feedHotkey;
     document.querySelector('#play-hotkey').textContent = playHotkey;
     document.querySelector('#hide-hotkey').textContent = hideHotkey;
     clockEnabledInput.checked = showClock;
-    clockStyleSelect.value = clockStyle;
-    clockStyleSelect.disabled = !showClock;
+    if (clockStyleChoice) {
+      clockStyleChoice.setChoice(clockStyle);
+      clockStyleChoice.disabled = !showClock;
+    }
+    if (shapeChoice) shapeChoice.setChoice(cardShape);
     raisePetInput.checked = raisePet;
     syncToggles();
     document.querySelector('#settings-footer-key').textContent = settingsHotkey;
@@ -1496,29 +1574,30 @@
   function setupAnimationLab() {
     if (!animationLabActive) return;
     const lab = document.querySelector('#animation-lab');
-    const labPet = document.querySelector('#animation-lab-pet');
-    const labState = document.querySelector('#animation-lab-state');
     const labSpeedInput = document.querySelector('#animation-lab-speed');
     const labSpeedValue = document.querySelector('#animation-lab-speed-value');
-    if (!lab || !labPet || !labState || !labSpeedInput || !labSpeedValue) return;
+    if (!lab || !labSpeedInput || !labSpeedValue) return;
 
     lab.classList.remove('hidden');
-    Object.keys(petNames).forEach(id => labPet.append(new Option(companionOptionLabel(id), id)));
-    labPet.value = pet;
-    const labRegion = document.querySelector('#animation-lab-region');
-    if (labRegion && petRegions) {
-      labRegion.append(new Option(t('skyrim'), 'skyrim'));
-      petRegions.names.forEach(name => labRegion.append(new Option(petRegions.info[name].label, name)));
-      labRegion.addEventListener('change', event => window.previewRegion(event.target.value));
+    let labStateValue = 'idle';
+    labChoices.pet = makeChoice('animation-lab-pet', 'animation-lab-pet', companionChoices(), pet, 'animationPet', value => setPet(value));
+    if (petRegions) {
+      const regions = [{ value: 'skyrim', key: 'skyrim' }].concat(petRegions.names.map(name => ({ value: name, label: petRegions.info[name].label })));
+      labChoices.region = makeChoice('animation-lab-region', 'animation-lab-region', regions, 'skyrim', 'animationPlace', value => window.previewRegion(value));
     }
-    labPet.addEventListener('change', event => setPet(event.target.value));
-    labState.addEventListener('change', event => playLabState(event.target.value));
+    const states = [['idle', 'idle'], ['moving', 'moving'], ['combat', 'combat'], ['landing', 'landing'], ['xp', 'xpGain'], ['celebrating', 'celebrating'], ['level-up', 'levelUp']]
+      .map(([value, key]) => ({ value, key }));
+    labChoices.state = makeChoice('animation-lab-state', 'animation-lab-state', states, labStateValue, 'animationState', value => {
+      labStateValue = value;
+      playLabState(value);
+    });
+    relabelChoices();
     labSpeedInput.addEventListener('input', event => {
       labSpeed = Number(event.target.value) || 1;
       labSpeedValue.textContent = `${labSpeed.toFixed(1).replace(/\.0$/, '')}×`;
       applyLabSpeed();
     });
-    document.querySelector('#animation-lab-play').addEventListener('click', () => playLabState(labState.value));
+    document.querySelector('#animation-lab-play').addEventListener('click', () => playLabState(labStateValue));
     document.querySelector('#animation-lab-transition').addEventListener('click', () => {
       window.clearTimeout(labTimer);
       controller.setBase('moving');
@@ -1568,7 +1647,10 @@
   function setClock(enabled, style) {
     showClock = enabled;
     clockStyle = style === 'ribbon' ? 'ribbon' : 'plate';
-    clockStyleSelect.disabled = !showClock;
+    if (clockStyleChoice) {
+      clockStyleChoice.setChoice(clockStyle);
+      clockStyleChoice.disabled = !showClock;
+    }
     // banner changes the height, so re-clamp
     if (hasCustomPosition()) setPosition(positionX, positionY);
     else {
@@ -1577,7 +1659,6 @@
     }
   }
   clockEnabledInput.addEventListener('change', event => setClock(event.target.checked, clockStyle));
-  languageSelect.addEventListener('change', event => setLanguage(event.target.value));
 
   // resize the card, then redraw everything that's drawn to its size
   function applyShape(shape) {
@@ -1590,14 +1671,14 @@
       updateSky();
     });
   }
-  document.querySelector('#card-shape').addEventListener('change', event => {
-    applyShape(event.target.value);
+  function chooseShape(shape) {
+    applyShape(shape);
     if (hasCustomPosition()) setPosition(positionX, positionY);
     else {
       syncPositionFields();
       queueNativeSettingsChanged();
     }
-  });
+  }
 
   function setScale(value) {
     cardScale = clampScale(value);
@@ -1615,7 +1696,6 @@
   [raisePetInput, clockEnabledInput].forEach(input => input.addEventListener('change', syncToggles));
   sizeRange.addEventListener('change', event => setScale(event.target.value));
   sizeValue.addEventListener('change', event => setScale(event.target.value));
-  clockStyleSelect.addEventListener('change', event => setClock(showClock, event.target.value));
   raisePetInput.addEventListener('change', event => {
     raisePet = event.target.checked;
     refreshPet(true);
@@ -1628,9 +1708,6 @@
     if (resetArmed) return startOver();
     resetArmed = true;
     renderPetPanel();
-  });
-  petSelect.addEventListener('change', event => {
-    if (setPet(event.target.value)) queueNativeSettingsChanged();
   });
   document.querySelector('#reset-position').addEventListener('click', resetPosition);
   document.querySelector('#settings-save').addEventListener('click', () => closeSettings(true));
@@ -1699,6 +1776,7 @@
 
   document.addEventListener('visibilitychange', () => applySceneClasses());
 
+  setupChoices();
   setLanguage(language, false);
   renderFrame();
   ['iconFood', 'iconHeart'].forEach(name => {

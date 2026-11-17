@@ -7,3 +7,6 @@ tools/pex-header.py -text
 tools/test-pex-header.py -text
 # DovahCamp's zip scan for the build user's name, copied unchanged: keep its bytes
 tools/zip-user-scan.py -text
+# DovahHub's list for every choice (DMP-21), copied unchanged: keep its bytes
+view/theme/dropdowns.js -text
+view/theme/dropdowns.css -text

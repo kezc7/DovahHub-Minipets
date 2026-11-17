@@ -32,9 +32,11 @@ test('the HUD page links the kit before its own styles, with DovahHub\'s sizing'
 test('the companion settings use the kit\'s parts, and the old look is gone', () => {
   const html = read('view/index.html');
   const settings = html.slice(html.indexOf('<section id="settings-menu"'), html.indexOf('<section id="animation-lab"'));
-  for (const part of ['dv-panel', 'dv-heading', 'dv-kicker', 'dv-setting-row', 'dv-toggle', 'dv-select', 'dv-slider', 'dv-stat', 'dv-button', 'dv-button--primary', 'dv-prompts', 'dv-keycap']) {
+  for (const part of ['dv-panel', 'dv-heading', 'dv-kicker', 'dv-setting-row', 'dv-toggle', 'dv-slider', 'dv-stat', 'dv-button', 'dv-button--primary', 'dv-prompts', 'dv-keycap']) {
     assert.ok(settings.includes(part), part);
   }
+  // the choices are made by app.js as buttons that open DovahHub's list (DMP-21), in the kit's select look
+  assert.match(read('view/app.js'), /button\.classList\.add\('dv-select', 'dv-choice'\)/);
   assert.doesNotMatch(settings, /settings-secondary|settings-primary/);
   const css = read('view/styles.css');
   assert.doesNotMatch(css, /\.settings-secondary|\.settings-primary|\.settings-toggle \{/);

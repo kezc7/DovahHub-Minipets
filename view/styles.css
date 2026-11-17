@@ -537,3 +537,10 @@ body.settings-open.dragging-pet, body.settings-open.dragging-pet * { cursor: gra
 @keyframes react-victory { 0% { transform: translateY(0) rotate(0deg) scale(1, 1); } 18% { transform: translateY(0) scale(1.12, .86); } 45% { transform: translateY(-22px) rotate(-10deg) scale(.96, 1.05); } 70% { transform: translateY(0) rotate(0deg) scale(1.08, .92); } 100% { transform: translateY(0) scale(1, 1); } }
 @keyframes react-sink { from { transform: translateY(0); } to { transform: translateY(8px); } }
 @keyframes react-bob-high { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+
+/* DMP-21: DovahHub's list (theme/dropdowns.css, unchanged) reads DovahHub's own token names. The list and the choice
+   buttons take them from the kit here; the card keeps its own --ink and --muted. */
+.wf-select-menu, .dv-choice { --accent-bright: var(--dv-accent-bright); --accent-rgb: var(--dv-accent-rgb); --font-body: var(--dv-font); --ink: var(--dv-ink); --ink-soft: var(--dv-ink-soft); --muted: var(--dv-muted); }
+.dv-choice { text-align: left; text-transform: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dv-choice:disabled { opacity: .45; cursor: default; }
+#animation-lab .dv-choice { min-width: 0; height: auto; padding: 2px 1.6rem 2px 6px; font-size: 12px; }
