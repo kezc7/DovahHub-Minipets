@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.12-beta
+- The settings page (Shift+B) works on a controller: the d-pad moves row by row through every control, A changes or opens it, and B backs out of a list or a key capture, then cancels the settings
+- The companion, card shape, clock style and language choices use DovahHub's list instead of the browser's dropdowns, so a controller can open and pick from them. Without DovahHub's list, each one steps through its choices when pressed
+- MiniPets.log names each setting you change, with its old and new value
+- Upgrading from 1.9.11-beta: install over it in your mod manager; your settings carry over
+
 ## 1.9.11-beta
 - MiniPets.dll's file version reads in numbers only, 1.9.11.0, as Windows and mod tools expect. The product version keeps the beta label. Nothing changes in game
 - Upgrading from 1.9.10-beta: install over it in your mod manager; nothing else changes
