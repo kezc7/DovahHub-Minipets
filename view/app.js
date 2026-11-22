@@ -1594,6 +1594,10 @@
     react(data) {
       react(data);
     },
+    // DMP-34: a reaction the gate turned down ({"source","captionKey","vars"}): its moment is kept, nothing is shown
+    remember(data) {
+      if (data && typeof data === 'object') rememberMoment(memoryFromReaction(data));
+    },
     // the plugin's self-test (DMP-11) asks what the card draws: the pet, its pose, the reaction playing,
     // the save session, and which of the reaction lines it was given aren't in this language's own catalogue
     selfTest(data) {

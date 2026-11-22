@@ -676,6 +676,11 @@ namespace MiniPets::SelfTestRunner
         StartSelfTest({}, false, 10);
     }
 
+    bool Running()
+    {
+        return g_selfTestRunning.load();
+    }
+
     void RegisterChronicleCommand()
     {
         if (!ReactionWiring::Chronicle()) {

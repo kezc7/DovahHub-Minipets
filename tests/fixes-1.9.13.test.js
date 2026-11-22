@@ -142,14 +142,14 @@ test('DMP-24: DovahHub\'s rows are worded again once the INI is read', () => {
 
 test('DMP-28: the outfit\'s ten minutes start only when shown, and a hidden card makes it wait', () => {
   const wiring = pluginPart('ReactionWiring');
-  assert.match(wiring, /Reactions::Verdict OfferReaction\(const Reactions::Reaction& reaction, bool fromOtherMod\)/);
+  assert.match(wiring, /Reactions::Verdict OfferReaction\(const Reactions::Reaction& reaction, bool fromOtherMod/);
   const outfit = wiring.slice(wiring.indexOf('void OfferOutfit('), wiring.indexOf('void OwnReaction('));
-  assert.match(outfit, /if \(verdict == Reactions::Verdict::Show\) \{\s*g_lastOutfitMs = now;/);
-  assert.match(outfit, /verdict == Reactions::Verdict::Hidden && mayWait && Card::IsHidden\(\)/, 'only a card hidden for a menu, never the player\'s own hide');
-  assert.equal((wiring.match(/g_lastOutfitMs = now;/g) || []).length, 1);
-  assert.match(wiring, /OfferOutfit\(reaction, now, true\);/);
-  assert.match(wiring, /if \(g_pendingOutfit && !Card::IsHidden\(\)\) \{[\s\S]{0,300}OfferOutfit\(reaction, NowMs\(\), false\);/, 'offered again once, without waiting again');
-  assert.match(wiring, /void ResetReactions\(\)[\s\S]{0,700}g_pendingOutfit\.reset\(\);/, 'a load drops it');
+  // since 1.9.14 the wait is DMP-35's, with the outfit's own minute
+  assert.match(outfit, /if \(OfferReaction\(reaction, true, kOutfitGraceMs, true\) == Reactions::Verdict::Show\) \{\s*g_lastOutfitMs = now;/);
+  assert.match(wiring, /constexpr double kOutfitGraceMs = 60\.0 \* 1000\.0;/);
+  assert.equal((wiring.match(/g_lastOutfitMs = now;/g) || []).length, 2, 'when shown at once, or after the wait');
+  assert.match(wiring, /OfferOutfit\(reaction, now\);/);
+  assert.match(wiring, /void ResetReactions\(\)[\s\S]{0,700}g_pending\.reset\(\);/, 'a load drops it');
 });
 
 test('DMP-29: a Shift release the game missed doesn\'t stick', () => {

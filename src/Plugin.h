@@ -275,5 +275,7 @@ namespace MiniPets
         void MaybeStartSelfTestFromIni();
         void RegisterChronicleCommand();
         void OnPageAnswer(const char* payload);
+        // DMP-34, DMP-35: while a run's reactions fire, none waits for the card and none is remembered
+        bool Running();
     }
 }

@@ -25,10 +25,19 @@ namespace MiniPets::ReactionWiring
         std::unordered_set<std::uint32_t> g_killsSeen;
         double g_loadedAtMs = 0.0;
         double g_lastOutfitMs = -1e18;
-        // DMP-28: an outfit reaction turned down while the card was hidden (DovahHub open), offered again once it's shown
-        std::optional<Reactions::Reaction> g_pendingOutfit;
-        double g_pendingOutfitUntilMs = 0.0;
-        constexpr double kPendingOutfitMs = 60.0 * 1000.0;
+        // DMP-35 (DMP-28 for outfits): one reaction turned down because the card was hidden for a menu, offered
+        // again on the first pass with the card shown. The higher priority keeps the place; a tie goes to the newer.
+        struct PendingReaction
+        {
+            Reactions::Reaction reaction;
+            bool fromOtherMod = false;
+            bool outfit = false;
+            double untilMs = 0.0;
+        };
+        std::optional<PendingReaction> g_pending;
+        // most menus close in a moment (a level-up, the fader); an outfit is changed inside DovahHub, which can stay open
+        constexpr double kGraceMs = 5.0 * 1000.0;
+        constexpr double kOutfitGraceMs = 60.0 * 1000.0;
         double g_lastChronicleMs = -1e18;
         double g_sleepReleaseAtMs = 0.0;
         bool g_playerDead = false;
@@ -45,8 +54,17 @@ namespace MiniPets::ReactionWiring
 
         OfferSeen g_lastOffer;
 
-        // game thread. fromOtherMod: the "react to other mods" switch covers it (React, DovahDamage, DovahHub)
-        Reactions::Verdict OfferReaction(const Reactions::Reaction& reaction, bool fromOtherMod)
+        // DMP-34: a moment the pet won't show is still its to remember (a boss, a milestone, a first visit); the page
+        // keeps what's worth keeping and shows nothing
+        void SendRemember(const Reactions::Reaction& reaction)
+        {
+            Card::Invoke("dragonbornXP.remember", "{\"source\":" + JsonString(reaction.source) + ",\"captionKey\":" + JsonString(reaction.captionKey) +
+                                                  ",\"vars\":" + (reaction.vars.empty() ? std::string("{}") : reaction.vars) + "}");
+        }
+
+        // game thread. fromOtherMod: the "react to other mods" switch covers it (React, DovahDamage, DovahHub).
+        // waitMs: how long it may wait for a card hidden for a menu (0: not at all, as for a second try).
+        Reactions::Verdict OfferReaction(const Reactions::Reaction& reaction, bool fromOtherMod, double waitMs = kGraceMs, bool outfit = false)
         {
             const double now = NowMs();
             const bool visible = !Card::IsHidden() && !g_settings.petHidden;
@@ -59,6 +77,22 @@ namespace MiniPets::ReactionWiring
                                          (shown ? std::string() : std::string(",\"reason\":\"") + Reactions::VerdictName(verdict) + "\"") + "}");
             if (!shown) {
                 logger::info("MiniPets reaction {} from {} not shown: {}", reaction.mood, reaction.source, Reactions::VerdictName(verdict));
+                // a self-test's reactions (a giant standing in for a boss) neither wait nor become memories
+                if (SelfTestRunner::Running()) {
+                    return verdict;
+                }
+                // DMP-35: hidden for a menu, not by the player: it waits for the card (its moment is kept if it never shows)
+                if (verdict == Reactions::Verdict::Hidden && waitMs > 0.0 && Card::IsHidden() && !g_settings.petHidden) {
+                    if (!g_pending || reaction.priority >= g_pending->reaction.priority) {
+                        if (g_pending) {
+                            SendRemember(g_pending->reaction);
+                        }
+                        g_pending = PendingReaction{ reaction, fromOtherMod, outfit, now + waitMs };
+                        logger::info("MiniPets reaction {} from {} waits up to {} s for the card", reaction.mood, reaction.source, static_cast<int>(waitMs / 1000.0));
+                        return verdict;
+                    }
+                }
+                SendRemember(reaction);
                 return verdict;
             }
             // one Chronicle line a minute at most, when the player turned it on
@@ -78,17 +112,11 @@ namespace MiniPets::ReactionWiring
         }
 
         // DMP-28: the outfit's ten minutes start only when the pet reacted. Turned down because the card was hidden
-        // for a menu (DovahHub open on its Wardrobe tab), it waits up to a minute for the card, once.
-        void OfferOutfit(const Reactions::Reaction& reaction, double now, bool mayWait)
+        // for a menu (DovahHub open on its Wardrobe tab), it waits up to a minute for the card (DMP-35's wait).
+        void OfferOutfit(const Reactions::Reaction& reaction, double now)
         {
-            const auto verdict = OfferReaction(reaction, true);
-            if (verdict == Reactions::Verdict::Show) {
+            if (OfferReaction(reaction, true, kOutfitGraceMs, true) == Reactions::Verdict::Show) {
                 g_lastOutfitMs = now;
-            }
-            else if (verdict == Reactions::Verdict::Hidden && mayWait && Card::IsHidden()) {
-                g_pendingOutfit = reaction;
-                g_pendingOutfitUntilMs = now + kPendingOutfitMs;
-                logger::info("MiniPets: the outfit reaction waits for the card to be shown");
             }
         }
 
@@ -246,7 +274,7 @@ namespace MiniPets::ReactionWiring
         g_killsSeen.clear();
         g_loadedAtMs = NowMs();
         g_lastOutfitMs = -1e18;
-        g_pendingOutfit.reset();
+        g_pending.reset();
         g_lastChronicleMs = -1e18;
         g_placeSeenMs.clear();
         {
@@ -322,12 +350,20 @@ namespace MiniPets::ReactionWiring
             }
         }
 
-        // DMP-28: the outfit change DovahHub sent while it was open, once the card is back
-        if (g_pendingOutfit && !Card::IsHidden()) {
-            const auto reaction = *g_pendingOutfit;
-            g_pendingOutfit.reset();
-            if (NowMs() < g_pendingOutfitUntilMs) {
-                OfferOutfit(reaction, NowMs(), false);
+        // DMP-35: the reaction that waited for the card, once it's back; or, out of time, only its moment
+        if (g_pending) {
+            const double now = NowMs();
+            if (now >= g_pending->untilMs) {
+                logger::info("MiniPets reaction {} from {} ran out of time waiting for the card", g_pending->reaction.mood, g_pending->reaction.source);
+                SendRemember(g_pending->reaction);
+                g_pending.reset();
+            }
+            else if (!Card::IsHidden()) {
+                const auto waiting = *g_pending;
+                g_pending.reset();
+                if (OfferReaction(waiting.reaction, waiting.fromOtherMod, 0.0) == Reactions::Verdict::Show && waiting.outfit) {
+                    g_lastOutfitMs = now;
+                }
             }
         }
 
@@ -381,7 +417,7 @@ namespace MiniPets::ReactionWiring
                 }
                 const double now = NowMs();
                 if (Reactions::FromOutfitChange(json, (now - g_loadedAtMs) / 1000.0, (now - g_lastOutfitMs) / 1000.0, reaction)) {
-                    OfferOutfit(reaction, now, true);
+                    OfferOutfit(reaction, now);
                 }
             });
         }
