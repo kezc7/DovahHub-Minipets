@@ -717,6 +717,10 @@ namespace MiniPets::Card
             if (entry.first <= 0) {
                 continue;
             }
+            // DMP-23: never a quest item; RemoveItem from here isn't stopped by the quest flag
+            if (entry.second && entry.second->IsQuestObject()) {
+                continue;
+            }
             if (count) {
                 *count += entry.first;
             }
