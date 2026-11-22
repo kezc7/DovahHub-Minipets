@@ -350,6 +350,10 @@ namespace MiniPets::SelfTestRunner
                     }
                 }
             }
+            else {
+                // DMP-33: the same page answer covers both, so the report says both were skipped
+                SelfTestReport(*run, "pet.memory", Result::Skip, "out of time (" + std::to_string(SelfTest::kRunBudgetSeconds) + " s)");
+            }
 
             // 2. each reaction through the handler the game event calls
                 if (!outOfTime("react.lowhealth")) {

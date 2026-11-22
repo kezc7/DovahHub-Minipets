@@ -160,18 +160,22 @@ namespace MiniPets::ReactionWiring
                 killedActors([](std::uint32_t id, const std::string&) { g_killsSeen.insert(id); });
                 return;
             }
-            if (Reactions::IsNewRecord(totals.biggestHit, g_bestHit)) {
-                g_bestHit = totals.biggestHit;
-                OwnReaction("dovahdamage", "cheer", "reactBigHit", "{\"amount\":" + std::to_string(std::lround(totals.biggestHit)) + "}", 3000, 1, false, true, true);
-            }
+            // DMP-33: a boss first. A record set by the same hit is kept, but the boss's hop is the one reaction,
+            // so the record's cheer doesn't take the minute's Chronicle line or a second share of the day's care.
+            bool boss = false;
             if (totals.kills > g_lastKills) {
                 g_lastKills = totals.kills;
-                bool boss = false;
                 killedActors([&](std::uint32_t id, const std::string& name) {
                     if (g_killsSeen.insert(id).second && !boss) {
                         boss = OfferBossKill(id, name);
                     }
                 });
+            }
+            if (Reactions::IsNewRecord(totals.biggestHit, g_bestHit)) {
+                g_bestHit = totals.biggestHit;
+                if (!boss) {
+                    OwnReaction("dovahdamage", "cheer", "reactBigHit", "{\"amount\":" + std::to_string(std::lround(totals.biggestHit)) + "}", 3000, 1, false, true, true);
+                }
             }
         }
 

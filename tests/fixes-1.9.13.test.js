@@ -96,6 +96,31 @@ test('DMP-31: the answer, or a load, ends the wait', () => {
   assert.equal(fed.length, 3, 'a load: the next one goes');
 });
 
+test('DMP-33: Play with no egg says "No egg yet", as Feed does', () => {
+  const { p, xp, results } = page({ raisePet: true });
+  xp.petState({ state: '', session: 1 });
+  p.element('#title').textContent = '';
+  xp.petAction({ action: 'play' });
+  assert.deepEqual(results.at(-1), { action: 'play', ok: false, reason: 'no pet' });
+  assert.equal(p.element('#title').textContent, 'No egg yet');
+});
+
+test('DMP-33: the English fallback has the switch words and the four choice labels, as i18n.js words them', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname, '..', 'view', 'app.js'), 'utf8');
+  const start = app.indexOf('function englishOnlyI18n()');
+  const fallback = app.slice(start, app.indexOf('const fill', start));
+  const i18n = fs.readFileSync(path.join(__dirname, '..', 'view', 'i18n.js'), 'utf8');
+  for (const key of ['toggleOn', 'toggleOff', 'square', 'wide', 'plate', 'ribbon']) {
+    // the first one in i18n.js is English's
+    const english = i18n.match(new RegExp(`\\b${key}: "([^"]*)"`));
+    assert.ok(english, `${key} in i18n.js`);
+    assert.ok(fallback.includes(`${key}: "${english[1]}"`), key);
+  }
+  assert.doesNotThrow(() => page({}, { skip: ['i18n.js'] }), 'the page still starts without i18n.js');
+});
+
 // --- the plugin ---------------------------------------------------------------
 
 test('DMP-23: feeding from the pack never takes a quest item', () => {
@@ -146,4 +171,25 @@ test('DMP-32: a failed load isn\'t a game: no g_gameLoaded, no INI self-test', (
   assert.ok(failed > 0);
   assert.ok(failed < post.indexOf('g_gameLoaded.store(true);'));
   assert.match(post, /if \(!message->data\) \{\s*logger::warn\("MiniPets: the save didn't load"\);\s*PetSave::FinishLoad\(\);\s*break;\s*\}\s*\[\[fallthrough\]\];\s*case SKSE::MessagingInterface::kNewGame:/);
+});
+
+test('DMP-33: a boss on the hit that set a record gets the one reaction', () => {
+  const wiring = pluginPart('ReactionWiring');
+  const poll = wiring.slice(wiring.indexOf('void PollDovahDamage()'), wiring.indexOf('class DeathSink'));
+  assert.ok(poll.indexOf('boss = OfferBossKill(id, name);') < poll.indexOf('IsNewRecord(totals.biggestHit, g_bestHit)'), 'the boss first');
+  assert.match(poll, /g_bestHit = totals\.biggestHit;\s*if \(!boss\) \{\s*OwnReaction\("dovahdamage", "cheer", "reactBigHit"/, 'the record is kept, the cheer only without a boss');
+});
+
+test('DMP-33: the co-save is read with its byte count checked, and the record is a finite number of 0 or more', () => {
+  const save = pluginPart('PetSave');
+  assert.match(save, /constexpr std::uint32_t kMaxPetRecord = 64 \* 1024;/);
+  assert.match(save, /if \(length > kMaxPetRecord\) \{[\s\S]{0,160}continue;/);
+  assert.match(save, /if \(serialization->ReadRecordData\(state\.data\(\), length\) != length\) \{[\s\S]{0,120}continue;/);
+  assert.match(save, /ReadRecordData\(&bestHit, sizeof\(bestHit\)\) != sizeof\(bestHit\) \|\| !std::isfinite\(bestHit\) \|\| bestHit < 0\.0f/);
+});
+
+test('DMP-33: the self-test reports pet.memory as skipped when pet.stage ran out of time', () => {
+  const run = pluginFile('SelfTestRunner.cpp');
+  const stage = run.slice(run.indexOf('if (!outOfTime("pet.stage")) {'), run.indexOf('// 2. each reaction'));
+  assert.match(stage, /else \{\s*\/\/[^\n]*\n\s*SelfTestReport\(\*run, "pet\.memory", Result::Skip, "out of time \("/);
 });

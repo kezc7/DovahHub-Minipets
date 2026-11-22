@@ -17,6 +17,8 @@ namespace MiniPets::PetSave
 
         constexpr std::uint32_t kPetRecord = 'PETS';
         constexpr std::uint32_t kHitRecord = 'HITS';  // 1.9.0: this save's biggest hit, for DovahDamage's records
+        // DMP-33: a pet record is a few hundred bytes of JSON; anything this big is not one
+        constexpr std::uint32_t kMaxPetRecord = 64 * 1024;
 
     }
 
@@ -107,13 +109,23 @@ namespace MiniPets::PetSave
         std::uint32_t length = 0;
         while (serialization->GetNextRecordInfo(type, version, length)) {
             if (type == kPetRecord && version == 1) {
+                if (length > kMaxPetRecord) {
+                    logger::warn("MiniPets: the co-save's pet record is {} bytes, too big for a pet; ignored", length);
+                    continue;
+                }
                 std::string state(length, '\0');
-                serialization->ReadRecordData(state.data(), length);
+                if (serialization->ReadRecordData(state.data(), length) != length) {
+                    logger::warn("MiniPets: the co-save's pet record was cut short; ignored");
+                    continue;
+                }
                 g_petState = state;
             }
             else if (type == kHitRecord && version == 1 && length == sizeof(float)) {
                 float bestHit = 0.0f;
-                serialization->ReadRecordData(&bestHit, sizeof(bestHit));
+                // DMP-33: a record that didn't read whole, or isn't a finite number of 0 or more, starts again at 0
+                if (serialization->ReadRecordData(&bestHit, sizeof(bestHit)) != sizeof(bestHit) || !std::isfinite(bestHit) || bestHit < 0.0f) {
+                    bestHit = 0.0f;
+                }
                 ReactionWiring::SetBestHit(bestHit);
             }
         }

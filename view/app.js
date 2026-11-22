@@ -247,6 +247,13 @@
       startOverConfirm: "Click again to start over",
       tiredDetail: "Let them rest for a bit.",
       tiredTitle: "{name} is tired",
+      // DMP-33: the switch words and the choice labels, as i18n.js has them
+      toggleOn: "On",
+      toggleOff: "Off",
+      square: "Square",
+      wide: "Wide",
+      plate: "Plate",
+      ribbon: "Ribbon",
       warmth: "Warmth",
       xpDetail: "{name} is celebrating.",
       xpTitle: "XP gained"
@@ -1452,7 +1459,11 @@
   }
 
   function playWithPet() {
-    if (!petLife) return reportPetAction('play', false, 'no pet');
+    if (!petLife) {
+      // DMP-33: as Feed says it
+      reportPetAction('play', false, 'no pet');
+      return petNotice(t('noEggTitle'), t('noEggDetail'));
+    }
     const result = petLifeRules.play(petLife, gameHours ?? 0);
     const name = petNames[petLife.species];
     reportPetAction('play', result.ok, result.reason);
