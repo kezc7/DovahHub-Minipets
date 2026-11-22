@@ -484,6 +484,8 @@
       reaction ? `reacting react-${reaction.mood}` : '',
       // DMP-42
       sneaking ? 'sneaking' : '',
+      // DMP-43
+      veteranClass(),
       extras.dimStealth && (sneaking || talking) ? 'dimmed' : ''
     ].filter(Boolean).join(' ');
   }
@@ -609,7 +611,60 @@
   }
   // the dim, with the setting on: the whole card at 55% while sneaking or talking, never over a reaction (styles.css)
   function onExtraChanged(key) {
-    if (key === 'dimStealth') applySceneClasses();
+    if (key === 'dimStealth' || key === 'laurels') applySceneClasses();
+    if (key === 'aurora') renderAurora();
+  }
+
+  // DMP-43: a seasoned or elder pet's laurels beside its name (and an elder's star), with the setting on
+  function veteranClass() {
+    if (!extras.laurels || !raisePet || !petLife || isEgg()) return '';
+    const stage = petLifeRules.growth(petLife, gameHours ?? petLife.hatchedAt);
+    return stage === 'seasoned' || stage === 'elder' ? `veteran-${stage}` : '';
+  }
+  // the laurels are the plate's own dashes' backgrounds: each half drawn once, as an image the stylesheet can use
+  function setLaurelImages() {
+    [['silver', 'laurelSilver'], ['gold', 'laurelGold']].forEach(([metal, name]) => {
+      [['left', false], ['right', true]].forEach(([side, flipX]) => {
+        const canvas = petSprites.renderOrnament(document, name, { flipX });
+        const url = typeof canvas.toDataURL === 'function' ? String(canvas.toDataURL()) : '';
+        if (url.startsWith('data:')) root.style.setProperty(`--laurel-${metal}-${side}`, `url("${url}")`);
+      });
+    });
+  }
+
+  // DMP-43: northern lights on a clear night in the north (Solstheim, Windhelm, Solitude), and on one clear night in
+  // five in the wilds, chosen by the night so it holds all night; never under a roof or in another realm
+  const AURORA_NORTH = ['solstheim', 'windhelm', 'solitude'];
+  let auroraCanvas = null;
+  let auroraKey = '';
+  function auroraTonight() {
+    if (!extras.aurora || timeOfDay !== 'night' || weather !== 'clear' || regionInfo().sky === 'hidden') return false;
+    if (AURORA_NORTH.includes(region)) return true;
+    if (region !== 'skyrim') return false;
+    const night = gameHours === null ? 0 : Math.floor((gameHours + 6) / 24);  // a night counts from the evening before
+    return petSky.seededRandom(night * 7919 + 13)() < 0.2;
+  }
+  function renderAurora() {
+    if (!auroraCanvas) return;
+    const show = auroraTonight();
+    auroraCanvas.classList.toggle('is-on', show);
+    if (!show) return;
+    const width = (skyBox && skyBox.clientWidth) || 242;
+    const height = (skyBox && skyBox.clientHeight) || 167;
+    const columns = Math.ceil(width / 3);
+    const rows = Math.ceil(height * 0.8 / 3);
+    const night = gameHours === null ? 0 : Math.floor((gameHours + 6) / 24);
+    const key = `${night}|${columns}x${rows}`;
+    if (key === auroraKey) return;
+    auroraKey = key;
+    auroraCanvas.width = columns;
+    auroraCanvas.height = rows;
+    auroraCanvas.style.width = `${columns * 3}px`;
+    auroraCanvas.style.height = `${rows * 3}px`;
+    const context = auroraCanvas.getContext && auroraCanvas.getContext('2d');
+    if (!context) return;
+    context.clearRect(0, 0, columns, rows);
+    petSky.drawAurora(context, columns, rows, night);
   }
 
   function petVisualKey() {
@@ -803,6 +858,16 @@
     body('masser', [['masser', 'moon-masser']]);
     body('secunda', [['secunda', 'moon-secunda']]);
     body('sun', [['sunHalo', 'sun-halo'], ['sun', 'sun-noon'], ['sunDawn', 'sun-dawn'], ['sunDusk', 'sun-dusk']]);
+    // DMP-43: the aurora behind the moons; the elder's star over the scenery
+    auroraCanvas = document.createElement('canvas');
+    auroraCanvas.className = 'aurora';
+    auroraCanvas.setAttribute('aria-hidden', 'true');
+    skyBox.prepend(auroraCanvas);
+    const star = petSprites.renderOrnament(document, 'elderStar');
+    star.className = 'elder-star';
+    star.setAttribute('aria-hidden', 'true');
+    scene.append(star);
+    setLaurelImages();
     scene.prepend(skyBox);
     const emblem = petSprites.renderOrnament(document, 'emblem');
     emblem.className = 'frame-emblem';
@@ -937,7 +1002,10 @@
     { key: 'careMoments', kind: 'flag', value: false, id: 'care-moments' },
     { key: 'chronicleLines', kind: 'flag', value: false, id: 'chronicle-lines' },
     // DMP-42
-    { key: 'dimStealth', kind: 'flag', value: false, id: 'dim-stealth' }
+    { key: 'dimStealth', kind: 'flag', value: false, id: 'dim-stealth' },
+    // DMP-43
+    { key: 'laurels', kind: 'flag', value: true, id: 'veteran-laurels' },
+    { key: 'aurora', kind: 'flag', value: true, id: 'aurora-toggle' }
   ];
   const extras = {};
   EXTRA_SETTINGS.forEach(setting => { extras[setting.key] = setting.value; });
@@ -1753,6 +1821,7 @@
       clockDate.textContent = petClock.formatDate(data);
       skyHours = (Number(data && data.hour) || 0) + (Number(data && data.minute) || 0) / 60;
       gameHours = Number.isFinite(data && data.hours) ? data.hours : (Number(data && data.day) || 0) * 24 + skyHours;
+      renderAurora();
       tickPet();
       maybeMention();
       scenerySeed = petSky.hashText(`${data && data.year}-${data && data.month}-${data && data.day}`);
@@ -1785,6 +1854,7 @@
       renderWeather();
       renderScenery();
       updateSky();
+      renderAurora();
     }
   };
 

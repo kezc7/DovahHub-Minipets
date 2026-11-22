@@ -352,6 +352,12 @@ namespace MiniPets
                     else if (key == "dim_when_sneaking") {
                         g_settings.dimStealth = ParseFlag(value);
                     }
+                    else if (key == "veteran_laurels") {
+                        g_settings.laurels = ParseFlag(value);
+                    }
+                    else if (key == "aurora") {
+                        g_settings.aurora = ParseFlag(value);
+                    }
                     else if (key == "react_to_mods") {
                         g_settings.reactToMods = ParseFlag(value);
                     }
@@ -402,6 +408,8 @@ namespace MiniPets
                    << "language=" << LanguageSetting() << '\n'
                    << "hidden=" << (g_settings.petHidden ? 1 : 0) << '\n'
                    << "dim_when_sneaking=" << (g_settings.dimStealth ? 1 : 0) << '\n'
+                   << "veteran_laurels=" << (g_settings.laurels ? 1 : 0) << '\n'
+                   << "aurora=" << (g_settings.aurora ? 1 : 0) << '\n'
                    << "react_to_mods=" << (g_settings.reactToMods ? 1 : 0) << '\n'
                    << "reaction_cooldown=" << g_settings.reactionCooldown << '\n'
                    << "care_moments=" << (g_settings.careMoments ? 1 : 0) << '\n'
@@ -440,7 +448,10 @@ namespace MiniPets
                ",\"reactionCooldown\":" + std::to_string(g_settings.reactionCooldown) +
                ",\"chronicleLines\":" + (g_settings.chronicleLines ? "true" : "false") +
                // DMP-42
-               ",\"dimStealth\":" + (g_settings.dimStealth ? "true" : "false") + "}";
+               ",\"dimStealth\":" + (g_settings.dimStealth ? "true" : "false") +
+               // DMP-43
+               ",\"laurels\":" + (g_settings.laurels ? "true" : "false") +
+               ",\"aurora\":" + (g_settings.aurora ? "true" : "false") + "}";
     }
 
     std::string LanguageSetting()

@@ -966,7 +966,12 @@
     iconHeart: ['.kk..kk.', 'kRRkkRRk', 'kRRRkRRk', 'kRRkRRRk', '.kRRkRk.', '..kRRk..', '...kk...'],
     sunDawn: disc(19, [[2.2, 'D', -1, -1], [5.4, 'E'], [6.6, 'F'], [9.3, 'I']]),
     sunDusk: disc(19, [[2.2, 'J', -1, -1], [5.4, 'K'], [6.6, 'L'], [9.3, 'N']]),
-    secunda: disc(11, [[0.8, 't', 1, -1], [0.7, 't', -1, 1.5], [3.2, 'S', -0.6, -0.6], [3.9, 's'], [5.4, 'H']])
+    secunda: disc(11, [[0.8, 't', 1, -1], [0.7, 't', -1, 1.5], [3.2, 'S', -0.6, -0.6], [3.9, 's'], [5.4, 'H']]),
+    // DMP-43: half a laurel wreath, left of the name plate (the right one is flipped): silver for seasoned, gold for an elder
+    laurelSilver: ['...kS.', '..kSsk', '.kSsk.', 'kSsSk.', 'kSk...', 'kSsSk.', '.kSsk.', '..kSsk', '...kS.'],
+    laurelGold: ['...kY.', '..kYyk', '.kYyk.', 'kYyYk.', 'kYk...', 'kYyYk.', '.kYyk.', '..kYyk', '...kY.'],
+    // DMP-43: an elder's faint star in the sky
+    elderStar: ['..Y..', '..y..', 'YyWyY', '..y..', '..Y..']
   };
 
   function renderOrnament(doc, name, options = {}) {

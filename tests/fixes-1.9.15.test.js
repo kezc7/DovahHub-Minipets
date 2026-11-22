@@ -252,3 +252,82 @@ test('DMP-42: the plugin sends sneaking and talking with the pose, and keeps the
   assert.ok(main.includes('",\\"dimStealth\\":"'));
   assert.match(read('view/index.html'), /<div class="settings-group look-group">\s*<h2 class="dv-kicker" data-i18n="lookHeading">Look<\/h2>\s*<label class="settings-row dv-setting-row" for="dim-stealth">/);
 });
+
+// --- DMP-43 ---------------------------------------------------------------
+
+test('DMP-43: laurels for a seasoned or elder pet, the elder\'s star, and the aurora on a clear northern night, each switchable', async () => {
+  const page = await startEdge();
+  try {
+    await page.send('Page.enable');
+    await page.send('Runtime.enable');
+    await load(page, '');
+    const pet = days => life.serialize(Object.assign(life.create('fox', 0), { stage: 'hatched', hatchedAt: 0, lastTick: days * 24, hunger: 80, happiness: 80 }));
+    const root = 'document.getElementById("dragonborn-xp").className';
+    const settings = extra => `dragonbornXP.applySettings(${JSON.stringify(Object.assign({ x: -1, y: -1, hotkey: 'Shift+B', pet: 'fox', raisePet: true, laurels: true, aurora: true }, extra))}); true`;
+    await page.run(`dragonbornXP.initialize({}); ${settings({})}`);
+
+    await page.run(`dragonbornXP.petState({ state: ${JSON.stringify(pet(10))}, session: 1 }); dragonbornXP.clock({ hour: 12, minute: 0, hours: 252 }); true`);
+    assert.doesNotMatch(await page.run(root), /veteran-/, 'an adult has none');
+    await page.run(`dragonbornXP.petState({ state: ${JSON.stringify(pet(30))}, session: 2 }); dragonbornXP.clock({ hour: 12, minute: 0, hours: 732 }); true`);
+    assert.match(await page.run(root), /(^| )veteran-seasoned( |$)/);
+    await page.run(`dragonbornXP.petState({ state: ${JSON.stringify(pet(70))}, session: 3 }); dragonbornXP.clock({ hour: 12, minute: 0, hours: 1692 }); true`);
+    assert.match(await page.run(root), /(^| )veteran-elder( |$)/);
+    assert.equal(await page.run('getComputedStyle(document.querySelector(".elder-star")).display'), 'block', 'the elder\'s star');
+    assert.match(await page.run('getComputedStyle(document.getElementById("dragonborn-xp")).getPropertyValue("--laurel-gold-left")'), /url\("?data:image\/png/, 'the laurel is drawn by the sprite code');
+    await page.run(settings({ laurels: false }));
+    assert.doesNotMatch(await page.run(root), /veteran-/, 'switched off');
+    await page.run(settings({}));
+
+    const aurora = 'document.querySelector(".aurora").classList.contains("is-on")';
+    await page.run(`dragonbornXP.worldMood({ time: 'night', weather: 'clear', region: 'solitude' }); true`);
+    assert.equal(await page.run(aurora), true, 'a clear night in Solitude');
+    await page.run(`dragonbornXP.worldMood({ time: 'night', weather: 'snow', region: 'solitude' }); true`);
+    assert.equal(await page.run(aurora), false, 'not in snow');
+    await page.run(`dragonbornXP.worldMood({ time: 'day', weather: 'clear', region: 'solitude' }); true`);
+    assert.equal(await page.run(aurora), false, 'not by day');
+    await page.run(`dragonbornXP.worldMood({ time: 'night', weather: 'clear', region: 'inn' }); true`);
+    assert.equal(await page.run(aurora), false, 'not under a roof');
+    await page.run(`dragonbornXP.worldMood({ time: 'night', weather: 'clear', region: 'whiterun' }); true`);
+    assert.equal(await page.run(aurora), false, 'not in Whiterun');
+    await page.run(`dragonbornXP.worldMood({ time: 'night', weather: 'clear', region: 'solitude' }); ${settings({ aurora: false })}`);
+    assert.equal(await page.run(aurora), false, 'switched off');
+    // the wilds: one clear night in five, the same all night
+    await page.run(settings({}));
+    let nights = 0;
+    for (let night = 0; night < 50; night++) {
+      await page.run(`dragonbornXP.clock({ hour: 23, minute: 0, hours: ${night * 24 + 23} }); dragonbornXP.worldMood({ time: 'night', weather: 'clear', region: 'skyrim' }); true`);
+      const late = await page.run(aurora);
+      await page.run(`dragonbornXP.clock({ hour: 3, minute: 0, hours: ${night * 24 + 27} }); true`);
+      assert.equal(await page.run(aurora), late, `night ${night} holds until morning`);
+      if (late) nights += 1;
+    }
+    assert.ok(nights >= 4 && nights <= 18, `about one night in five in the wilds (${nights} of 50)`);
+  } finally {
+    await page.close();
+  }
+});
+
+test('DMP-43: the aurora is drawn the same for the same night, inside its canvas', () => {
+  const sky = require('../view/sky.js');
+  const draw = seed => {
+    const cells = [];
+    sky.drawAurora({ set fillStyle(v) { this.colour = v; }, fillRect(x, y) { cells.push(`${x},${y},${this.colour}`); } }, 80, 44, seed);
+    return cells;
+  };
+  const a = draw(7);
+  assert.deepEqual(a, draw(7));
+  assert.notDeepEqual(a, draw(8), 'another night, other waves');
+  assert.ok(a.every(cell => { const [x, y] = cell.split(',').map(Number); return x >= 0 && x < 80 && y >= 0 && y < 44; }));
+});
+
+test('DMP-43: the plugin keeps the laurels and the aurora as fields 18 and 19, on by default', () => {
+  const card = read('src/CardBridge.cpp');
+  assert.match(card, /const bool laurels = parts\.size\(\) > 18 \? ParseFlag\(parts\[18\]\) : g_settings\.laurels;/);
+  assert.match(card, /const bool aurora = parts\.size\(\) > 19 \? ParseFlag\(parts\[19\]\) : g_settings\.aurora;/);
+  const plugin = read('src/Plugin.h');
+  assert.match(plugin, /bool laurels = true;/);
+  assert.match(plugin, /bool aurora = true;/);
+  const main = read('src/main.cpp');
+  assert.ok(main.includes('<< "veteran_laurels=" << (g_settings.laurels ? 1 : 0)'));
+  assert.ok(main.includes('<< "aurora=" << (g_settings.aurora ? 1 : 0)'));
+});

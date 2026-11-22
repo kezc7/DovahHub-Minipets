@@ -554,3 +554,21 @@ html[data-meridian-input="gamepad"] .dv-toggle input[data-meridian-focused] + .d
 /* the dim, with the setting on: eased, and never over a reaction */
 #dragonborn-xp .toast-shell { transition: opacity .4s ease; }
 #dragonborn-xp.dimmed:not(.reacting) .toast-shell { opacity: .55; }
+
+/* DMP-43: a seasoned or elder pet's laurels: the name plate's dashes, each with half a wreath beside it */
+#dragonborn-xp.veteran-seasoned { --laurel-left: var(--laurel-silver-left); --laurel-right: var(--laurel-silver-right); }
+#dragonborn-xp.veteran-elder { --laurel-left: var(--laurel-gold-left); --laurel-right: var(--laurel-gold-right); }
+#dragonborn-xp.caption-name.veteran-seasoned #title::before, #dragonborn-xp.caption-name.veteran-elder #title::before {
+  flex: 0 0 30px; height: 27px; margin: -8px 0; box-shadow: none; image-rendering: pixelated;
+  background: var(--laurel-left) left center / 18px 27px no-repeat, linear-gradient(#c9c3b1, #c9c3b1) right center / 10px 1px no-repeat;
+}
+#dragonborn-xp.caption-name.veteran-seasoned #title::after, #dragonborn-xp.caption-name.veteran-elder #title::after {
+  flex: 0 0 30px; height: 27px; margin: -8px 0; box-shadow: none; image-rendering: pixelated;
+  background: var(--laurel-right) right center / 18px 27px no-repeat, linear-gradient(#c9c3b1, #c9c3b1) left center / 10px 1px no-repeat;
+}
+.elder-star { display: none; position: absolute; top: 24%; right: 13%; z-index: 2; opacity: .85; image-rendering: pixelated; pointer-events: none; }
+#dragonborn-xp.veteran-elder .elder-star { display: block; }
+/* DMP-43: the aurora, behind the moons, drifting a little */
+.aurora { display: none; position: absolute; top: 0; left: 0; image-rendering: pixelated; pointer-events: none; mix-blend-mode: screen; }
+.aurora.is-on { display: block; animation: aurora-drift 40s ease-in-out infinite alternate; }
+@keyframes aurora-drift { from { transform: translateX(-6px); } to { transform: translateX(6px); } }

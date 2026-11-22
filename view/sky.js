@@ -240,5 +240,27 @@
     }
   }
 
-  return Object.freeze({ phaseFor, skyPositions, buildScenery, drawScenery, shade, seededRandom, hashText });
+  // DMP-43: two faint ribbons, green and blue, hanging down from a wavy top edge; drawn once per night and size on a
+  // canvas of cells (the page scales it up, pixelated). seed shifts the waves from one night to the next.
+  const AURORA_BANDS = [
+    { y: 0.34, amp: 0.10, waves: 1.7, colour: [90, 240, 170], alpha: 0.22 },
+    { y: 0.22, amp: 0.08, waves: 2.6, colour: [120, 200, 255], alpha: 0.14 }
+  ];
+  function drawAurora(context, columns, rows, seed = 0) {
+    const random = seededRandom(seed);
+    AURORA_BANDS.forEach(band => {
+      const shift = random() * Math.PI * 2;
+      for (let x = 0; x < columns; x += 1) {
+        const top = Math.round((band.y + Math.sin(x / columns * Math.PI * band.waves + shift) * band.amp) * rows);
+        const length = Math.round(rows * (0.28 + 0.12 * Math.sin(x * 0.9 + shift)));
+        for (let y = 0; y < length; y += 1) {
+          const alpha = band.alpha * (1 - y / length) * (x % 2 ? 0.8 : 1);
+          context.fillStyle = `rgba(${band.colour.join(',')},${alpha.toFixed(3)})`;
+          context.fillRect(x, top + y, 1, 1);
+        }
+      }
+    });
+  }
+
+  return Object.freeze({ phaseFor, skyPositions, buildScenery, drawScenery, shade, seededRandom, hashText, AURORA_BANDS, drawAurora });
 });

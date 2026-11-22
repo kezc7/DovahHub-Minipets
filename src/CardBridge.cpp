@@ -385,6 +385,9 @@ namespace MiniPets::Card
                 const bool chronicleLines = parts.size() > 16 ? ParseFlag(parts[16]) : g_settings.chronicleLines;
                 // DMP-42: the dim (field 17)
                 const bool dimStealth = parts.size() > 17 ? ParseFlag(parts[17]) : g_settings.dimStealth;
+                // DMP-43: the laurels and the aurora (fields 18 and 19)
+                const bool laurels = parts.size() > 18 ? ParseFlag(parts[18]) : g_settings.laurels;
+                const bool aurora = parts.size() > 19 ? ParseFlag(parts[19]) : g_settings.aurora;
                 // DMP-37: a language code, or "hub" to follow DovahHub
                 const auto language = parts.size() > 12 && (parts[12] == "hub" || IsSupportedLanguage(parts[12])) ? parts[12] : LanguageSetting();
                 bool requiresShift = false;
@@ -419,6 +422,8 @@ namespace MiniPets::Card
                 noteChange("care_moments", flag(g_settings.careMoments), flag(careMoments));
                 noteChange("chronicle_lines", flag(g_settings.chronicleLines), flag(chronicleLines));
                 noteChange("dim_when_sneaking", flag(g_settings.dimStealth), flag(dimStealth));
+                noteChange("veteran_laurels", flag(g_settings.laurels), flag(laurels));
+                noteChange("aurora", flag(g_settings.aurora), flag(aurora));
                 g_settings.positionX = x;
                 g_settings.positionY = y;
                 g_settings.settingsHotkey = hotkey;
@@ -439,6 +444,8 @@ namespace MiniPets::Card
                 g_settings.careMoments = careMoments;
                 g_settings.chronicleLines = chronicleLines;
                 g_settings.dimStealth = dimStealth;
+                g_settings.laurels = laurels;
+                g_settings.aurora = aurora;
                 StorePetKey(g_feedKey, feedKey);
                 StorePetKey(g_playKey, playKey);
                 StorePetKey(g_hideKey, hideKey);

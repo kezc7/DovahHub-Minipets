@@ -101,6 +101,8 @@ namespace MiniPets
         std::string language = "en";  // the language in use (DovahHub's when following it)
         bool followHubLanguage = false;  // DMP-37: language=hub, "Follow DovahHub"
         bool dimStealth = false;  // DMP-42: dim_when_sneaking, the card at 55% while sneaking or talking
+        bool laurels = true;  // DMP-43: veteran_laurels
+        bool aurora = true;  // DMP-43: aurora, northern lights on clear nights in the north
         bool petHidden = false;
         // reactions (1.9.0): other mods' and the suite's events, the one cooldown, and the two extras
         bool reactToMods = true;
