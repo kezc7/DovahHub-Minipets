@@ -4,6 +4,17 @@ The node tests (`node --test "tests/*.test.js"`) and the settings test (`xmake b
 
 `MiniPets.log` is in `Documents\My Games\Skyrim Special Edition\SKSE\`.
 
+## 1.9.15 (DMP-39 to DMP-43)
+
+1. **Snap to corner** (DMP-39). In the settings, pick each corner in turn: the card jumps there. Drag the card: the choice reads Custom. Top right puts it back in its usual place.
+2. **The Reactions group** (DMP-40). Turn off React to other mods in Shift+B and save: DovahHub's Settings tab shows it off too, and the log has `MiniPets setting react_to_mods: 1 -> 0`. Set the time between reactions to 30: two record hits within 30 s show once.
+3. **A favourite food** (DMP-41). Raise a fox (Ember loves sweets). Carry a sweet roll and some cheaper food, and press Feed: the sweet roll goes, and the card says "Ember's favourite!". A quest item is never taken.
+4. **Sneaking** (DMP-42). Crouch: the pet crouches low and moves slowly. Turn on Dim while sneaking or talking: the card fades to about half while you sneak, and while you talk to someone. A reaction still shows at full strength.
+5. **Laurels** (DMP-43). A pet past 20 game days has silver laurels beside its name; past 60, gold laurels and a small star in the sky. Turn off Veteran laurels: they go.
+6. **Northern lights** (DMP-43). Wait for a clear night in Solitude or Windhelm: faint green and blue ribbons in the sky. Not in snow, rain or under a roof. Turn off Northern lights: they go.
+
+Pass: each step as written. Fail: note the step and send `MiniPets.log`.
+
 ## 1.9.14 (DMP-34 to DMP-38)
 
 1. **A memory behind a menu** (DMP-34). With a hatched pet, open the map and fast travel to a city it has never seen, then open the inventory the moment the loading screen goes. Close it: the city is in the pet's memories (DovahHub's MiniPets tab) even if no reaction showed.

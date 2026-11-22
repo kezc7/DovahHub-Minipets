@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.15-beta
+- Snap to corner, first in the settings' Position group: top right, top left, bottom right or bottom left in one pick. Dragging the card or moving a slider makes it Custom
+- The four reaction settings that were only in DovahHub's Settings tab (react to other mods, time between reactions, shared moments, Chronicle lines) are in the Shift+B settings too, as a Reactions group. Both places keep the same settings
+- Each companion has a favourite food (Ember loves sweets, Clack loves fish, Nibbles loves cheese, and so on). Feed takes the cheapest favourite in your pack first, and a favourite cheers the pet up three times as much: "Ember's favourite!" It never takes a quest item
+- Your pet crouches low while you sneak, and moves more slowly
+- A new Look group in the settings:
+  - Dim while sneaking or talking (off by default): the card fades to about half while you sneak or talk to someone, never over a reaction;
+  - Veteran laurels (on): a seasoned pet gets silver laurels beside its name, and an elder gold ones and a faint star;
+  - Northern lights (on): faint aurora ribbons on clear nights in Solstheim, Windhelm and Solitude, and on about one clear night in five in the wilds
+- Upgrading from 1.9.14-beta: install over it in your mod manager; your settings carry over, and the new ones start as above
+
 ## 1.9.14-beta
 - A raised pet remembers a boss, a milestone or a first visit even when its reaction didn't show (a menu was open, or another reaction had just played)
 - A reaction that arrives while a menu hides the card (a level-up, the fader) waits up to 5 seconds and plays once the card is back. An outfit change in DovahHub's Wardrobe tab still waits up to a minute
