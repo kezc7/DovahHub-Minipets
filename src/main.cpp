@@ -70,6 +70,8 @@ namespace MiniPets
         void OnDataLoaded()
         {
             LoadSettings();
+            // DMP-24: DovahHub's rows were worded at kPostPostLoad, before the INI was read
+            Hub::RefreshHubSettings();
             Card::StoreKeys();
             if (!Card::CreateView()) {
                 return;

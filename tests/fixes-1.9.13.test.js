@@ -36,3 +36,11 @@ test('DMP-23: feeding from the pack never takes a quest item', () => {
   assert.ok(quest < food.indexOf('*count += entry.first;'), 'and not counted as food');
   assert.ok(quest < food.indexOf('cheapest = object;'));
 });
+
+test('DMP-24: DovahHub\'s rows are worded again once the INI is read', () => {
+  const core = pluginFile('main.cpp');
+  assert.match(core, /void OnDataLoaded\(\)\s*\{\s*LoadSettings\(\);\s*\/\/[^\n]*\n\s*Hub::RefreshHubSettings\(\);/);
+  const hub = pluginPart('Hub');
+  assert.match(hub, /void RefreshHubSettings\(\)[\s\S]{0,400}g_hubSettingsLanguage == g_settings\.language && g_hubSettingsHideKey == g_settings\.hideHotkeyName/,
+    'only when they differ from what was sent at kPostPostLoad');
+});
