@@ -610,7 +610,7 @@ namespace MiniPets::Card
         }
 
         // DMP-42: sneaking crouches the pet; dialogue is shown over the game, so the card can dim for it
-        const auto* ui = RE::UI::GetSingleton();
+        auto* ui = RE::UI::GetSingleton();  // IsMenuOpen isn't const
         const bool talking = ui && ui->IsMenuOpen("Dialogue Menu");
         PublishCompanionState(player->IsInCombat() ? "combat" : moving ? "flying" : "idle", player->IsSneaking(), talking);
     }
