@@ -1435,8 +1435,20 @@
       reportPetAction('feed', false, 'full');
       return petNotice(t('fullTitle', { name: petNames[petLife.species] }), t('fullDetail'));
     }
+    // DMP-31: one food on its way at a time; the plugin takes it from the pack before the page sees it
+    // (no result: the first press's answer is the one the tab and API listeners get)
+    if (feedWaiting()) return;
+    feedSentAt = Date.now();
     if (typeof window.feedPet === 'function') window.feedPet('');
     else window.dragonbornXP.petFed({ name: 'Sweetroll', source: 'pack' });
+  }
+
+  // DMP-31: when the page last asked the plugin for food (Date.now()), 0 when nothing is on its way.
+  // The answer (petFed), a load (petState) or 2 s end the wait.
+  let feedSentAt = 0;
+  const FEED_WAIT_MS = 2000;
+  function feedWaiting() {
+    return feedSentAt > 0 && Date.now() - feedSentAt < FEED_WAIT_MS;
   }
 
   function playWithPet() {
@@ -1530,6 +1542,7 @@
     },
     // saved pet from the co-save ('' = none yet)
     petState(data) {
+      feedSentAt = 0;
       const text = data && typeof data.state === 'string' ? data.state : '';
       const session = data && Number.isFinite(data.session) ? data.session : petSession;
       if (session !== petSession) {
@@ -1548,6 +1561,7 @@
       else if (data && data.action === 'play') playWithPet();
     },
     petFed(data) {
+      feedSentAt = 0;
       if (data && data.none) {
         reportPetAction('feed', false, 'no food');
         return petNotice(t('noFoodTitle'), t('noFoodDetail'));

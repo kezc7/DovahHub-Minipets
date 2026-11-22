@@ -69,6 +69,33 @@ test('DMP-27: a language picked during a reaction words the reaction again', () 
   assert.match(title.textContent, /120/, 'and is still the reaction\'s, not the moving line');
 });
 
+test('DMP-31: a second Feed before the plugin answers asks for no second food', () => {
+  const { xp, fed, results } = page({ raisePet: true });
+  xp.petState({ state: life.serialize(hatched('fox', 70)), session: 1 });
+  xp.petAction({ action: 'feed' });
+  xp.petAction({ action: 'feed' });
+  assert.equal(fed.length, 1, 'one food asked for');
+  assert.deepEqual(results, [], 'the second press reports nothing of its own');
+  xp.petFed({ name: 'Apple', source: 'pack' });
+  assert.equal(results.at(-1).ok, true);
+  // fed to 100: the next press is "full", and asks for nothing
+  xp.petAction({ action: 'feed' });
+  assert.equal(fed.length, 1);
+  assert.equal(results.at(-1).reason, 'full');
+});
+
+test('DMP-31: the answer, or a load, ends the wait', () => {
+  const { xp, fed } = page({ raisePet: true });
+  xp.petState({ state: life.serialize(hatched('fox', 20)), session: 1 });
+  xp.petAction({ action: 'feed' });
+  xp.petFed({ name: 'Apple', source: 'pack' });
+  xp.petAction({ action: 'feed' });
+  assert.equal(fed.length, 2, 'answered: the next one goes');
+  xp.petState({ state: life.serialize(hatched('fox', 20)), session: 2 });
+  xp.petAction({ action: 'feed' });
+  assert.equal(fed.length, 3, 'a load: the next one goes');
+});
+
 // --- the plugin ---------------------------------------------------------------
 
 test('DMP-23: feeding from the pack never takes a quest item', () => {
