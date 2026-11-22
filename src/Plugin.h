@@ -265,6 +265,7 @@ namespace MiniPets
         DOVAHHUB_API::Result ReportSelfTestStep(const char* stepJson);
         DOVAHHUB_API::Result FinishSelfTest();
         void RegisterWithDovahMenu();
+        std::string KeyOwner(const std::string& chord);
         void UpdateDovahMenuHotkey();
     }
 

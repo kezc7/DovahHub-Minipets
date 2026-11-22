@@ -941,6 +941,18 @@ namespace MiniPets::Card
             g_prismaUI->RegisterJSListener(view, "selfTestAnswer", [](const char* payload) {
                 SelfTestRunner::OnPageAnswer(payload);
             });
+            // DMP-36: a key the player just picked; the answer names the suite mod that already uses it, if any
+            g_prismaUI->RegisterJSListener(view, "keyOwner", [](const char* payload) {
+                const std::string chord(payload ? payload : "");
+                if (chord.empty() || chord.size() > 32) {
+                    return;
+                }
+                if (const auto taskInterface = GameThread("key owner")) {
+                    taskInterface->Queue([chord]() {
+                        Invoke("dragonbornXP.keyOwner", "{\"chord\":" + JsonString(chord) + ",\"owner\":" + JsonString(Hub::KeyOwner(chord)) + "}");
+                    });
+                }
+            });
             g_prismaUI->RegisterJSListener(view, "feedPet", [](const char*) {
                 if (const auto taskInterface = GameThread("feed from the pack")) {
                     taskInterface->Queue([]() { FeedFromPack(); });

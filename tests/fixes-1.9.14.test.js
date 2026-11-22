@@ -82,3 +82,28 @@ test('DMP-35: a reaction turned down while the card is hidden for a menu waits f
   assert.match(drain, /else if \(!Card::IsHidden\(\)\) \{[\s\S]{0,200}OfferReaction\(waiting\.reaction, waiting\.fromOtherMod, 0\.0\)/, 'once the card is back, one try, no second wait');
   assert.match(wiring, /void ResetReactions\(\)[\s\S]{0,700}g_pending\.reset\(\);/);
 });
+
+// --- DMP-36 ---------------------------------------------------------------
+
+test('DMP-36: the page says which suite mod already uses a key just picked', () => {
+  const { p, xp } = page({ hotkey: 'Shift+B' });
+  const hint = p.element('#hotkey-hint');
+  hint.textContent = '';
+  xp.keyOwner({ chord: 'Shift+B', owner: 'DovahWheel' });
+  assert.equal(hint.textContent, 'Shift+B is already used by DovahWheel.');
+  hint.textContent = '';
+  xp.keyOwner({ chord: 'F9', owner: 'DovahWheel' });
+  assert.equal(hint.textContent, '', 'not one of MiniPets\' keys now');
+  xp.keyOwner({ chord: 'Shift+B', owner: '' });
+  assert.equal(hint.textContent, '', 'nobody owns it');
+});
+
+test('DMP-36: the plugin asks DovahMenu 0.2.3+ on the game thread; MiniPets\' own entry is nobody', () => {
+  const hub = pluginPart('Hub');
+  const owner = hub.slice(hub.indexOf('std::string KeyOwner('), hub.indexOf('std::string KeyOwner(') + 700);
+  assert.match(owner, /if \(!g_menu \|\| g_menu->hostVersionNumber < 203 \|\| !g_menu->FindKeyOwner\) \{\s*return \{\};/);
+  assert.match(owner, /return lower == "minipets" \? std::string\(\) : name;/);
+  const card = pluginPart('Card');
+  assert.match(card, /RegisterJSListener\(view, "keyOwner", \[\]\(const char\* payload\) \{[\s\S]{0,400}GameThread\("key owner"\)[\s\S]{0,300}Invoke\("dragonbornXP\.keyOwner"/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'view', 'app.js'), 'utf8'), /if \(typeof window\.keyOwner === 'function'\) window\.keyOwner\(label\);/);
+});

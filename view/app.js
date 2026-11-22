@@ -206,6 +206,7 @@
       hintSad: "{name} feels lonely.",
       hotkeyAllowed: "Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.",
       hotkeyAlreadyUsed: "{key} is already used for {action}.",
+      hotkeyUsedByMod: "{key} is already used by {mod}.",
       levelDetail: "A mighty little celebration.",
       levelNumber: "Level {level}!",
       levelTitle: "Level up!",
@@ -1594,6 +1595,12 @@
     react(data) {
       react(data);
     },
+    // DMP-36: {"chord","owner"}: the suite mod that already opens with a key just picked ("" for none)
+    keyOwner(data) {
+      if (!data || !data.owner || typeof data.chord !== 'string') return;
+      const current = Object.keys(hotkeyActions).some(which => getHotkey(which).toUpperCase() === data.chord.toUpperCase());
+      if (current) hotkeyHint.textContent = t('hotkeyUsedByMod', { key: data.chord, mod: data.owner });
+    },
     // DMP-34: a reaction the gate turned down ({"source","captionKey","vars"}): its moment is kept, nothing is shown
     remember(data) {
       if (data && typeof data === 'object') rememberMoment(memoryFromReaction(data));
@@ -1923,6 +1930,8 @@
     setHotkey(which, label);
     stopCapture();
     hotkeyHint.textContent = t('saveHotkeyHint');
+    // DMP-36: another suite mod's key? The plugin asks DovahMenu, and keyOwner below says so (the key is still taken)
+    if (typeof window.keyOwner === 'function') window.keyOwner(label);
     renderPetPanel();
     queueNativeSettingsChanged();
   }, true);

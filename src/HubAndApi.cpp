@@ -542,6 +542,20 @@ namespace MiniPets::Hub
         }
     }
 
+    // DMP-36: which suite mod already opens with this key, by DovahMenu 0.2.3+'s FindKeyOwner ("" for none,
+    // MiniPets' own entry, or no DovahMenu). Game thread: FindKeyOwner rescans, so only when a key is picked.
+    std::string KeyOwner(const std::string& chord)
+    {
+        if (!g_menu || g_menu->hostVersionNumber < 203 || !g_menu->FindKeyOwner) {
+            return {};
+        }
+        const char* owner = g_menu->FindKeyOwner(chord.c_str());
+        std::string name = owner ? owner : "";
+        std::string lower = name;
+        std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        return lower == "minipets" ? std::string() : name;
+    }
+
     // The settings key changed: DovahMenu's key picker (FindKeyOwner) should know.
     void UpdateDovahMenuHotkey()
     {
