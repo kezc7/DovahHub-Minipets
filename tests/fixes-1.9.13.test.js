@@ -43,6 +43,32 @@ test('DMP-26: an egg has no species class; the companion still has its own', () 
   assert.match(companion.root.className, /(^| )pet-chicken( |$)/);
 });
 
+test('DMP-27: walking or a fight during a reaction leaves the reaction\'s words', () => {
+  const { xp, title } = page({ pet: 'fox' });
+  xp.react({ source: 'minipets', mood: 'cheer', captionKey: 'reactBigHit', vars: { amount: 120 }, ms: 3000, priority: 1 });
+  const words = title.textContent;
+  assert.ok(words, 'the reaction has a caption');
+  xp.companionState({ state: 'moving' });
+  assert.equal(title.textContent, words, 'not the moving line');
+  xp.companionState({ state: 'combat' });
+  assert.equal(title.textContent, words, 'not the combat line');
+  xp.reactEnd({});
+  xp.companionState({ state: 'idle' });
+  xp.companionState({ state: 'moving' });
+  assert.notEqual(title.textContent, words, 'with no reaction the moving line shows again');
+});
+
+test('DMP-27: a language picked during a reaction words the reaction again', () => {
+  const { xp, title } = page({ pet: 'fox' });
+  xp.companionState({ state: 'moving' });
+  xp.react({ source: 'minipets', mood: 'cheer', captionKey: 'reactBigHit', vars: { amount: 120 }, ms: 3000, priority: 1 });
+  const english = title.textContent;
+  assert.match(english, /120/);
+  xp.applySettings({ x: -1, y: -1, hotkey: 'Shift+B', pet: 'fox', language: 'fr' });
+  assert.notEqual(title.textContent, english, 'the caption follows the new language');
+  assert.match(title.textContent, /120/, 'and is still the reaction\'s, not the moving line');
+});
+
 // --- the plugin ---------------------------------------------------------------
 
 test('DMP-23: feeding from the pack never takes a quest item', () => {

@@ -506,6 +506,8 @@
     } else if ((state === 'moving' || state === 'combat') && state !== announcedBase) {
       // only announce a state change once
       announcedBase = state;
+      // DMP-27: a reaction playing keeps its words; the change is noted, so its line doesn't come late
+      if (reaction) return showReactionCaption(0);
       // the companion's own line where the language has one, else the shared line
       const own = petI18n.caption(isEgg() ? 'egg' : shownSpecies(), state);
       const fill = state === 'combat' ? 92 : 42;
@@ -518,6 +520,9 @@
     } else if (state === 'idle' || state === 'landing') {
       announcedBase = 'idle';
       collapseCaption();
+    } else if (reaction) {
+      // DMP-27: worded again, in a language just picked
+      showReactionCaption(0);
     } else if (!captionTimer) {
       collapseCaption();
     }
