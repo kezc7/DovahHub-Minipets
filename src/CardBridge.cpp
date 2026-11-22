@@ -21,6 +21,9 @@ namespace MiniPets::Card
         PetKey g_playKey;
         PetKey g_hideKey;
         std::atomic_bool g_shiftDown = false;
+        // DMP-29: when the game last said Shift went down (SteadyMs, set with g_shiftDown)
+        std::atomic<std::int64_t> g_shiftDownAtMs = 0;
+        constexpr std::int64_t kShiftBatchMs = 500;
         std::atomic_bool g_overlayHiddenForMenus = true;
         // DovahMenu asked for settings while the overlay was hidden for a menu that is closing: open them as
         // soon as the overlay is shown again, if that's within 2 s (steady-clock ms; 0 = nothing waiting).
@@ -30,6 +33,21 @@ namespace MiniPets::Card
         std::int64_t SteadyMs()
         {
             return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        }
+
+        // DMP-29: Shift is held when Windows says so now, or when the game said it went down under half a second
+        // ago (Shift+key in one quick batch, released before the key is handled). A key-up the game never saw (Shift+Tab
+        // to an overlay) leaves g_shiftDown stuck; once it's older than that and Windows says up, it's cleared.
+        bool ShiftHeld()
+        {
+            if ((GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0) {
+                return true;
+            }
+            if (g_shiftDown.load() && SteadyMs() - g_shiftDownAtMs.load() < kShiftBatchMs) {
+                return true;
+            }
+            g_shiftDown.store(false);
+            return false;
         }
         std::string g_lastCompanionState;
         std::string g_lastWorldMood;
@@ -765,9 +783,11 @@ namespace MiniPets::Card
         }
 
         (void)keyHandler->Register(0x2A, KeyEventType::KEY_DOWN, []() {
+            g_shiftDownAtMs.store(SteadyMs());
             g_shiftDown.store(true);
         });
         (void)keyHandler->Register(0x36, KeyEventType::KEY_DOWN, []() {
+            g_shiftDownAtMs.store(SteadyMs());
             g_shiftDown.store(true);
         });
         (void)keyHandler->Register(0x2A, KeyEventType::KEY_UP, []() {
@@ -780,7 +800,7 @@ namespace MiniPets::Card
         // register every key once so the hotkey can be rebound at runtime
         for (std::uint32_t scanCode = 1; scanCode < 0x80; ++scanCode) {
             (void)keyHandler->Register(scanCode, KeyEventType::KEY_DOWN, [scanCode]() {
-                const bool shiftDown = g_shiftDown.load() || (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+                const bool shiftDown = ShiftHeld();
                 if (g_settingsOpen.load()) {
                     return;
                 }

@@ -99,3 +99,15 @@ test('DMP-28: the outfit\'s ten minutes start only when shown, and a hidden card
   assert.match(wiring, /if \(g_pendingOutfit && !Card::IsHidden\(\)\) \{[\s\S]{0,300}OfferOutfit\(reaction, NowMs\(\), false\);/, 'offered again once, without waiting again');
   assert.match(wiring, /void ResetReactions\(\)[\s\S]{0,700}g_pendingOutfit\.reset\(\);/, 'a load drops it');
 });
+
+test('DMP-29: a Shift release the game missed doesn\'t stick', () => {
+  const card = pluginPart('Card');
+  assert.doesNotMatch(card, /g_shiftDown\.load\(\) \|\|/);
+  const held = card.slice(card.indexOf('bool ShiftHeld()'), card.indexOf('bool ShiftHeld()') + 500);
+  assert.match(held, /if \(\(GetAsyncKeyState\(VK_SHIFT\) & 0x8000\) != 0\) \{\s*return true;/);
+  assert.match(held, /g_shiftDown\.load\(\) && SteadyMs\(\) - g_shiftDownAtMs\.load\(\) < kShiftBatchMs/);
+  assert.match(held, /g_shiftDown\.store\(false\);\s*return false;/);
+  assert.match(card, /constexpr std::int64_t kShiftBatchMs = 500;/);
+  assert.match(card, /const bool shiftDown = ShiftHeld\(\);/);
+  assert.equal((card.match(/g_shiftDownAtMs\.store\(SteadyMs\(\)\);\s*g_shiftDown\.store\(true\);/g) || []).length, 2, 'both Shift keys');
+});
