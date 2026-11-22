@@ -481,7 +481,10 @@
       isEgg() ? `is-egg egg-warm-${petLife ? Math.min(3, Math.floor(petLifeRules.eggProgress(petLife) * 4)) : 0}` : '',
       petMood() && petMood() !== 'egg' ? `mood-${petMood()}` : '',
       raisePet && petLife ? 'raising' : '',
-      reaction ? `reacting react-${reaction.mood}` : ''
+      reaction ? `reacting react-${reaction.mood}` : '',
+      // DMP-42
+      sneaking ? 'sneaking' : '',
+      extras.dimStealth && (sneaking || talking) ? 'dimmed' : ''
     ].filter(Boolean).join(' ');
   }
 
@@ -581,15 +584,32 @@
     if (isEgg()) {
       petSprites.renderEgg(spriteHost, petLife ? petLife.species : null);
       archetype = 'light';
-      spriteHost.style.transform = '';
+      spriteGrowth = 0;
     } else {
       archetype = petSprites.render(spriteHost, shownSpecies()).archetype;
       const stage = raisePet && petLife ? petLifeRules.growth(petLife, gameHours ?? petLife.hatchedAt) : 'adult';
-      const growth = petLifeRules.GROWTH_SCALE[stage] || 1;
-      spriteHost.style.transformOrigin = '50% 100%';
-      spriteHost.style.transform = growth === 1 ? '' : `scale(${growth})`;
+      spriteGrowth = petLifeRules.GROWTH_SCALE[stage] || 1;
     }
+    applySpriteTransform();
     shownPetKey = petVisualKey();
+  }
+
+  // DMP-42: the player sneaking (a crouch: lower and a little wider, from the feet) and talking, from the plugin's
+  // companion state. The crouch goes in the sprite's own transform, with its growth: the page's renderer may lack
+  // the separate scale property. An egg doesn't crouch.
+  let spriteGrowth = 1;
+  let sneaking = false;
+  let talking = false;
+  const CROUCH = { x: 1.06, y: 0.78 };
+  function applySpriteTransform() {
+    spriteHost.style.transformOrigin = '50% 100%';
+    if (!spriteGrowth) spriteHost.style.transform = '';
+    else if (sneaking) spriteHost.style.transform = `scale(${(spriteGrowth * CROUCH.x).toFixed(3)}, ${(spriteGrowth * CROUCH.y).toFixed(3)})`;
+    else spriteHost.style.transform = spriteGrowth === 1 ? '' : `scale(${spriteGrowth})`;
+  }
+  // the dim, with the setting on: the whole card at 55% while sneaking or talking, never over a reaction (styles.css)
+  function onExtraChanged(key) {
+    if (key === 'dimStealth') applySceneClasses();
   }
 
   function petVisualKey() {
@@ -915,7 +935,9 @@
     { key: 'reactToMods', kind: 'flag', value: true, id: 'react-to-mods' },
     { key: 'reactionCooldown', kind: 'number', value: 8, id: 'reaction-cooldown', min: 2, max: 60 },
     { key: 'careMoments', kind: 'flag', value: false, id: 'care-moments' },
-    { key: 'chronicleLines', kind: 'flag', value: false, id: 'chronicle-lines' }
+    { key: 'chronicleLines', kind: 'flag', value: false, id: 'chronicle-lines' },
+    // DMP-42
+    { key: 'dimStealth', kind: 'flag', value: false, id: 'dim-stealth' }
   ];
   const extras = {};
   EXTRA_SETTINGS.forEach(setting => { extras[setting.key] = setting.value; });
@@ -1683,6 +1705,15 @@
       petCheer(t(title, { name: petNames[petLife.species] }), t('ateDetail', { food }));
     },
     companionState(data) {
+      // DMP-42: {"state","sneaking","talking"}
+      const nextSneaking = Boolean(data && data.sneaking);
+      const nextTalking = Boolean(data && data.talking);
+      if (nextSneaking !== sneaking || nextTalking !== talking) {
+        sneaking = nextSneaking;
+        talking = nextTalking;
+        applySpriteTransform();
+        applySceneClasses();
+      }
       controller.setBase(data && data.state ? data.state : 'idle');
     },
     // src/main.cpp OfferReaction: {"source","mood","caption","captionKey","vars","ms","priority","hold","care","say"}

@@ -349,6 +349,9 @@ namespace MiniPets
                     else if (key == "hidden") {
                         g_settings.petHidden = ParseFlag(value);
                     }
+                    else if (key == "dim_when_sneaking") {
+                        g_settings.dimStealth = ParseFlag(value);
+                    }
                     else if (key == "react_to_mods") {
                         g_settings.reactToMods = ParseFlag(value);
                     }
@@ -398,6 +401,7 @@ namespace MiniPets
                    << "hide_hotkey=" << g_settings.hideHotkeyName << '\n'
                    << "language=" << LanguageSetting() << '\n'
                    << "hidden=" << (g_settings.petHidden ? 1 : 0) << '\n'
+                   << "dim_when_sneaking=" << (g_settings.dimStealth ? 1 : 0) << '\n'
                    << "react_to_mods=" << (g_settings.reactToMods ? 1 : 0) << '\n'
                    << "reaction_cooldown=" << g_settings.reactionCooldown << '\n'
                    << "care_moments=" << (g_settings.careMoments ? 1 : 0) << '\n'
@@ -434,7 +438,9 @@ namespace MiniPets
                // DMP-40: the Reactions group in the settings
                ",\"reactToMods\":" + (g_settings.reactToMods ? "true" : "false") +
                ",\"reactionCooldown\":" + std::to_string(g_settings.reactionCooldown) +
-               ",\"chronicleLines\":" + (g_settings.chronicleLines ? "true" : "false") + "}";
+               ",\"chronicleLines\":" + (g_settings.chronicleLines ? "true" : "false") +
+               // DMP-42
+               ",\"dimStealth\":" + (g_settings.dimStealth ? "true" : "false") + "}";
     }
 
     std::string LanguageSetting()

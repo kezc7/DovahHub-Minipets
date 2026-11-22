@@ -196,3 +196,59 @@ test('DMP-41: a favourite is a treat: more happiness, and the card says so', () 
   xp.petFed({ name: 'Salmon', source: 'pack', group: 'fish' });
   assert.equal(title.textContent, 'Ember ate well');
 });
+
+// --- DMP-42 ---------------------------------------------------------------
+
+test('DMP-42: sneaking crouches the pet; a grown pet keeps its size in the crouch; an egg doesn\'t crouch', () => {
+  const p = loadPage();
+  p.sandbox.petStateChanged = () => {};
+  const xp = p.sandbox.dragonbornXP;
+  xp.applySettings({ x: -1, y: -1, hotkey: 'Shift+B', pet: 'fox' });
+  const sprite = p.element('#pet-sprite');
+  const root = p.element('#dragonborn-xp');
+  xp.companionState({ state: 'idle', sneaking: true, talking: false });
+  assert.equal(sprite.style.transform, 'scale(1.060, 0.780)');
+  assert.match(root.className, /(^| )sneaking( |$)/);
+  xp.companionState({ state: 'idle', sneaking: false, talking: false });
+  assert.equal(sprite.style.transform, '');
+  assert.doesNotMatch(root.className, /sneaking/);
+  // a baby (0.62) crouches at its own size
+  const baby = Object.assign(life.create('fox', 0), { stage: 'hatched', hatchedAt: 100, lastTick: 100, hunger: 80, happiness: 80 });
+  xp.applySettings({ x: -1, y: -1, hotkey: 'Shift+B', pet: 'fox', raisePet: true });
+  xp.petState({ state: life.serialize(baby), session: 1 });
+  xp.clock({ hour: 10, minute: 0, hours: 101 });
+  xp.companionState({ state: 'idle', sneaking: true, talking: false });
+  assert.equal(sprite.style.transform, 'scale(0.657, 0.484)');
+  xp.petState({ state: life.serialize(life.create('fox', 0)), session: 2 });
+  assert.equal(sprite.style.transform, '', 'an egg stays as it is');
+});
+
+test('DMP-42: with the setting on, the card dims while sneaking or talking; off, it never does', () => {
+  const p = loadPage();
+  const xp = p.sandbox.dragonbornXP;
+  const root = p.element('#dragonborn-xp');
+  xp.applySettings({ x: -1, y: -1, hotkey: 'Shift+B', pet: 'fox', dimStealth: false });
+  xp.companionState({ state: 'idle', sneaking: true, talking: false });
+  assert.doesNotMatch(root.className, /dimmed/, 'off by default');
+  xp.applySettings({ x: -1, y: -1, hotkey: 'Shift+B', pet: 'fox', dimStealth: true });
+  assert.match(root.className, /(^| )dimmed( |$)/);
+  xp.companionState({ state: 'idle', sneaking: false, talking: true });
+  assert.match(root.className, /(^| )dimmed( |$)/, 'in dialogue too');
+  xp.companionState({ state: 'idle', sneaking: false, talking: false });
+  assert.doesNotMatch(root.className, /dimmed/);
+  const css = read('view/styles.css');
+  assert.match(css, /#dragonborn-xp\.dimmed:not\(\.reacting\) \.toast-shell \{ opacity: \.55; \}/, '55%, never over a reaction');
+  assert.match(css, /#dragonborn-xp \.toast-shell \{ transition: opacity \.4s ease; \}/);
+});
+
+test('DMP-42: the plugin sends sneaking and talking with the pose, and keeps the dim in the INI as field 17', () => {
+  const card = read('src/CardBridge.cpp');
+  assert.match(card, /PublishCompanionState\(player->IsInCombat\(\) \? "combat" : moving \? "flying" : "idle", player->IsSneaking\(\), talking\);/);
+  assert.match(card, /const bool talking = ui && ui->IsMenuOpen\("Dialogue Menu"\);/);
+  assert.match(card, /const bool dimStealth = parts\.size\(\) > 17 \? ParseFlag\(parts\[17\]\) : g_settings\.dimStealth;/);
+  const main = read('src/main.cpp');
+  assert.match(main, /else if \(key == "dim_when_sneaking"\) \{\s*g_settings\.dimStealth = ParseFlag\(value\);/);
+  assert.ok(main.includes('<< "dim_when_sneaking=" << (g_settings.dimStealth ? 1 : 0)'));
+  assert.ok(main.includes('",\\"dimStealth\\":"'));
+  assert.match(read('view/index.html'), /<div class="settings-group look-group">\s*<h2 class="dv-kicker" data-i18n="lookHeading">Look<\/h2>\s*<label class="settings-row dv-setting-row" for="dim-stealth">/);
+});

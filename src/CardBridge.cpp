@@ -127,20 +127,26 @@ namespace MiniPets::Card
             Invoke("dragonbornXP.skillGain", "{\"skill\":" + JsonString(skill) + "}");
         }
 
-        void PublishCompanionState(const std::string& state)
+        // DMP-42: the pose, and whether the player is sneaking or talking (the crouch and the dim)
+        std::string g_lastCompanionFlags;
+
+        void PublishCompanionState(const std::string& state, bool sneaking, bool talking)
         {
-            if (state == g_lastCompanionState) {
+            const std::string flags = std::string(sneaking ? "s" : "") + (talking ? "t" : "");
+            if (state == g_lastCompanionState && flags == g_lastCompanionFlags) {
                 return;
             }
 
             const auto previous = g_lastCompanionState;
             g_lastCompanionState = state;
+            g_lastCompanionFlags = flags;
+            const std::string extra = std::string(",\"sneaking\":") + (sneaking ? "true" : "false") + ",\"talking\":" + (talking ? "true" : "false") + "}";
 
             if (state == "idle" && previous != "" && previous != "idle") {
-                Invoke("dragonbornXP.companionState", "{\"state\":\"landed\"}");
+                Invoke("dragonbornXP.companionState", "{\"state\":\"landed\"" + extra);
             }
             else {
-                Invoke("dragonbornXP.companionState", "{\"state\":\"" + state + "\"}");
+                Invoke("dragonbornXP.companionState", "{\"state\":\"" + state + "\"" + extra);
             }
         }
 
@@ -377,6 +383,8 @@ namespace MiniPets::Card
                 const int reactionCooldown = parts.size() > 14 ? std::clamp(std::stoi(parts[14]), Reactions::kMinCooldownSeconds, Reactions::kMaxCooldownSeconds) : g_settings.reactionCooldown;
                 const bool careMoments = parts.size() > 15 ? ParseFlag(parts[15]) : g_settings.careMoments;
                 const bool chronicleLines = parts.size() > 16 ? ParseFlag(parts[16]) : g_settings.chronicleLines;
+                // DMP-42: the dim (field 17)
+                const bool dimStealth = parts.size() > 17 ? ParseFlag(parts[17]) : g_settings.dimStealth;
                 // DMP-37: a language code, or "hub" to follow DovahHub
                 const auto language = parts.size() > 12 && (parts[12] == "hub" || IsSupportedLanguage(parts[12])) ? parts[12] : LanguageSetting();
                 bool requiresShift = false;
@@ -410,6 +418,7 @@ namespace MiniPets::Card
                 noteChange("reaction_cooldown", std::to_string(g_settings.reactionCooldown), std::to_string(reactionCooldown));
                 noteChange("care_moments", flag(g_settings.careMoments), flag(careMoments));
                 noteChange("chronicle_lines", flag(g_settings.chronicleLines), flag(chronicleLines));
+                noteChange("dim_when_sneaking", flag(g_settings.dimStealth), flag(dimStealth));
                 g_settings.positionX = x;
                 g_settings.positionY = y;
                 g_settings.settingsHotkey = hotkey;
@@ -429,6 +438,7 @@ namespace MiniPets::Card
                 g_settings.reactionCooldown = reactionCooldown;
                 g_settings.careMoments = careMoments;
                 g_settings.chronicleLines = chronicleLines;
+                g_settings.dimStealth = dimStealth;
                 StorePetKey(g_feedKey, feedKey);
                 StorePetKey(g_playKey, playKey);
                 StorePetKey(g_hideKey, hideKey);
@@ -592,7 +602,10 @@ namespace MiniPets::Card
                      movement.walking || movement.running || movement.sprinting;
         }
 
-        PublishCompanionState(player->IsInCombat() ? "combat" : moving ? "flying" : "idle");
+        // DMP-42: sneaking crouches the pet; dialogue is shown over the game, so the card can dim for it
+        const auto* ui = RE::UI::GetSingleton();
+        const bool talking = ui && ui->IsMenuOpen("Dialogue Menu");
+        PublishCompanionState(player->IsInCombat() ? "combat" : moving ? "flying" : "idle", player->IsSneaking(), talking);
     }
 
     // checks the real view state every poll in case something else showed it
@@ -941,6 +954,7 @@ namespace MiniPets::Card
         g_lastClockMinute = -1;
         g_lastWorldMood.clear();
         g_lastCompanionState.clear();
+        g_lastCompanionFlags.clear();
         g_lastPlace.clear();
     }
 

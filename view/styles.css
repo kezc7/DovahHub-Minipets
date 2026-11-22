@@ -546,3 +546,11 @@ body.settings-open.dragging-pet, body.settings-open.dragging-pet * { cursor: gra
 #animation-lab .dv-choice { min-width: 0; height: auto; padding: 2px 1.6rem 2px 6px; font-size: 12px; }
 /* DMP-21: with the pad, a switch's ring goes on its track (the checkbox itself is the 1px one above) */
 html[data-meridian-input="gamepad"] .dv-toggle input[data-meridian-focused] + .dv-toggle__track { outline: 2px solid var(--dv-accent-bright); outline-offset: 2px; box-shadow: var(--dv-ring); }
+
+/* DMP-42: sneaking. The crouch is in the sprite's transform (app.js); its loops run at about 60% speed, with no fx */
+#dragonborn-xp.sneaking.state-idle .pet-body { animation-duration: 4.6s; }
+#dragonborn-xp.sneaking.state-moving .pet-motion { animation-duration: 1.5s; }
+#dragonborn-xp.sneaking .role-fx-combat, #dragonborn-xp.sneaking .role-fx-glow { opacity: .4; }
+/* the dim, with the setting on: eased, and never over a reaction */
+#dragonborn-xp .toast-shell { transition: opacity .4s ease; }
+#dragonborn-xp.dimmed:not(.reacting) .toast-shell { opacity: .55; }

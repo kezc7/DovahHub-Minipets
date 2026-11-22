@@ -100,6 +100,7 @@ namespace MiniPets
         std::string hideHotkeyName = "Shift+V";
         std::string language = "en";  // the language in use (DovahHub's when following it)
         bool followHubLanguage = false;  // DMP-37: language=hub, "Follow DovahHub"
+        bool dimStealth = false;  // DMP-42: dim_when_sneaking, the card at 55% while sneaking or talking
         bool petHidden = false;
         // reactions (1.9.0): other mods' and the suite's events, the one cooldown, and the two extras
         bool reactToMods = true;
