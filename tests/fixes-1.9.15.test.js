@@ -9,6 +9,16 @@ const { startEdge, press, load, value, listOpen, lastSent, sleep } = require('./
 const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\r\n/g, '\n');
 
+// scroll a control into place, let that scroll's event go (a list closes on a scroll), then focus it
+async function focusOn(page, id) {
+  await page.run(`(async () => {
+    const el = document.getElementById(${JSON.stringify(id)});
+    el.scrollIntoView({ block: 'center' });
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    el.focus({ preventScroll: true });
+    return true; })()`);
+}
+
 // --- DMP-39 ---------------------------------------------------------------
 
 test('DMP-39: Snap to corner moves the card to a corner, and reads Custom anywhere else', async () => {
@@ -22,7 +32,7 @@ test('DMP-39: Snap to corner moves the card to a corner, and reads Custom anywhe
     assert.equal(await value(page, 'corner-choice'), 'tr', 'the default place is top right');
 
     // Top left is second in the list
-    await page.run('document.getElementById("corner-choice").focus(); true');
+    await focusOn(page, 'corner-choice');
     await press(page, 'Enter');
     assert.ok(await listOpen(page));
     await press(page, 'ArrowDown');
@@ -34,7 +44,7 @@ test('DMP-39: Snap to corner moves the card to a corner, and reads Custom anywhe
     assert.equal(await page.run('document.getElementById("position-x").value'), '0', 'the slider follows');
 
     // Bottom right, the third
-    await page.run('document.getElementById("corner-choice").focus(); true');
+    await focusOn(page, 'corner-choice');
     await press(page, 'Enter');
     // the list opens on the current choice: up to the top first
     await press(page, 'ArrowUp', 5);
@@ -52,7 +62,7 @@ test('DMP-39: Snap to corner moves the card to a corner, and reads Custom anywhe
     assert.equal(await value(page, 'corner-choice'), 'custom');
 
     // Top right again: the card's default place (-1, -1)
-    await page.run('document.getElementById("corner-choice").focus(); true');
+    await focusOn(page, 'corner-choice');
     await press(page, 'Enter');
     await press(page, 'ArrowUp', 5);
     await press(page, 'Enter');

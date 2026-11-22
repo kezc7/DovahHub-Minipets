@@ -33,6 +33,18 @@ test('no page in view/ has a native select, and the list is DovahHub\'s, unchang
 
 const { startEdge, press, click, load, value, listOpen, lastSent, payloadFrom, sleep } = require('./edge-harness.js');
 
+// A list closes on any scroll event outside it (dropdowns.js). The page grew with 1.9.15's rows, so a test scrolls the
+// control into place first; a scroll event is sent with the next frame, and headless Edge can hold frames back, so
+// the test waits two frames (the event has been sent by then) before it focuses the control and opens the list.
+async function focusOn(page, id) {
+  await page.run(`(async () => {
+    const el = document.getElementById(${JSON.stringify(id)});
+    el.scrollIntoView({ block: 'center' });
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    el.focus({ preventScroll: true });
+    return true; })()`);
+}
+
 test('each setting is chosen from DovahHub\'s list by keyboard and mouse, sent to the plugin, and read back after a reload', async () => {
   const page = await startEdge();
   try {
@@ -47,7 +59,7 @@ test('each setting is chosen from DovahHub\'s list by keyboard and mouse, sent t
     assert.equal(await value(page, 'pet-choice'), 'dovahmin');
 
     // the companion: Enter opens the list, Down moves without choosing, Enter chooses (Ember the fox is fifth)
-    await page.run('document.getElementById("pet-choice").focus(); true');
+    await focusOn(page, 'pet-choice');
     await press(page, 'Enter');
     assert.ok(await listOpen(page), 'Enter opens the companion list');
     await press(page, 'ArrowDown', 4);
@@ -60,7 +72,7 @@ test('each setting is chosen from DovahHub\'s list by keyboard and mouse, sent t
     assert.equal((await lastSent(page))[3], 'fox', 'the plugin is sent the companion (field 3)');
 
     // Escape closes a list with nothing changed, and leaves the settings open
-    await page.run('document.getElementById("card-shape").focus(); true');
+    await focusOn(page, 'card-shape');
     await press(page, 'Enter');
     await press(page, 'ArrowDown');
     await press(page, 'Escape');
@@ -80,7 +92,7 @@ test('each setting is chosen from DovahHub\'s list by keyboard and mouse, sent t
     assert.ok(await page.run('document.getElementById("clock-style").disabled'), 'no clock, no clock style');
     await page.run('document.getElementById("clock-enabled").click(); true');
     assert.ok(!(await page.run('document.getElementById("clock-style").disabled')));
-    await page.run('document.getElementById("clock-style").focus(); true');
+    await focusOn(page, 'clock-style');
     await press(page, ' ');
     assert.ok(await listOpen(page), 'Space opens the clock style list');
     await press(page, 'ArrowDown');
@@ -93,7 +105,7 @@ test('each setting is chosen from DovahHub\'s list by keyboard and mouse, sent t
 
     // the language: the other choices relabel in it at once
     const wideInEnglish = await page.run('document.getElementById("card-shape").textContent');
-    await page.run('document.getElementById("language-choice").focus(); true');
+    await focusOn(page, 'language-choice');
     await press(page, 'Enter');
     await press(page, 'ArrowDown', 2);
     await press(page, 'Enter');
@@ -119,7 +131,7 @@ test('each setting is chosen from DovahHub\'s list by keyboard and mouse, sent t
     assert.match(await page.run('document.getElementById("pet-choice").textContent'), /^Ember/);
 
     // Cancel puts a choice back: choose French, cancel, and the page is German again
-    await page.run('document.getElementById("language-choice").focus(); true');
+    await focusOn(page, 'language-choice');
     await press(page, 'Enter');
     await press(page, 'ArrowUp', 1);
     await press(page, 'Enter');
