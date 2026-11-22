@@ -138,3 +138,12 @@ test('DMP-29: a Shift release the game missed doesn\'t stick', () => {
   assert.match(card, /const bool shiftDown = ShiftHeld\(\);/);
   assert.equal((card.match(/g_shiftDownAtMs\.store\(SteadyMs\(\)\);\s*g_shiftDown\.store\(true\);/g) || []).length, 2, 'both Shift keys');
 });
+
+test('DMP-32: a failed load isn\'t a game: no g_gameLoaded, no INI self-test', () => {
+  const handler = cpp.slice(cpp.indexOf('static void SKSEMessageHandler('));
+  const post = handler.slice(handler.indexOf('case SKSE::MessagingInterface::kPostLoadGame:'), handler.indexOf('default:'));
+  const failed = post.indexOf('if (!message->data) {');
+  assert.ok(failed > 0);
+  assert.ok(failed < post.indexOf('g_gameLoaded.store(true);'));
+  assert.match(post, /if \(!message->data\) \{\s*logger::warn\("MiniPets: the save didn't load"\);\s*PetSave::FinishLoad\(\);\s*break;\s*\}\s*\[\[fallthrough\]\];\s*case SKSE::MessagingInterface::kNewGame:/);
+});

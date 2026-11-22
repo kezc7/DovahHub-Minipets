@@ -86,7 +86,9 @@ test('the plugin: Revert and kPreLoadGame start a new session; loading clears ev
   assert.match(begin, /g_loadingSave\.store\(true\)/);
   assert.match(begin, /g_petSession\.fetch_add\(1\)/);
   assert.match(begin, /ResetReactions\(\);/);
-  assert.match(begin, /SendPetState\(\);/);
+  // DMP-32: an empty pet in the new session, not the save being left
+  assert.match(begin, /Card::Invoke\("dragonbornXP\.petState", "\{\\"state\\":\\"\\",\\"session\\":" \+ std::to_string\(g_petSession\.load\(\)\) \+ "\}"\);/);
+  assert.doesNotMatch(begin, /SendPetState\(\);/);
   const finish = cpp.slice(cpp.indexOf('void FinishLoad()'), cpp.indexOf('void FinishLoad()') + 600);
   for (const line of ['g_loadingSave.store(false)', 'Card::ForgetLastSent()', 'ResetReactions()', 'SendPetState()']) {
     assert.ok(finish.includes(line), line);

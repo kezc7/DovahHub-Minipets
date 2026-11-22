@@ -479,6 +479,13 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
         PetSave::BeginLoad();
         break;
     case SKSE::MessagingInterface::kPostLoadGame:
+        // DMP-32: SKSE's data is true when the save loaded. A failed load ends the load guard but isn't a game.
+        if (!message->data) {
+            logger::warn("MiniPets: the save didn't load");
+            PetSave::FinishLoad();
+            break;
+        }
+        [[fallthrough]];
     case SKSE::MessagingInterface::kNewGame:
         // stay hidden until a game is loaded
         g_gameLoaded.store(true);

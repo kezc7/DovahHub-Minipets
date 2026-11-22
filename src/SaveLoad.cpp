@@ -49,7 +49,8 @@ namespace MiniPets::PetSave
         g_loadingSave.store(true);
         g_petSession.fetch_add(1);
         ReactionWiring::ResetReactions();
-        SendPetState();
+        // DMP-32: no pet in the new session; the save's own pet is sent at kPostLoadGame
+        Card::Invoke("dragonbornXP.petState", "{\"state\":\"\",\"session\":" + std::to_string(g_petSession.load()) + "}");
     }
 
     // SKSE's revert (a new game, or before a load): this save's pet and record are gone
