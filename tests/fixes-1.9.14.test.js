@@ -145,3 +145,13 @@ test('DMP-37: the plugin keeps language=hub, follows DovahHub on the 250 ms pass
   assert.match(follow, /Card::Invoke\("dragonbornXP\.applySettings", SettingsPayload\(\)\);\s*RefreshHubSettings\(\);/);
   assert.doesNotMatch(follow, /SaveSettings\(\)/, 'nothing saved: the INI keeps hub');
 });
+
+// --- DMP-38 ---------------------------------------------------------------
+
+test('DMP-38: the position sliders step by 20 for the pad; the number boxes keep 1', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'view', 'index.html'), 'utf8');
+  assert.match(html, /<input id="position-x" class="dv-slider" type="range" min="0" max="3000" step="20">/);
+  assert.match(html, /<input id="position-y" class="dv-slider" type="range" min="0" max="2000" step="20">/);
+  assert.match(html, /<input id="position-x-value" class="dv-setting-row__value" type="number" min="0" max="3000" step="1">/);
+  assert.match(html, /<input id="position-y-value" class="dv-setting-row__value" type="number" min="0" max="2000" step="1">/);
+});
