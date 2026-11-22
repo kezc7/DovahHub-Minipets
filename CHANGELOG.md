@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.14-beta
+- A raised pet remembers a boss, a milestone or a first visit even when its reaction didn't show (a menu was open, or another reaction had just played)
+- A reaction that arrives while a menu hides the card (a level-up, the fader) waits up to 5 seconds and plays once the card is back. An outfit change in DovahHub's Wardrobe tab still waits up to a minute
+- When you pick a key in the settings, MiniPets says if another suite mod already uses it ("Shift+V is already used by DovahWheel."). The key is still yours to keep. Needs DovahMenu
+- Language has a new choice, Follow DovahHub: MiniPets uses DovahHub's language and changes with it. Needs DovahHub 0.95.17-beta or later; without it, MiniPets is in English
+- The X and Y position sliders move in steps of 20, so a controller crosses the screen quickly. The number boxes beside them still move by 1
+- Upgrading from 1.9.13-beta: install over it in your mod manager; your settings carry over
+
 ## 1.9.13-beta
 - Feeding from your pack never uses a quest item
 - DovahHub's Settings tab shows MiniPets' rows in your language, with your hide key, from the start of a session. Until now they were in English, with Shift+V, until you changed one of the two

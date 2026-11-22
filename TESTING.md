@@ -4,6 +4,16 @@ The node tests (`node --test "tests/*.test.js"`) and the settings test (`xmake b
 
 `MiniPets.log` is in `Documents\My Games\Skyrim Special Edition\SKSE\`.
 
+## 1.9.14 (DMP-34 to DMP-38)
+
+1. **A memory behind a menu** (DMP-34). With a hatched pet, open the map and fast travel to a city it has never seen, then open the inventory the moment the loading screen goes. Close it: the city is in the pet's memories (DovahHub's MiniPets tab) even if no reaction showed.
+2. **The grace window** (DMP-35). Level up and open the level-up menu at once, or sleep, so a reaction lands behind a menu. Log: `MiniPets reaction <mood> from <source> waits up to 5 s for the card`, then the reaction plays when the menu closes. Stay in a menu longer than 5 s: `ran out of time waiting for the card`, and nothing plays.
+3. **A suite mod's key** (DMP-36, needs DovahMenu). In the settings, set the hide key to a key another suite mod opens with (DovahMenu's own key, or a mod in its list): the line under the hotkeys says "<key> is already used by <mod>." The key is still set.
+4. **Follow DovahHub** (DMP-37, needs DovahHub 0.95.17-beta or later). Pick Follow DovahHub in the language list: MiniPets switches to DovahHub's language. Change DovahHub's language: MiniPets follows within a second. Log: `MiniPets: following DovahHub's language, <old> -> <new>`. MiniPets.ini keeps `language=hub`.
+5. **The sliders on a pad** (DMP-38). A on the X position slider, then Right: the card moves 20 pixels a press. The number box beside it still steps by 1.
+
+Pass: each step as written. Fail: note the step and send `MiniPets.log`.
+
 ## The 1.9.13 fixes (DMP-23 to DMP-33)
 
 Raise-a-pet on, with a hatched pet, unless a step says otherwise.
