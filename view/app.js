@@ -20,6 +20,8 @@
   let petChoice = null;
   let shapeChoice = null;
   let clockStyleChoice = null;
+  // DMP-39: Snap to corner (top right is the card's default place)
+  let cornerChoice = null;
   let languageChoice = null;
   const petSelectRow = document.querySelector('#pet-select-row');
   const raisePetInput = document.querySelector('#raise-pet');
@@ -370,6 +372,7 @@
     positionYRange.value = positionYValue.value = String(shown.y);
     sizeRange.value = sizeValue.value = String(cardScale);
     if (shapeChoice) shapeChoice.setChoice(cardShape);
+    if (cornerChoice) cornerChoice.setChoice(cornerOf());
     syncSliders();
   }
 
@@ -411,6 +414,30 @@
     const shown = shownPosition();
     if (axis === 'x') setPosition(rawValue, shown.y);
     else setPosition(shown.x, rawValue);
+  }
+
+  // DMP-39: which corner the card is in now ('custom' anywhere else); a corner picked moves it there
+  const CORNER_CHOICES = [['tr', 'cornerTopRight'], ['tl', 'cornerTopLeft'], ['br', 'cornerBottomRight'], ['bl', 'cornerBottomLeft'], ['custom', 'cornerCustom']]
+    .map(([value, key]) => ({ value, key }));
+  function cornerOf() {
+    if (!hasCustomPosition()) return 'tr';
+    const max = maxPosition();
+    const shown = shownPosition();
+    const near = (a, b) => Math.abs(a - b) <= 2;
+    const left = near(shown.x, 0), right = near(shown.x, max.x), top = near(shown.y, minY()), bottom = near(shown.y, max.y);
+    if (top && right) return 'tr';
+    if (top && left) return 'tl';
+    if (bottom && right) return 'br';
+    if (bottom && left) return 'bl';
+    return 'custom';
+  }
+  function chooseCorner(value) {
+    const max = maxPosition();
+    if (value === 'tr') resetPosition();
+    else if (value === 'tl') setPosition(0, minY());
+    else if (value === 'br') setPosition(max.x, max.y);
+    else if (value === 'bl') setPosition(0, max.y);
+    else if (cornerChoice) cornerChoice.setChoice(cornerOf());  // Custom: drag the card, or use the sliders
   }
 
   function resetPosition() {
@@ -986,6 +1013,7 @@
     petChoice = makeChoice('pet', 'pet-choice', companionChoices(), pet, 'chooseCompanion', value => {
       if (setPet(value)) queueNativeSettingsChanged();
     });
+    cornerChoice = makeChoice('corner', 'corner-choice', CORNER_CHOICES.map(c => ({ ...c })), cornerOf(), 'snapToCorner', chooseCorner);
     shapeChoice = makeChoice('shape', 'card-shape', [{ value: 'square', key: 'square' }, { value: 'wide', key: 'wide' }], cardShape, 'shape', chooseShape);
     clockStyleChoice = makeChoice('clock-style', 'clock-style', [{ value: 'plate', key: 'plate' }, { value: 'ribbon', key: 'ribbon' }], clockStyle, 'clockStyle',
       value => setClock(showClock, value));
