@@ -211,8 +211,21 @@ test('the plugin: the card part notices a change of place, never the place a loa
   const wiring = pluginPart('ReactionWiring');
   assert.match(wiring, /if \(!PetSave::HasPet\(\) \|\| PetSave::PetIsEgg\(\)\) \{\s*return;/, 'a raised, hatched pet only');
   assert.match(wiring, /now - seen->second < kPlaceRepeatMs/, 'the same place again only after ten minutes');
-  assert.match(wiring, /OfferReaction\(reaction, false\);/);
+  // DMP-25: the ten minutes start only when the pet said something
+  assert.match(wiring, /if \(OfferReaction\(reaction, false\) == Reactions::Verdict::Show\) \{\s*g_placeSeenMs\[key\] = now;\s*\}/);
+  assert.doesNotMatch(wiring, /g_placeSeenMs\[key\] = now;\s*OfferReaction/, 'not before the verdict');
   assert.match(wiring, /void ResetReactions\(\)[\s\S]{0,600}g_placeSeenMs\.clear\(\);/, 'a load starts the places over');
+});
+
+test('the plugin: the place is looked at on every pass with the card shown, not only when the mood changed (DMP-25)', () => {
+  const { pluginPart } = require('./plugin-source.js');
+  const card = pluginPart('Card');
+  const mood = card.slice(card.indexOf('void UpdateWorldMood()'), card.indexOf('void UpdateClock()'));
+  const place = mood.indexOf('UpdatePlace(region);');
+  assert.ok(place > 0 && place < mood.indexOf('if (mood == g_lastWorldMood)'), 'before the mood check, so two "house" places still count');
+  assert.match(mood, /if \(g_gameLoaded\.load\(\) && !PetSave::Loading\(\) && !g_overlayHiddenForMenus\.load\(\)\) \{\s*UpdatePlace\(region\);\s*\}/,
+    'not behind a loading screen or the fader: noticed once the card is back');
+  assert.equal((mood.match(/UpdatePlace\(region\)/g) || []).length, 1);
 });
 
 test('the DovahHub tab shows the stage ahead and the newest memories', () => {

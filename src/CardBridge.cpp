@@ -654,6 +654,12 @@ namespace MiniPets::Card
         const auto region = GetRegion();
         const std::string mood = std::string(timeOfDay) + "|" + weather + "|" + region;
 
+        // DMP-25: the place on every pass, not only when the mood changed (two "house" places share one), and only
+        // with the card shown: a place met behind a loading screen or the fader is noticed once the card is back
+        if (g_gameLoaded.load() && !PetSave::Loading() && !g_overlayHiddenForMenus.load()) {
+            UpdatePlace(region);
+        }
+
         if (mood == g_lastWorldMood) {
             return;
         }
@@ -661,7 +667,6 @@ namespace MiniPets::Card
         g_lastWorldMood = mood;
         Invoke("dragonbornXP.worldMood", "{\"time\":\"" + std::string(timeOfDay) + "\",\"weather\":\"" + weather +
                                              "\",\"region\":\"" + region + "\"}");
-        UpdatePlace(region);
     }
 
     // once per in-game minute

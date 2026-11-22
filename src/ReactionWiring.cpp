@@ -42,7 +42,7 @@ namespace MiniPets::ReactionWiring
         OfferSeen g_lastOffer;
 
         // game thread. fromOtherMod: the "react to other mods" switch covers it (React, DovahDamage, DovahHub)
-        void OfferReaction(const Reactions::Reaction& reaction, bool fromOtherMod)
+        Reactions::Verdict OfferReaction(const Reactions::Reaction& reaction, bool fromOtherMod)
         {
             const double now = NowMs();
             const bool visible = !Card::IsHidden() && !g_settings.petHidden;
@@ -55,7 +55,7 @@ namespace MiniPets::ReactionWiring
                                          (shown ? std::string() : std::string(",\"reason\":\"") + Reactions::VerdictName(verdict) + "\"") + "}");
             if (!shown) {
                 logger::info("MiniPets reaction {} from {} not shown: {}", reaction.mood, reaction.source, Reactions::VerdictName(verdict));
-                return;
+                return verdict;
             }
             // one Chronicle line a minute at most, when the player turned it on
             bool say = false;
@@ -70,6 +70,7 @@ namespace MiniPets::ReactionWiring
                                              ",\"ms\":" + std::to_string(reaction.ms) + ",\"priority\":" + std::to_string(reaction.priority) +
                                              ",\"hold\":" + (reaction.hold ? "true" : "false") + ",\"care\":" + (reaction.care ? "true" : "false") +
                                              ",\"say\":" + (say ? "true" : "false") + "}");
+            return verdict;
         }
 
         void OwnReaction(const char* source, const char* mood, const char* captionKey, std::string vars, int ms, int priority, bool hold, bool care, bool fromOtherMod)
@@ -247,8 +248,10 @@ namespace MiniPets::ReactionWiring
         if (const auto seen = g_placeSeenMs.find(key); seen != g_placeSeenMs.end() && now - seen->second < kPlaceRepeatMs) {
             return;
         }
-        g_placeSeenMs[key] = now;
-        OfferReaction(reaction, false);
+        // DMP-25: the ten minutes start only when the pet said something
+        if (OfferReaction(reaction, false) == Reactions::Verdict::Show) {
+            g_placeSeenMs[key] = now;
+        }
     }
 
     void ForgetPlaces()
