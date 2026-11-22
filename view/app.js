@@ -172,6 +172,7 @@
       ateDetail: "Mmm, {food}!",
       ateWellTitle: "{name} ate well",
       ateWithYouTitle: "{name} ate with you",
+      favouriteTitle: "{name}'s favourite!",
       celebrating: "Celebrating!",
       celebratingDetail: "{name} is delighted.",
       chooseEgg: "Choose an egg",
@@ -1669,14 +1670,17 @@
         return petNotice(t('noFoodTitle'), t('noFoodDetail'));
       }
       if (!raisePet || !petLife) return;
-      const result = petLifeRules.feed(petLife);
+      // DMP-41: the plugin names the food's group; the companion's favourite is a treat
+      const isFavourite = Boolean(data && data.group) && petLifeRules.favourite(petLife.species) === data.group;
+      const result = petLifeRules.feed(petLife, isFavourite);
       const food = data && data.name ? data.name : t('resultSnack');
       if (!result.ok) return reportPetAction('feed', false, result.reason);
       reportPetAction('feed', true, null, food);
       petLife = result.pet;
       savePet();
       refreshPet();
-      petCheer(t(data && data.source === 'ate' ? 'ateWithYouTitle' : 'ateWellTitle', { name: petNames[petLife.species] }), t('ateDetail', { food }));
+      const title = isFavourite ? 'favouriteTitle' : data && data.source === 'ate' ? 'ateWithYouTitle' : 'ateWellTitle';
+      petCheer(t(title, { name: petNames[petLife.species] }), t('ateDetail', { food }));
     },
     companionState(data) {
       controller.setBase(data && data.state ? data.state : 'idle');

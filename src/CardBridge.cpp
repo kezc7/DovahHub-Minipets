@@ -521,7 +521,8 @@ namespace MiniPets::Card
         void SendPetFed(const RE::TESForm* food, const char* source)
         {
             const char* name = food ? food->GetName() : nullptr;
-            Invoke("dragonbornXP.petFed", "{\"name\":" + JsonString(name ? name : "") + ",\"source\":\"" + source + "\"}");
+            // DMP-41: the page decides whether it's the companion's favourite
+            Invoke("dragonbornXP.petFed", "{\"name\":" + JsonString(name ? name : "") + ",\"source\":\"" + source + "\",\"group\":" + JsonString(FoodGroup(food)) + "}");
         }
 
         // eating food in game feeds the pet too
@@ -542,14 +543,15 @@ namespace MiniPets::Card
             }
         };
 
-        // Feed button: uses the cheapest food in the player's inventory.
+        // Feed button: the cheapest of the raised companion's favourite food, else the cheapest food (DMP-41)
         void FeedFromPack()
         {
             auto* player = RE::PlayerCharacter::GetSingleton();
             if (!player) {
                 return;
             }
-            auto* cheapest = CheapestFood();
+            const auto species = JsonField(PetSave::State(), "species");
+            auto* cheapest = CheapestFood(nullptr, FavouriteFood(species));
             if (!cheapest) {
                 Invoke("dragonbornXP.petFed", "{\"none\":true}");
                 return;
@@ -735,8 +737,61 @@ namespace MiniPets::Card
                                          ",\"hours\":" + std::to_string(calendar->GetHoursPassed()) + "}");
     }
 
-    // cheapest food in the player's pack, and how many food items there are
-    RE::TESBoundObject* CheapestFood(int* count)
+    // DMP-41: a food's group, from its model's path, which every load order and language keeps: vanilla food has no
+    // keyword for meat or fish. Engine-dependent on the mesh: a mod's own food with an odd mesh name has no group.
+    std::string FoodGroup(const RE::TESForm* food)
+    {
+        const auto* model = food ? food->As<RE::TESModel>() : nullptr;
+        const char* path = model ? model->GetModel() : nullptr;
+        if (!path || !*path) {
+            return {};
+        }
+        std::string lower(path);
+        std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        // first match wins: sweet things before fruit (berries), greens before hot food (potato soup)
+        static constexpr std::array<std::pair<std::string_view, std::string_view>, 37> kWords{ {
+            { "sweetroll", "sweets" }, { "honey", "sweets" }, { "cake", "sweets" }, { "pie", "sweets" }, { "berr", "sweets" }, { "candy", "sweets" },
+            { "fish", "fish" }, { "salmon", "fish" }, { "clam", "fish" }, { "crab", "fish" },
+            { "cheese", "cheese" },
+            { "bread", "bread" }, { "flour", "bread" }, { "wheat", "bread" },
+            { "milk", "drinks" }, { "water", "drinks" }, { "juice", "drinks" },
+            { "mead", "mead" }, { "wine", "mead" }, { "sujamma", "mead" }, { "flin", "mead" }, { "brandy", "mead" },
+            { "apple", "greens" }, { "cabbage", "greens" }, { "carrot", "greens" }, { "potato", "greens" }, { "leek", "greens" }, { "tomato", "greens" }, { "gourd", "greens" },
+            { "stew", "hot" }, { "soup", "hot" },
+            { "meat", "meat" }, { "venison", "meat" }, { "beef", "meat" }, { "rabbit", "meat" }, { "pheasant", "meat" }, { "horker", "meat" },
+        } };
+        for (const auto& [word, group] : kWords) {
+            if (lower.find(word) != std::string::npos) {
+                return std::string(group);
+            }
+        }
+        return {};
+    }
+
+    // DMP-41: each companion's favourite group (view/pet-life.js FAVOURITE_FOODS is the same table)
+    std::string FavouriteFood(std::string_view species)
+    {
+        static constexpr std::array<std::pair<std::string_view, std::string_view>, 20> kFavouriteFoods{ {
+            { "mudcrab", "fish" }, { "horker", "fish" }, { "netch", "fish" },
+            { "death-hound", "meat" }, { "sabrecat", "meat" }, { "troll", "meat" }, { "frostbite-spider", "meat" }, { "chaurus", "meat" },
+            { "skeever", "cheese" },
+            { "chicken", "bread" }, { "dwarven-spider", "bread" },
+            { "spriggan", "greens" }, { "mammoth", "greens" },
+            { "fox", "sweets" }, { "dovahmin", "sweets" }, { "dovahpink", "sweets" }, { "wisp", "sweets" },
+            { "flame-atronach", "hot" },
+            { "frost-atronach", "drinks" },
+            { "dragon-priest", "mead" },
+        } };
+        for (const auto& [id, group] : kFavouriteFoods) {
+            if (id == species) {
+                return std::string(group);
+            }
+        }
+        return {};
+    }
+
+    // cheapest food in the player's pack (of the favourite group first, when one is given), and how many food items there are
+    RE::TESBoundObject* CheapestFood(int* count, std::string_view preferGroup)
     {
         if (count) {
             *count = 0;
@@ -751,6 +806,8 @@ namespace MiniPets::Card
         });
         RE::TESBoundObject* cheapest = nullptr;
         auto cheapestValue = (std::numeric_limits<std::int32_t>::max)();
+        RE::TESBoundObject* favourite = nullptr;
+        auto favouriteValue = (std::numeric_limits<std::int32_t>::max)();
         for (const auto& [object, entry] : inventory) {
             if (entry.first <= 0) {
                 continue;
@@ -766,8 +823,12 @@ namespace MiniPets::Card
                 cheapest = object;
                 cheapestValue = object->GetGoldValue();
             }
+            if (!preferGroup.empty() && object->GetGoldValue() < favouriteValue && FoodGroup(object) == preferGroup) {
+                favourite = object;
+                favouriteValue = object->GetGoldValue();
+            }
         }
-        return cheapest;
+        return favourite ? favourite : cheapest;
     }
 
     void SetPetHidden(bool hidden)

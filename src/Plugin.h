@@ -172,7 +172,10 @@ namespace MiniPets
         void UpdateOverlayMenuVisibility();
         void UpdateWorldMood();
         void UpdateClock();
-        RE::TESBoundObject* CheapestFood(int* count = nullptr);
+        RE::TESBoundObject* CheapestFood(int* count = nullptr, std::string_view preferGroup = {});
+        // DMP-41
+        std::string FoodGroup(const RE::TESForm* food);
+        std::string FavouriteFood(std::string_view species);
         void SetPetHidden(bool hidden);
         void RegisterPreviewKeys();
         bool IsHidden();     // a menu, a load, another Prisma UI menu: the overlay is hidden

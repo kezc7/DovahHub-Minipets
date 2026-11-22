@@ -53,10 +53,30 @@
     return { pet: next, events };
   }
 
-  function feed(pet) {
+  // DMP-41: each companion's favourite food group (src/CardBridge.cpp kFavouriteFoods is the same table)
+  const FAVOURITE_FOODS = Object.freeze({
+    mudcrab: 'fish', horker: 'fish', netch: 'fish',
+    'death-hound': 'meat', sabrecat: 'meat', troll: 'meat', 'frostbite-spider': 'meat', chaurus: 'meat',
+    skeever: 'cheese',
+    chicken: 'bread', 'dwarven-spider': 'bread',
+    spriggan: 'greens', mammoth: 'greens',
+    fox: 'sweets', dovahmin: 'sweets', dovahpink: 'sweets', wisp: 'sweets',
+    'flame-atronach': 'hot',
+    'frost-atronach': 'drinks',
+    'dragon-priest': 'mead'
+  });
+  const FAVOURITE_HAPPINESS = 15;
+
+  function favourite(species) {
+    return FAVOURITE_FOODS[species] || '';
+  }
+
+  // a favourite (DMP-41) makes it happier than any other meal
+  function feed(pet, isFavourite = false) {
     if (pet.stage === 'egg') return { pet, ok: false, reason: 'egg' };
     if (pet.hunger >= 98) return { pet, ok: false, reason: 'full' };
-    return { pet: Object.assign({}, pet, { hunger: clamp(pet.hunger + 35), happiness: clamp(pet.happiness + 5) }), ok: true };
+    const happiness = isFavourite ? FAVOURITE_HAPPINESS : 5;
+    return { pet: Object.assign({}, pet, { hunger: clamp(pet.hunger + 35), happiness: clamp(pet.happiness + happiness) }), ok: true, favourite: Boolean(isFavourite) };
   }
 
   function play(pet, hours) {
@@ -200,6 +220,6 @@
     };
   }
 
-  return Object.freeze({ HATCH_WARMTH, GROWTH_SCALE, STAGES, STAGE_DAYS, MEMORY_KINDS, MAX_MEMORIES, create, tick, feed, play, xp, levelUp, growth, nextStage, mood, eggProgress,
+  return Object.freeze({ HATCH_WARMTH, GROWTH_SCALE, STAGES, STAGE_DAYS, MEMORY_KINDS, MAX_MEMORIES, FAVOURITE_FOODS, favourite, create, tick, feed, play, xp, levelUp, growth, nextStage, mood, eggProgress,
     shareMoment, CARE_PER_DAY, remember, knows, mention, serialize, restore });
 });
