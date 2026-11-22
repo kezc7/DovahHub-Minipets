@@ -421,7 +421,8 @@
       animationLabActive ? 'animation-lab' : '',
       document.hidden ? 'animation-paused' : '',
       hasCustomPosition() ? 'custom-position' : '',
-      `pet-${pet}`,
+      // DMP-26: the species drawn, so a raised pet gets its own colours and reaction touches; none for an egg
+      !isEgg() && shownSpecies() ? `pet-${shownSpecies()}` : '',
       `archetype-${archetype}`,
       includeTransient ? `state-${current.state}` : '',
       includeTransient && flying ? 'state-flying' : '',

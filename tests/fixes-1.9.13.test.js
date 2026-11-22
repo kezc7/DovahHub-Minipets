@@ -26,6 +26,23 @@ function page(settings = {}, options = {}) {
 
 // --- the page ---------------------------------------------------------------
 
+test('DMP-26: a raised pet gets its own species class, whatever the companion setting', () => {
+  const { xp, root } = page({ raisePet: true });
+  xp.petState({ state: life.serialize(hatched('fox')), session: 1 });
+  assert.match(root.className, /(^| )pet-fox( |$)/);
+  assert.doesNotMatch(root.className, /(^| )pet-dovahmin( |$)/, 'not the companion left in the setting');
+  xp.petState({ state: life.serialize(hatched('dovahpink')), session: 2 });
+  assert.match(root.className, /(^| )pet-dovahpink( |$)/, 'a raised Dovahpink gets its pink');
+});
+
+test('DMP-26: an egg has no species class; the companion still has its own', () => {
+  const egg = page({ raisePet: true });
+  egg.xp.petState({ state: life.serialize(life.create('mudcrab', 0)), session: 1 });
+  assert.doesNotMatch(egg.root.className, /(^| )pet-[a-z-]+( |$)/);
+  const companion = page({ pet: 'chicken' });
+  assert.match(companion.root.className, /(^| )pet-chicken( |$)/);
+});
+
 // --- the plugin ---------------------------------------------------------------
 
 test('DMP-23: feeding from the pack never takes a quest item', () => {
