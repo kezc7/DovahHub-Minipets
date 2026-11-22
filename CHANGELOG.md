@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.9.13-beta
+- Feeding from your pack never uses a quest item
+- DovahHub's Settings tab shows MiniPets' rows in your language, with your hide key, from the start of a session. Until now they were in English, with Shift+V, until you changed one of the two
+- A raised pet notices a place you reach through a loading screen or by fast travel once the screen has gone, and going into your house from another building counts. A place it didn't get to mention comes up again on your next visit, instead of waiting 10 minutes
+- A raised pet gets its own colours and reaction touches (a Dovahpink's pink, a fox's tail, a chicken's flap) when the companion setting names another
+- Walking off or starting a fight no longer replaces the words of a reaction that is still playing, and changing the language words it again
+- Changing your outfit in DovahHub's Wardrobe tab gets its reaction when you close DovahHub, and a change that got no reaction doesn't start the 10-minute wait
+- After Shift+Tab to the Steam overlay or another window, plain V, B, N and K no longer act as Shift+V, Shift+B, Shift+N and Shift+K
+- On a controller, Up and Down reach the second line of the raise-a-pet buttons when they wrap (in French or German), and moving off a hotkey that is waiting for a key puts the old key back
+- Pressing Feed twice quickly uses one food item, not two
+- With raise-a-pet on and no egg yet, the play key says "No egg yet", as the feed key does
+- One hit that sets a damage record and kills a boss gets the boss's hop only. The record is kept, but the cheer no longer uses the minute's Chronicle line or a second share of the day's care
+- Smaller fixes: a damaged co-save record is skipped instead of read, a save that fails to load no longer counts as a loaded game, and the self-test's report names every step it skipped
+- Upgrading from 1.9.12-beta: install over it in your mod manager; nothing else changes
+
 ## 1.9.12-beta
 - The settings page (Shift+B) works on a controller: the d-pad moves row by row through every control, A changes or opens it, and B backs out of a list or a key capture, then cancels the settings
 - The companion, card shape, clock style and language choices use DovahHub's list instead of the browser's dropdowns, so a controller can open and pick from them. Without DovahHub's list, each one steps through its choices when pressed

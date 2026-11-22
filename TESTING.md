@@ -4,6 +4,23 @@ The node tests (`node --test "tests/*.test.js"`) and the settings test (`xmake b
 
 `MiniPets.log` is in `Documents\My Games\Skyrim Special Edition\SKSE\`.
 
+## The 1.9.13 fixes (DMP-23 to DMP-33)
+
+Raise-a-pet on, with a hatched pet, unless a step says otherwise.
+
+1. **Quest food** (DMP-23). Carry one cheap food and one food or drink the game marks as a quest item (the inventory won't let you drop it). Press Feed: the cheap one is eaten and the quest item stays. With only the quest item, Feed says "No food in your pack".
+2. **DovahHub's rows in your language** (DMP-24, needs DovahHub). Set MiniPets to Français in Shift+B, quit, and start the game again. DovahHub's Settings tab shows MiniPets' rows in French. Log: `MiniPets: DovahHub settings sent again in fr`.
+3. **Places after a loading screen** (DMP-25). Fast travel to a city you haven't been to this session: once the loading screen has gone, the pet hops with the city's line (the first visit is worded as one). Go from another building in town into your house: the home wave. Log: `MiniPets reaction: hop from minipets`, then `wave`.
+4. **The raised pet's own look** (DMP-26). Companion at Dovahmin, raise a Dovahpink: the card's dragon is pink. Raise a fox and wave at it (a follower joining, with DovahHub): its tail wags fast.
+5. **A reaction keeps its words** (DMP-27). Sleep an hour and walk off as soon as the fade ends: "Sweet dreams" stays until the pet gets up, then the card goes back to its name.
+6. **The outfit reaction** (DMP-28, needs DovahHub). More than 30 seconds after a load, change the outfit in DovahHub's Wardrobe tab, then close DovahHub: "New look?" shows. Log: `MiniPets: the outfit reaction waits for the card to be shown`, then `MiniPets reaction: curious from dovahhub`.
+7. **Shift after the overlay** (DMP-29). Hold Shift, press Tab to open the Steam overlay, let go of Shift there, close the overlay, then press V: only the camera changes; the card stays. Shift+V still hides it.
+8. **The pad, in French** (DMP-30). Language Français, open the settings on the controller. If Nourrir, Jouer and Recommencer take two lines, Down from Jouer goes to Recommencer, and Up comes back. A on a hotkey, then the D-pad: the capture ends with the old key, and the ring moves.
+9. **Feed twice** (DMP-31). With food at about 70%, press the feed key twice quickly: one food item is gone, and the card says the pet ate.
+10. **Play with no egg** (DMP-33). Start over, so no egg is picked, and press the play key: "No egg yet / Pick one in settings."
+
+Pass: each step as written. Fail: note the step and send `MiniPets.log`.
+
 ## Playthrough: reactions (1.9.0)
 
 Play these in order on one character. Each step names the card's caption and the `MiniPets.log` line. Reactions never show over a menu or a loading screen, and the default gap between two of them is 8 seconds, so leave a few seconds between steps.
