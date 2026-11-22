@@ -58,6 +58,10 @@ namespace MiniPets::Hub
             for (const auto& entry : HubText::kTexts) {
                 languages += (languages.empty() ? "" : ",") + choice(entry.code, entry.languageName);
             }
+            // DMP-37
+            if (g_hub && DOVAHHUB_API::HasLanguage(g_hub)) {
+                languages += "," + choice("hub", text.languageFollowHub);
+            }
             return std::string("{\"title\":\"MiniPets\",\"settings\":[") +
                    "{\"key\":\"raise_pet\",\"label\":" + JsonString(text.raisePet) + ",\"type\":\"toggle\",\"value\":false,\"note\":" + JsonString(text.raisePetHint) + "}," +
                    "{\"key\":\"show_clock\",\"label\":" + JsonString(text.hubShowClock) + ",\"type\":\"toggle\",\"value\":false}," +
@@ -115,7 +119,7 @@ namespace MiniPets::Hub
                    ",\"clock_style\":" + JsonString(g_settings.clockStyle) +
                    ",\"scale\":" + std::to_string(g_settings.scale) +
                    ",\"card_shape\":" + JsonString(g_settings.cardShape) +
-                   ",\"language\":" + JsonString(g_settings.language) +
+                   ",\"language\":" + JsonString(LanguageSetting()) +
                    ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") +
                    ",\"react_to_mods\":" + (g_settings.reactToMods ? "true" : "false") +
                    ",\"reaction_cooldown\":" + std::to_string(g_settings.reactionCooldown) +
@@ -145,8 +149,8 @@ namespace MiniPets::Hub
             else if (key == "card_shape" && IsSupportedCardShape(value)) {
                 g_settings.cardShape = value;
             }
-            else if (key == "language" && IsSupportedLanguage(value)) {
-                g_settings.language = value;
+            else if (key == "language" && SetLanguageSetting(value)) {
+                // DMP-37: a code, or "hub"
             }
             else if (key == "hidden") {
                 Card::SetPetHidden(ParseFlag(value));
@@ -540,6 +544,35 @@ namespace MiniPets::Hub
             g_menu = nullptr;
             g_menuEntry = 0;
         }
+    }
+
+    // DMP-37: DovahHub's language when it has one MiniPets speaks
+    std::string HubLanguage()
+    {
+        if (!g_hub || !DOVAHHUB_API::HasLanguage(g_hub) || !g_hub->GetLanguage) {
+            return {};
+        }
+        const char* code = g_hub->GetLanguage();
+        return code && IsSupportedLanguage(code) ? std::string(code) : std::string();
+    }
+
+    // DMP-37: on the 250 ms pass. Following DovahHub, a change of its language words MiniPets again: the card, the
+    // settings and DovahHub's rows. Nothing is saved: the INI keeps language=hub.
+    void FollowHubLanguage()
+    {
+        if (!g_settings.followHubLanguage) {
+            return;
+        }
+        const auto hub = HubLanguage();
+        const std::string language = hub.empty() ? "en" : hub;
+        if (language == g_settings.language) {
+            return;
+        }
+        logger::info("MiniPets: following DovahHub's language, {} -> {}", g_settings.language, language);
+        g_settings.language = language;
+        Card::Invoke("dragonbornXP.applySettings", SettingsPayload());
+        RefreshHubSettings();
+        PushPetsState();
     }
 
     // DMP-36: which suite mod already opens with this key, by DovahMenu 0.2.3+'s FindKeyOwner ("" for none,

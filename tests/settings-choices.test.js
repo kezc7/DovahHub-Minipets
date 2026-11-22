@@ -139,12 +139,14 @@ test('the plugin reads, writes and sends back each of the four in the same place
   assert.match(card, /const auto& pet = parts\[3\];/);
   assert.match(card, /const auto clockStyle = parts\.size\(\) > 5 && IsSupportedClockStyle\(parts\[5\]\)/);
   assert.match(card, /const auto cardShape = parts\.size\(\) > 10 && IsSupportedCardShape\(parts\[10\]\)/);
-  assert.match(card, /const auto language = parts\.size\(\) > 12 && IsSupportedLanguage\(parts\[12\]\)/);
+  // DMP-37: a language code, or "hub" to follow DovahHub
+  assert.match(card, /const auto language = parts\.size\(\) > 12 && \(parts\[12\] == "hub" \|\| IsSupportedLanguage\(parts\[12\]\)\)/);
   // the page sends them in that order
-  assert.match(read('view/app.js'), /window\.settingsChanged\(`\$\{x\}\|\$\{y\}\|\$\{settingsHotkey\}\|\$\{pet\}\|\$\{showClock \? 1 : 0\}\|\$\{clockStyle\}\|\$\{cardScale\}\|\$\{raisePet \? 1 : 0\}\|\$\{feedHotkey\}\|\$\{playHotkey\}\|\$\{cardShape\}\|\$\{hideHotkey\}\|\$\{language\}`\)/);
+  assert.match(read('view/app.js'), /window\.settingsChanged\(`\$\{x\}\|\$\{y\}\|\$\{settingsHotkey\}\|\$\{pet\}\|\$\{showClock \? 1 : 0\}\|\$\{clockStyle\}\|\$\{cardScale\}\|\$\{raisePet \? 1 : 0\}\|\$\{feedHotkey\}\|\$\{playHotkey\}\|\$\{cardShape\}\|\$\{hideHotkey\}\|\$\{languageSetting\}`\)/);
   // the INI: written by SaveSettings, read by LoadSettings, under the same keys
   for (const key of ['pet', 'clock_style', 'card_shape', 'language']) {
-    assert.match(main, new RegExp(`<< "${key}=" << g_settings\\.`), `${key} is written`);
+    // DMP-37: the language is written as chosen, "hub" included
+    assert.match(main, key === 'language' ? /<< "language=" << LanguageSetting\(\)/ : new RegExp(`<< "${key}=" << g_settings\\.`), `${key} is written`);
     assert.match(main, new RegExp(`key == "${key}"`), `${key} is read`);
   }
   // and sent back to the page at load under the names the page reads

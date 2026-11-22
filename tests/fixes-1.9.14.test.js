@@ -107,3 +107,41 @@ test('DMP-36: the plugin asks DovahMenu 0.2.3+ on the game thread; MiniPets\' ow
   assert.match(card, /RegisterJSListener\(view, "keyOwner", \[\]\(const char\* payload\) \{[\s\S]{0,400}GameThread\("key owner"\)[\s\S]{0,300}Invoke\("dragonbornXP\.keyOwner"/);
   assert.match(fs.readFileSync(path.join(__dirname, '..', 'view', 'app.js'), 'utf8'), /if \(typeof window\.keyOwner === 'function'\) window\.keyOwner\(label\);/);
 });
+
+// --- DMP-37 ---------------------------------------------------------------
+
+test('DMP-37: following DovahHub words the page in its language, and sends "hub" back', () => {
+  const { p, xp, sent } = page({ languageSetting: 'hub', language: 'fr', hubLanguage: 'fr' });
+  assert.equal(p.sandbox.PetI18n.current, 'fr', 'DovahHub\'s language');
+  // only the settings write (queueNativeSettingsChanged's 120 ms) runs at once; the idle animation's timers would loop
+  p.sandbox.setTimeout = (fn, ms) => { if (ms === 120) fn(); return 1; };
+  // a setting changed in the page: the language goes back as chosen
+  xp.openSettings({ x: -1, y: -1, hotkey: 'Shift+B', pet: 'fox', raisePet: true, languageSetting: 'hub', language: 'fr', hubLanguage: 'fr' });
+  p.element('#clock-enabled').checked = true;
+  p.element('#clock-enabled').fire('change');
+  const fields = (sent.at(-1) || '').split('|');
+  assert.equal(fields[12], 'hub');
+  // DovahHub's language changes: the plugin sends it again
+  xp.applySettings({ x: -1, y: -1, hotkey: 'Shift+B', pet: 'fox', raisePet: true, languageSetting: 'hub', language: 'de', hubLanguage: 'de' });
+  assert.equal(p.sandbox.PetI18n.current, 'de');
+});
+
+test('DMP-37: without DovahHub, "hub" reads English and the choice stays hidden', () => {
+  const { p } = page({ languageSetting: 'hub', language: 'en', hubLanguage: '' });
+  assert.equal(p.sandbox.PetI18n.current, 'en');
+});
+
+test('DMP-37: the plugin keeps language=hub, follows DovahHub on the 250 ms pass, and offers the choice to DovahHub', () => {
+  const core = pluginFile('main.cpp');
+  assert.match(core, /return g_settings\.followHubLanguage \? std::string\("hub"\) : g_settings\.language;/);
+  assert.match(core, /if \(value == "hub"\) \{\s*g_settings\.followHubLanguage = true;\s*const auto hub = Hub::HubLanguage\(\);\s*g_settings\.language = hub\.empty\(\) \? "en" : hub;/);
+  assert.match(core, /<< "language=" << LanguageSetting\(\)/);
+  assert.match(core, /Card::UpdateCompanionState\(\);\s*Hub::FollowHubLanguage\(\);/);
+  assert.match(core, /",\\"languageSetting\\":" \+ JsonString\(LanguageSetting\(\)\) \+\s*",\\"hubLanguage\\":" \+ JsonString\(Hub::HubLanguage\(\)\)/);
+  const hub = pluginPart('Hub');
+  assert.match(hub, /if \(g_hub && DOVAHHUB_API::HasLanguage\(g_hub\)\) \{\s*languages \+= "," \+ choice\("hub", text\.languageFollowHub\);/);
+  const follow = hub.slice(hub.indexOf('void FollowHubLanguage()'), hub.indexOf('void FollowHubLanguage()') + 800);
+  assert.match(follow, /if \(!g_settings\.followHubLanguage\) \{\s*return;/);
+  assert.match(follow, /Card::Invoke\("dragonbornXP\.applySettings", SettingsPayload\(\)\);\s*RefreshHubSettings\(\);/);
+  assert.doesNotMatch(follow, /SaveSettings\(\)/, 'nothing saved: the INI keeps hub');
+});

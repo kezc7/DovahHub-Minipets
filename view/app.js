@@ -89,6 +89,9 @@
   let timeOfDay = 'day';
   let weather = 'clear';
   let language = 'en';
+  // DMP-37: what the player chose ('hub' follows DovahHub), and DovahHub's language ('' without DovahHub 0.95.17+)
+  let languageSetting = 'en';
+  let hubLanguage = '';
   // set by the plugin, see regions.js
   let region = 'skyrim';
 
@@ -207,6 +210,7 @@
       hotkeyAllowed: "Press a letter, number, Enter, Space, Tab, or F1–F12 with optional Shift.",
       hotkeyAlreadyUsed: "{key} is already used for {action}.",
       hotkeyUsedByMod: "{key} is already used by {mod}.",
+      languageFollowHub: "Follow DovahHub",
       levelDetail: "A mighty little celebration.",
       levelNumber: "Level {level}!",
       levelTitle: "Level up!",
@@ -881,7 +885,7 @@
     if (typeof window.settingsChanged !== 'function') return;
     const x = hasCustomPosition() ? positionX : -1;
     const y = hasCustomPosition() ? positionY : -1;
-    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}|${cardShape}|${hideHotkey}|${language}`);
+    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}|${cardShape}|${hideHotkey}|${languageSetting}`);
   }
 
   function queueNativeSettingsChanged() {
@@ -917,7 +921,9 @@
   const labChoices = {};
   let reportedNoChoiceList = false;
   const LANGUAGE_CHOICES = [['en', 'English'], ['fr', 'Français'], ['de', 'Deutsch'], ['it', 'Italiano'], ['es', 'Español'],
-    ['pl', 'Polski'], ['tr', 'Türkçe'], ['zh-CN', '简体中文'], ['ja', '日本語'], ['ko', '한국어']].map(([value, label]) => ({ value, label }));
+    ['pl', 'Polski'], ['tr', 'Türkçe'], ['zh-CN', '简体中文'], ['ja', '日本語'], ['ko', '한국어']].map(([value, label]) => ({ value, label }))
+    // DMP-37: shown once the plugin says DovahHub has a language
+    .concat([{ value: 'hub', key: 'languageFollowHub', hidden: true }]);
 
   function companionChoices() {
     return Object.keys(petNames).map(id => ({ value: id, companion: true }));
@@ -939,8 +945,9 @@
     };
     button.addEventListener('click', () => {
       if (button.disabled || !choices.length) return;
-      const at = choices.findIndex(c => String(c.value) === String(current));
-      const next = choices[(at + 1) % choices.length];
+      const shown = choices.filter(c => !c.hidden);
+      const at = shown.findIndex(c => String(c.value) === String(current));
+      const next = shown[(at + 1) % shown.length];
       button.setChoice(next.value);
       onChoose(next.value, next);
     });
@@ -987,6 +994,11 @@
     relabelChoices();
   }
 
+  // DMP-37: the language list's own "Follow DovahHub" entry (makeChoice keeps its own copy of the choices)
+  function followHubChoices() {
+    return madeChoices.filter(made => made.button === languageChoice).flatMap(made => made.choices.filter(choice => choice.value === 'hub'));
+  }
+
   function localizeCompanionOptions() {
     relabelChoices();
     document.querySelectorAll('[data-pet-label]').forEach(label => {
@@ -995,10 +1007,12 @@
   }
 
   function setLanguage(next, persist = true) {
-    language = petI18n.setLanguage(next);
+    // DMP-37: 'hub' words the page in DovahHub's language (English without DovahHub)
+    languageSetting = next === 'hub' ? 'hub' : petI18n.setLanguage(next);
+    language = petI18n.setLanguage(next === 'hub' ? (hubLanguage || 'en') : next);
     petI18n.apply(document);
     localizeCompanionOptions();
-    if (languageChoice) languageChoice.setChoice(language);
+    if (languageChoice) languageChoice.setChoice(languageSetting);
     renderPetPanel();
     if (lastClockData) {
       clockTime.textContent = petClock.formatTime(lastClockData.hour, lastClockData.minute);
@@ -1024,7 +1038,7 @@
     syncPositionFields();
     settingsHotkeyButton.textContent = settingsHotkey;
     if (petChoice) petChoice.setChoice(pet);
-    if (languageChoice) languageChoice.setChoice(language);
+    if (languageChoice) languageChoice.setChoice(languageSetting);
     document.querySelector('#feed-hotkey').textContent = feedHotkey;
     document.querySelector('#play-hotkey').textContent = playHotkey;
     document.querySelector('#hide-hotkey').textContent = hideHotkey;
@@ -1048,7 +1062,7 @@
       positionX = settingsSnapshot.x;
       positionY = settingsSnapshot.y;
       settingsHotkey = settingsSnapshot.hotkey;
-      setLanguage(settingsSnapshot.language, false);
+      setLanguage(settingsSnapshot.languageSetting, false);
       cardScale = settingsSnapshot.cardScale;
       raisePet = settingsSnapshot.raisePet;
       feedHotkey = settingsSnapshot.feedHotkey;
@@ -1073,7 +1087,7 @@
 
   function openSettings(data) {
     if (data) applyNativeSettings(data);
-    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey, hideHotkey, cardShape, language };
+    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey, hideHotkey, cardShape, languageSetting };
     settingsOpen = true;
     applySceneClasses();
     document.body.classList.add('settings-open');
@@ -1212,7 +1226,12 @@
     if (typeof data.feedHotkey === 'string' && data.feedHotkey) feedHotkey = data.feedHotkey;
     if (typeof data.playHotkey === 'string' && data.playHotkey) playHotkey = data.playHotkey;
     if (typeof data.hideHotkey === 'string' && data.hideHotkey) hideHotkey = data.hideHotkey;
-    if (typeof data.language === 'string') setLanguage(data.language, false);
+    if (typeof data.hubLanguage === 'string') {
+      hubLanguage = data.hubLanguage;
+      followHubChoices().forEach(choice => { choice.hidden = !hubLanguage; });
+    }
+    if (typeof data.languageSetting === 'string') setLanguage(data.languageSetting, false);
+    else if (typeof data.language === 'string') setLanguage(data.language, false);
     if (typeof data.hidden === 'boolean') petHidden = data.hidden;
     if (typeof data.careMoments === 'boolean') careMoments = data.careMoments;
     if (typeof data.clock === 'boolean') showClock = data.clock;

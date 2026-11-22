@@ -32,6 +32,7 @@ namespace HubText
         const char* careMomentsNote;
         const char* chronicleLines;
         const char* chronicleLinesNote;
+        const char* languageFollowHub;
     };
 
     inline constexpr Text kTexts[] = {
@@ -58,7 +59,8 @@ namespace HubText
           "Shared moments count as care",
           "A big moment makes a raised companion a little happier, at most three times a game day",
           "Your companion speaks in Chronicle",
-          "A line in the chat now and then, at most one a minute" },
+          "A line in the chat now and then, at most one a minute",
+          "Follow DovahHub" },
         { "fr",
           "Fran\303\247ais",
           "\303\211lever un compagnon",
@@ -82,7 +84,8 @@ namespace HubText
           "Les moments partag\303\251s comptent comme des soins",
           "Un grand moment rend un compagnon \303\251lev\303\251 un peu plus heureux, trois fois par jour de jeu au plus",
           "Votre compagnon parle dans Chronicle",
-          "Une ligne dans le chat de temps en temps, une par minute au plus" },
+          "Une ligne dans le chat de temps en temps, une par minute au plus",
+          "Suivre DovahHub" },
         { "de",
           "Deutsch",
           "Begleiter aufziehen",
@@ -106,7 +109,8 @@ namespace HubText
           "Gemeinsame Momente z\303\244hlen als Pflege",
           "Ein gro\303\237er Moment macht einen aufgezogenen Begleiter etwas gl\303\274cklicher, h\303\266chstens dreimal pro Spieltag",
           "Dein Begleiter spricht in Chronicle",
-          "Ab und zu eine Zeile im Chat, h\303\266chstens eine pro Minute" },
+          "Ab und zu eine Zeile im Chat, h\303\266chstens eine pro Minute",
+          "Wie DovahHub" },
         { "it",
           "Italiano",
           "Allevare un compagno",
@@ -130,7 +134,8 @@ namespace HubText
           "I momenti condivisi contano come cure",
           "Un grande momento rende un po\342\200\231 pi\303\271 felice il compagno allevato, al massimo tre volte per giorno di gioco",
           "Il tuo compagno parla in Chronicle",
-          "Una riga nella chat ogni tanto, al massimo una al minuto" },
+          "Una riga nella chat ogni tanto, al massimo una al minuto",
+          "Segui DovahHub" },
         { "es",
           "Espa\303\261ol",
           "Criar un compa\303\261ero",
@@ -154,7 +159,8 @@ namespace HubText
           "Los momentos compartidos cuentan como cuidados",
           "Un gran momento hace un poco m\303\241s feliz al compa\303\261ero criado, como mucho tres veces por d\303\255a de juego",
           "Tu compa\303\261ero habla en Chronicle",
-          "Una l\303\255nea en el chat de vez en cuando, como mucho una por minuto" },
+          "Una l\303\255nea en el chat de vez en cuando, como mucho una por minuto",
+          "Seguir DovahHub" },
         { "pl",
           "Polski",
           "Wychowuj towarzysza",
@@ -178,7 +184,8 @@ namespace HubText
           "Wsp\303\263lne chwile licz\304\205 si\304\231 jako opieka",
           "Wa\305\274na chwila troch\304\231 cieszy wychowywanego towarzysza, najwy\305\274ej trzy razy na dzie\305\204 gry",
           "Towarzysz m\303\263wi w Chronicle",
-          "Od czasu do czasu jedna linijka na czacie, najwy\305\274ej jedna na minut\304\231" },
+          "Od czasu do czasu jedna linijka na czacie, najwy\305\274ej jedna na minut\304\231",
+          "Jak w DovahHub" },
         { "tr",
           "T\303\274rk\303\247e",
           "Yolda\305\237 yeti\305\237tir",
@@ -202,7 +209,8 @@ namespace HubText
           "Payla\305\237\304\261lan anlar bak\304\261m say\304\261l\304\261r",
           "B\303\274y\303\274k bir an, yeti\305\237tirdi\304\237in yolda\305\237\304\261 biraz mutlu eder; oyun g\303\274n\303\274 ba\305\237\304\261na en fazla \303\274\303\247 kez",
           "Yolda\305\237\304\261n Chronicle\342\200\231da konu\305\237ur",
-          "Ara s\304\261ra sohbete bir sat\304\261r, dakikada en fazla bir" },
+          "Ara s\304\261ra sohbete bir sat\304\261r, dakikada en fazla bir",
+          "DovahHub'\304\261 izle" },
         { "zh-CN",
           "\347\256\200\344\275\223\344\270\255\346\226\207",
           "\345\205\273\346\210\220\344\274\231\344\274\264",
@@ -226,7 +234,8 @@ namespace HubText
           "\345\205\261\345\220\214\347\232\204\346\227\266\345\210\273\344\271\237\347\256\227\347\205\247\351\241\276",
           "\351\207\215\350\246\201\346\227\266\345\210\273\344\274\232\350\256\251\345\205\273\346\210\220\344\270\255\347\232\204\344\274\231\344\274\264\345\274\200\345\277\203\344\270\200\347\202\271\357\274\214\346\257\217\344\270\252\346\270\270\346\210\217\346\227\245\346\234\200\345\244\232\344\270\211\346\254\241",
           "\344\274\231\344\274\264\345\234\250 Chronicle \344\270\255\350\257\264\350\257\235",
-          "\345\201\266\345\260\224\345\234\250\350\201\212\345\244\251\344\270\255\350\257\264\344\270\200\345\217\245\357\274\214\346\257\217\345\210\206\351\222\237\346\234\200\345\244\232\344\270\200\345\217\245" },
+          "\345\201\266\345\260\224\345\234\250\350\201\212\345\244\251\344\270\255\350\257\264\344\270\200\345\217\245\357\274\214\346\257\217\345\210\206\351\222\237\346\234\200\345\244\232\344\270\200\345\217\245",
+          "\350\267\237\351\232\217 DovahHub" },
         { "ja",
           "\346\227\245\346\234\254\350\252\236",
           "\344\273\262\351\226\223\343\202\222\350\202\262\343\201\246\343\202\213",
@@ -250,7 +259,8 @@ namespace HubText
           "\344\270\200\347\267\222\343\201\256\347\236\254\351\226\223\343\202\202\343\201\212\344\270\226\350\251\261\343\201\253\346\225\260\343\201\210\343\202\213",
           "\345\244\247\343\201\215\343\201\252\345\207\272\346\235\245\344\272\213\343\201\247\350\202\262\343\201\246\343\201\246\343\201\204\343\202\213\344\273\262\351\226\223\343\201\214\345\260\221\343\201\227\345\271\270\343\201\233\343\201\253\343\201\252\343\202\212\343\201\276\343\201\231\357\274\210\343\202\262\343\203\274\343\203\240\345\206\205\343\201\256" "1\346\227\245\343\201\253\346\234\200\345\244\247" "3\345\233\236\357\274\211",
           "\344\273\262\351\226\223\343\201\214Chronicle\343\201\247\350\251\261\343\201\231",
-          "\343\201\250\343\201\215\343\201\251\343\201\215\343\203\201\343\203\243\343\203\203\343\203\210\343\201\253\344\270\200\350\250\200\357\274\210" "1\345\210\206\343\201\253\346\234\200\345\244\247" "1\345\233\236\357\274\211" },
+          "\343\201\250\343\201\215\343\201\251\343\201\215\343\203\201\343\203\243\343\203\203\343\203\210\343\201\253\344\270\200\350\250\200\357\274\210" "1\345\210\206\343\201\253\346\234\200\345\244\247" "1\345\233\236\357\274\211",
+          "DovahHub \343\201\253\345\220\210\343\202\217\343\201\233\343\202\213" },
         { "ko",
           "\355\225\234\352\265\255\354\226\264",
           "\353\217\231\353\243\214 \355\202\244\354\232\260\352\270\260",
@@ -274,7 +284,8 @@ namespace HubText
           "\355\225\250\352\273\230\355\225\234 \354\210\234\352\260\204\353\217\204 \353\217\214\353\264\204\354\234\274\353\241\234 \352\263\204\354\202\260",
           "\355\201\260 \354\210\234\352\260\204\354\235\264 \355\202\244\354\232\260\353\212\224 \353\217\231\353\243\214\353\245\274 \354\241\260\352\270\210 \353\215\224 \355\226\211\353\263\265\355\225\230\352\262\214 \355\225\251\353\213\210\353\213\244. \352\262\214\354\236\204 \353\202\264 \355\225\230\353\243\250\354\227\220 \354\265\234\353\214\200 \354\204\270 \353\262\210",
           "\353\217\231\353\243\214\352\260\200 Chronicle\354\227\220\354\204\234 \353\247\220\355\225\230\352\270\260",
-          "\352\260\200\353\201\224 \354\261\204\355\214\205\354\227\220 \355\225\234 \354\244\204, 1\353\266\204\354\227\220 \354\265\234\353\214\200 \355\225\234 \353\262\210" }
+          "\352\260\200\353\201\224 \354\261\204\355\214\205\354\227\220 \355\225\234 \354\244\204, 1\353\266\204\354\227\220 \354\265\234\353\214\200 \355\225\234 \353\262\210",
+          "DovahHub \353\224\260\353\245\264\352\270\260" }
     };
 
     // the text for a language code, English when the code is unknown

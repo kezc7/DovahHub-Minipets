@@ -371,7 +371,8 @@ namespace MiniPets::Card
                 const auto playKey = parts.size() > 9 && ParseHotkey(parts[9]) != 0 ? parts[9] : g_settings.playHotkeyName;
                 const auto cardShape = parts.size() > 10 && IsSupportedCardShape(parts[10]) ? parts[10] : g_settings.cardShape;
                 const auto hideKey = parts.size() > 11 && ParseHotkey(parts[11]) != 0 ? parts[11] : g_settings.hideHotkeyName;
-                const auto language = parts.size() > 12 && IsSupportedLanguage(parts[12]) ? parts[12] : g_settings.language;
+                // DMP-37: a language code, or "hub" to follow DovahHub
+                const auto language = parts.size() > 12 && (parts[12] == "hub" || IsSupportedLanguage(parts[12])) ? parts[12] : LanguageSetting();
                 bool requiresShift = false;
                 const auto hotkey = ParseHotkey(hotkeyName, &requiresShift);
                 if (hotkey == 0 || x < -1 || y < -1 || !IsSupportedPet(pet)) {
@@ -398,7 +399,7 @@ namespace MiniPets::Card
                 noteChange("play_hotkey", g_settings.playHotkeyName, playKey);
                 noteChange("card_shape", g_settings.cardShape, cardShape);
                 noteChange("hide_hotkey", g_settings.hideHotkeyName, hideKey);
-                noteChange("language", g_settings.language, language);
+                noteChange("language", LanguageSetting(), language);
                 g_settings.positionX = x;
                 g_settings.positionY = y;
                 g_settings.settingsHotkey = hotkey;
@@ -413,7 +414,7 @@ namespace MiniPets::Card
                 g_settings.playHotkeyName = playKey;
                 g_settings.cardShape = cardShape;
                 g_settings.hideHotkeyName = hideKey;
-                g_settings.language = language;
+                (void)SetLanguageSetting(language);
                 StorePetKey(g_feedKey, feedKey);
                 StorePetKey(g_playKey, playKey);
                 StorePetKey(g_hideKey, hideKey);

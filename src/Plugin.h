@@ -98,7 +98,8 @@ namespace MiniPets
         std::string playHotkeyName = "Shift+K";
         std::string cardShape = "square";
         std::string hideHotkeyName = "Shift+V";
-        std::string language = "en";
+        std::string language = "en";  // the language in use (DovahHub's when following it)
+        bool followHubLanguage = false;  // DMP-37: language=hub, "Follow DovahHub"
         bool petHidden = false;
         // reactions (1.9.0): other mods' and the suite's events, the one cooldown, and the two extras
         bool reactToMods = true;
@@ -129,6 +130,9 @@ namespace MiniPets
     bool IsSupportedCardShape(std::string_view shape);
     bool IsSupportedClockStyle(std::string_view style);
     bool IsSupportedLanguage(std::string_view language);
+    // DMP-37: the language as chosen ("hub" follows DovahHub), and choosing one; false for neither a code nor "hub"
+    std::string LanguageSetting();
+    bool SetLanguageSetting(std::string_view value);
     bool ParseFlag(std::string_view value);
     std::vector<std::string> Split(std::string_view value, char separator);
     bool IsSupportedPet(std::string_view pet);
@@ -266,6 +270,9 @@ namespace MiniPets
         DOVAHHUB_API::Result FinishSelfTest();
         void RegisterWithDovahMenu();
         std::string KeyOwner(const std::string& chord);
+        // DMP-37: DovahHub 0.95.17+'s language ("" without it), and following it when the player chose to
+        std::string HubLanguage();
+        void FollowHubLanguage();
         void UpdateDovahMenuHotkey();
     }
 

@@ -16,7 +16,7 @@ const ROOT = path.join(__dirname, '..');
 const HEADER = path.join(ROOT, 'src', 'HubText.h');
 const FIELDS = ['raisePet', 'raisePetHint', 'hubShowClock', 'clockStyle', 'plate', 'ribbon', 'hubCardSize', 'hubCardShape',
   'square', 'wide', 'hubHideCard', 'hubHideCardNote', 'language', 'machineTranslationNote', 'leftoverDll',
-  'reactToMods', 'reactToModsNote', 'reactionCooldown', 'careMoments', 'careMomentsNote', 'chronicleLines', 'chronicleLinesNote'];
+  'reactToMods', 'reactToModsNote', 'reactionCooldown', 'careMoments', 'careMomentsNote', 'chronicleLines', 'chronicleLinesNote', 'languageFollowHub'];
 
 function cString(text) {
   let out = '"';

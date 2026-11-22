@@ -54,6 +54,7 @@ namespace MiniPets
                             }
                             Card::UpdateOverlayMenuVisibility();
                             Card::UpdateCompanionState();
+                            Hub::FollowHubLanguage();
                             Card::UpdateWorldMood();
                             Card::UpdateClock();
                             ReactionWiring::UpdateReactions();
@@ -342,8 +343,8 @@ namespace MiniPets
                     else if (key == "hide_hotkey" && ParseHotkey(value) != 0) {
                         g_settings.hideHotkeyName = value;
                     }
-                    else if (key == "language" && IsSupportedLanguage(value)) {
-                        g_settings.language = value;
+                    else if (key == "language") {
+                        (void)SetLanguageSetting(value);
                     }
                     else if (key == "hidden") {
                         g_settings.petHidden = ParseFlag(value);
@@ -395,7 +396,7 @@ namespace MiniPets
                    << "play_hotkey=" << g_settings.playHotkeyName << '\n'
                    << "card_shape=" << g_settings.cardShape << '\n'
                    << "hide_hotkey=" << g_settings.hideHotkeyName << '\n'
-                   << "language=" << g_settings.language << '\n'
+                   << "language=" << LanguageSetting() << '\n'
                    << "hidden=" << (g_settings.petHidden ? 1 : 0) << '\n'
                    << "react_to_mods=" << (g_settings.reactToMods ? 1 : 0) << '\n'
                    << "reaction_cooldown=" << g_settings.reactionCooldown << '\n'
@@ -426,8 +427,31 @@ namespace MiniPets
                ",\"cardShape\":" + JsonString(g_settings.cardShape) +
                ",\"hideHotkey\":" + JsonString(g_settings.hideHotkeyName) +
                ",\"language\":" + JsonString(g_settings.language) +
+               ",\"languageSetting\":" + JsonString(LanguageSetting()) +
+               ",\"hubLanguage\":" + JsonString(Hub::HubLanguage()) +
                ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") +
                ",\"careMoments\":" + (g_settings.careMoments ? "true" : "false") + "}";
+    }
+
+    std::string LanguageSetting()
+    {
+        return g_settings.followHubLanguage ? std::string("hub") : g_settings.language;
+    }
+
+    bool SetLanguageSetting(std::string_view value)
+    {
+        if (value == "hub") {
+            g_settings.followHubLanguage = true;
+            const auto hub = Hub::HubLanguage();
+            g_settings.language = hub.empty() ? "en" : hub;
+            return true;
+        }
+        if (!IsSupportedLanguage(value)) {
+            return false;
+        }
+        g_settings.followHubLanguage = false;
+        g_settings.language = std::string(value);
+        return true;
     }
 
     std::uint32_t GameThreadId()
