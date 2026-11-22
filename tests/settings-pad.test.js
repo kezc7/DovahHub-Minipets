@@ -243,3 +243,52 @@ test('the pad reaches every control on the settings page, runs each list, and sa
     await page.close();
   }
 });
+
+// DMP-30: in a long language the raise-a-pet buttons wrap onto two lines; Up and Down take the other line first.
+// And moving off a hotkey that waits for a key ends the wait, with the old key back.
+test('Up and Down reach a wrapped line of buttons, and the D-pad ends a hotkey capture', async () => {
+  const life = require('../view/pet-life.js');
+  const fox = Object.assign(life.create('fox', 0), { stage: 'hatched', hatchedAt: 0, lastTick: 100, hunger: 50, happiness: 50 });
+  const page = await startEdge();
+  try {
+    await page.send('Page.enable');
+    await page.send('Runtime.enable');
+    await openSettingsWithPad(page);
+    await page.run(`dragonbornXP.petState({ state: ${JSON.stringify(life.serialize(fox))}, session: 1 }); true`);
+    await padTo(page, 'raise-pet');
+    await pad(page, 'a');
+    assert.ok(await page.run('document.getElementById("raise-pet").checked'), 'raise-a-pet on, with a hatched fox');
+    // as French or German words them: room for Feed and Play only, so Start over wraps
+    const lines = await page.run(`(() => {
+      const row = document.querySelector('.pet-life-actions');
+      const feed = document.getElementById('pet-feed').getBoundingClientRect(), play = document.getElementById('pet-play').getBoundingClientRect();
+      row.style.width = (play.right - feed.left + 4) + 'px';
+      const top = id => Math.round(document.getElementById(id).getBoundingClientRect().top);
+      return [top('pet-feed'), top('pet-play'), top('pet-reset')];
+    })()`);
+    assert.equal(lines[0], lines[1], 'Feed and Play share the first line');
+    assert.ok(lines[2] > lines[0], 'Start over is on the second line');
+
+    await padTo(page, 'pet-play');
+    await pad(page, 'down');
+    assert.equal(await focusedId(page), 'pet-reset', 'Down from Play goes to Start over, below it');
+    await pad(page, 'up');
+    assert.ok(['pet-feed', 'pet-play'].includes(await focusedId(page)), 'Up from Start over goes back to the first line');
+    await padTo(page, 'pet-reset');
+    await pad(page, 'down');
+    assert.ok(!['pet-feed', 'pet-play', 'pet-reset'].includes(await focusedId(page)), 'Down from the last line leaves the row');
+
+    // a hotkey waiting for a key: Down ends the wait and moves on
+    await padTo(page, 'settings-hotkey');
+    const key = await page.run('document.getElementById("settings-hotkey").textContent');
+    await pad(page, 'a');
+    assert.ok(await page.run('document.getElementById("settings-hotkey").classList.contains("capturing")'), 'A starts a capture');
+    await pad(page, 'down');
+    assert.ok(!(await page.run('document.getElementById("settings-hotkey").classList.contains("capturing")')), 'the D-pad ends it');
+    assert.equal(await page.run('document.getElementById("settings-hotkey").textContent'), key, 'with the old key back');
+    assert.notEqual(await focusedId(page), 'settings-hotkey', 'and moves on');
+    assert.ok(await page.run('!document.getElementById("settings-menu").classList.contains("hidden")'), 'the settings stay open');
+  } finally {
+    await page.close();
+  }
+});

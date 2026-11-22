@@ -1130,6 +1130,14 @@
       const next = padNearest(current, inRow, direction);
       if (next) { padFocus(next); return true; }
       if (direction === 'left' || direction === 'right') return true;  // the row's end: stay
+    } else {
+      // DMP-30: a row whose buttons wrapped (a long language) has its other line first, then the next row.
+      // A line is another one only when it's at least half a button's height away.
+      const half = current.getBoundingClientRect().height / 2;
+      const y = padCentre(current).y;
+      const otherLine = inRow.filter(el => Math.abs(padCentre(el).y - y) >= half);
+      const next = padNearest(current, otherLine, direction);
+      if (next) { padFocus(next); return true; }
     }
     const rows = [];
     items.forEach(el => { const r = padRowOf(el); if (rows.indexOf(r) < 0) rows.push(r); });
@@ -1165,6 +1173,8 @@
           return false;
         }
         if (['up', 'down', 'left', 'right'].indexOf(event.action) < 0) return false;
+        // DMP-30: moving off a hotkey waiting for a key ends the wait, with the old key back
+        if (captureButton) stopCapture();
         if (padEditing && padEditing === selected) return false;  // Left and Right change it, as the layer does
         padEditing = null;
         return padMove(root, event.action);
