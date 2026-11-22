@@ -25,6 +25,10 @@ namespace MiniPets::ReactionWiring
         std::unordered_set<std::uint32_t> g_killsSeen;
         double g_loadedAtMs = 0.0;
         double g_lastOutfitMs = -1e18;
+        // DMP-28: an outfit reaction turned down while the card was hidden (DovahHub open), offered again once it's shown
+        std::optional<Reactions::Reaction> g_pendingOutfit;
+        double g_pendingOutfitUntilMs = 0.0;
+        constexpr double kPendingOutfitMs = 60.0 * 1000.0;
         double g_lastChronicleMs = -1e18;
         double g_sleepReleaseAtMs = 0.0;
         bool g_playerDead = false;
@@ -71,6 +75,21 @@ namespace MiniPets::ReactionWiring
                                              ",\"hold\":" + (reaction.hold ? "true" : "false") + ",\"care\":" + (reaction.care ? "true" : "false") +
                                              ",\"say\":" + (say ? "true" : "false") + "}");
             return verdict;
+        }
+
+        // DMP-28: the outfit's ten minutes start only when the pet reacted. Turned down because the card was hidden
+        // for a menu (DovahHub open on its Wardrobe tab), it waits up to a minute for the card, once.
+        void OfferOutfit(const Reactions::Reaction& reaction, double now, bool mayWait)
+        {
+            const auto verdict = OfferReaction(reaction, true);
+            if (verdict == Reactions::Verdict::Show) {
+                g_lastOutfitMs = now;
+            }
+            else if (verdict == Reactions::Verdict::Hidden && mayWait && Card::IsHidden()) {
+                g_pendingOutfit = reaction;
+                g_pendingOutfitUntilMs = now + kPendingOutfitMs;
+                logger::info("MiniPets: the outfit reaction waits for the card to be shown");
+            }
         }
 
         void OwnReaction(const char* source, const char* mood, const char* captionKey, std::string vars, int ms, int priority, bool hold, bool care, bool fromOtherMod)
@@ -223,6 +242,7 @@ namespace MiniPets::ReactionWiring
         g_killsSeen.clear();
         g_loadedAtMs = NowMs();
         g_lastOutfitMs = -1e18;
+        g_pendingOutfit.reset();
         g_lastChronicleMs = -1e18;
         g_placeSeenMs.clear();
         {
@@ -298,6 +318,15 @@ namespace MiniPets::ReactionWiring
             }
         }
 
+        // DMP-28: the outfit change DovahHub sent while it was open, once the card is back
+        if (g_pendingOutfit && !Card::IsHidden()) {
+            const auto reaction = *g_pendingOutfit;
+            g_pendingOutfit.reset();
+            if (NowMs() < g_pendingOutfitUntilMs) {
+                OfferOutfit(reaction, NowMs(), false);
+            }
+        }
+
         if (g_sleepReleaseAtMs > 0.0 && NowMs() >= g_sleepReleaseAtMs) {
             g_sleepReleaseAtMs = 0.0;
             ReleaseReaction("sleep");
@@ -348,8 +377,7 @@ namespace MiniPets::ReactionWiring
                 }
                 const double now = NowMs();
                 if (Reactions::FromOutfitChange(json, (now - g_loadedAtMs) / 1000.0, (now - g_lastOutfitMs) / 1000.0, reaction)) {
-                    g_lastOutfitMs = now;
-                    OfferReaction(reaction, true);
+                    OfferOutfit(reaction, now, true);
                 }
             });
         }

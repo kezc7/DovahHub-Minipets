@@ -87,3 +87,15 @@ test('DMP-24: DovahHub\'s rows are worded again once the INI is read', () => {
   assert.match(hub, /void RefreshHubSettings\(\)[\s\S]{0,400}g_hubSettingsLanguage == g_settings\.language && g_hubSettingsHideKey == g_settings\.hideHotkeyName/,
     'only when they differ from what was sent at kPostPostLoad');
 });
+
+test('DMP-28: the outfit\'s ten minutes start only when shown, and a hidden card makes it wait', () => {
+  const wiring = pluginPart('ReactionWiring');
+  assert.match(wiring, /Reactions::Verdict OfferReaction\(const Reactions::Reaction& reaction, bool fromOtherMod\)/);
+  const outfit = wiring.slice(wiring.indexOf('void OfferOutfit('), wiring.indexOf('void OwnReaction('));
+  assert.match(outfit, /if \(verdict == Reactions::Verdict::Show\) \{\s*g_lastOutfitMs = now;/);
+  assert.match(outfit, /verdict == Reactions::Verdict::Hidden && mayWait && Card::IsHidden\(\)/, 'only a card hidden for a menu, never the player\'s own hide');
+  assert.equal((wiring.match(/g_lastOutfitMs = now;/g) || []).length, 1);
+  assert.match(wiring, /OfferOutfit\(reaction, now, true\);/);
+  assert.match(wiring, /if \(g_pendingOutfit && !Card::IsHidden\(\)\) \{[\s\S]{0,300}OfferOutfit\(reaction, NowMs\(\), false\);/, 'offered again once, without waiting again');
+  assert.match(wiring, /void ResetReactions\(\)[\s\S]{0,700}g_pendingOutfit\.reset\(\);/, 'a load drops it');
+});
