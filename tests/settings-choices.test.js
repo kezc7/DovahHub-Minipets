@@ -142,7 +142,7 @@ test('the plugin reads, writes and sends back each of the four in the same place
   // DMP-37: a language code, or "hub" to follow DovahHub
   assert.match(card, /const auto language = parts\.size\(\) > 12 && \(parts\[12\] == "hub" \|\| IsSupportedLanguage\(parts\[12\]\)\)/);
   // the page sends them in that order
-  assert.match(read('view/app.js'), /window\.settingsChanged\(`\$\{x\}\|\$\{y\}\|\$\{settingsHotkey\}\|\$\{pet\}\|\$\{showClock \? 1 : 0\}\|\$\{clockStyle\}\|\$\{cardScale\}\|\$\{raisePet \? 1 : 0\}\|\$\{feedHotkey\}\|\$\{playHotkey\}\|\$\{cardShape\}\|\$\{hideHotkey\}\|\$\{languageSetting\}`\)/);
+  assert.match(read('view/app.js'), /window\.settingsChanged\(`\$\{x\}\|\$\{y\}\|\$\{settingsHotkey\}\|\$\{pet\}\|\$\{showClock \? 1 : 0\}\|\$\{clockStyle\}\|\$\{cardScale\}\|\$\{raisePet \? 1 : 0\}\|\$\{feedHotkey\}\|\$\{playHotkey\}\|\$\{cardShape\}\|\$\{hideHotkey\}\|\$\{languageSetting\}\|\$\{extraFields\(\)\}`\)/);
   // the INI: written by SaveSettings, read by LoadSettings, under the same keys
   for (const key of ['pet', 'clock_style', 'card_shape', 'language']) {
     // DMP-37: the language is written as chosen, "hub" included

@@ -350,7 +350,8 @@ namespace MiniPets::Card
             }
         }
 
-        // x|y|hotkey|pet|clock|clockStyle|scale|raisePet|feedKey|playKey|shape|hideKey|language, everything after pet is optional
+        // x|y|hotkey|pet|clock|clockStyle|scale|raisePet|feedKey|playKey|shape|hideKey|language|reactToMods|cooldown|careMoments|
+        // chronicleLines, then the look settings; everything after pet is optional
         void ApplySettings(std::string_view payload)
         {
             const auto parts = Split(payload, '|');
@@ -371,6 +372,11 @@ namespace MiniPets::Card
                 const auto playKey = parts.size() > 9 && ParseHotkey(parts[9]) != 0 ? parts[9] : g_settings.playHotkeyName;
                 const auto cardShape = parts.size() > 10 && IsSupportedCardShape(parts[10]) ? parts[10] : g_settings.cardShape;
                 const auto hideKey = parts.size() > 11 && ParseHotkey(parts[11]) != 0 ? parts[11] : g_settings.hideHotkeyName;
+                // DMP-40: the Reactions group (fields 13 to 16); an older page leaves them as they are
+                const bool reactToMods = parts.size() > 13 ? ParseFlag(parts[13]) : g_settings.reactToMods;
+                const int reactionCooldown = parts.size() > 14 ? std::clamp(std::stoi(parts[14]), Reactions::kMinCooldownSeconds, Reactions::kMaxCooldownSeconds) : g_settings.reactionCooldown;
+                const bool careMoments = parts.size() > 15 ? ParseFlag(parts[15]) : g_settings.careMoments;
+                const bool chronicleLines = parts.size() > 16 ? ParseFlag(parts[16]) : g_settings.chronicleLines;
                 // DMP-37: a language code, or "hub" to follow DovahHub
                 const auto language = parts.size() > 12 && (parts[12] == "hub" || IsSupportedLanguage(parts[12])) ? parts[12] : LanguageSetting();
                 bool requiresShift = false;
@@ -400,6 +406,10 @@ namespace MiniPets::Card
                 noteChange("card_shape", g_settings.cardShape, cardShape);
                 noteChange("hide_hotkey", g_settings.hideHotkeyName, hideKey);
                 noteChange("language", LanguageSetting(), language);
+                noteChange("react_to_mods", flag(g_settings.reactToMods), flag(reactToMods));
+                noteChange("reaction_cooldown", std::to_string(g_settings.reactionCooldown), std::to_string(reactionCooldown));
+                noteChange("care_moments", flag(g_settings.careMoments), flag(careMoments));
+                noteChange("chronicle_lines", flag(g_settings.chronicleLines), flag(chronicleLines));
                 g_settings.positionX = x;
                 g_settings.positionY = y;
                 g_settings.settingsHotkey = hotkey;
@@ -415,6 +425,10 @@ namespace MiniPets::Card
                 g_settings.cardShape = cardShape;
                 g_settings.hideHotkeyName = hideKey;
                 (void)SetLanguageSetting(language);
+                g_settings.reactToMods = reactToMods;
+                g_settings.reactionCooldown = reactionCooldown;
+                g_settings.careMoments = careMoments;
+                g_settings.chronicleLines = chronicleLines;
                 StorePetKey(g_feedKey, feedKey);
                 StorePetKey(g_playKey, playKey);
                 StorePetKey(g_hideKey, hideKey);

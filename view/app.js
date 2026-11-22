@@ -908,11 +908,49 @@
 
   // --- Settings -----------------------------------------------------------
 
+  // DMP-40: settings sent to the plugin after the language, each a switch or a number with its own row in the
+  // settings: the Reactions group, then the look settings (DMP-42, DMP-43)
+  const EXTRA_SETTINGS = [
+    { key: 'reactToMods', kind: 'flag', value: true, id: 'react-to-mods' },
+    { key: 'reactionCooldown', kind: 'number', value: 8, id: 'reaction-cooldown', min: 2, max: 60 },
+    { key: 'careMoments', kind: 'flag', value: false, id: 'care-moments' },
+    { key: 'chronicleLines', kind: 'flag', value: false, id: 'chronicle-lines' }
+  ];
+  const extras = {};
+  EXTRA_SETTINGS.forEach(setting => { extras[setting.key] = setting.value; });
+  function setExtra(key, raw, persist = true) {
+    const setting = EXTRA_SETTINGS.find(s => s.key === key);
+    if (!setting) return;
+    const value = setting.kind === 'flag' ? Boolean(raw) : Math.min(setting.max, Math.max(setting.min, Math.round(Number(raw) || setting.value)));
+    extras[key] = value;
+    if (key === 'careMoments') careMoments = value;
+    if (typeof onExtraChanged === 'function') onExtraChanged(key);
+    if (settingsOpen) syncExtraFields();
+    if (persist) queueNativeSettingsChanged();
+  }
+  function syncExtraFields() {
+    EXTRA_SETTINGS.forEach(setting => {
+      const input = document.getElementById(setting.id);
+      if (!input) return;
+      if (setting.kind === 'flag') input.checked = Boolean(extras[setting.key]);
+      else {
+        input.value = String(extras[setting.key]);
+        const box = document.getElementById(`${setting.id}-value`);
+        if (box) box.value = String(extras[setting.key]);
+      }
+    });
+    syncToggles();
+    syncSliders();
+  }
+  function extraFields() {
+    return EXTRA_SETTINGS.map(setting => setting.kind === 'flag' ? (extras[setting.key] ? 1 : 0) : extras[setting.key]).join('|');
+  }
+
   function nativeSettingsChanged() {
     if (typeof window.settingsChanged !== 'function') return;
     const x = hasCustomPosition() ? positionX : -1;
     const y = hasCustomPosition() ? positionY : -1;
-    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}|${cardShape}|${hideHotkey}|${languageSetting}`);
+    window.settingsChanged(`${x}|${y}|${settingsHotkey}|${pet}|${showClock ? 1 : 0}|${clockStyle}|${cardScale}|${raisePet ? 1 : 0}|${feedHotkey}|${playHotkey}|${cardShape}|${hideHotkey}|${languageSetting}|${extraFields()}`);
   }
 
   function queueNativeSettingsChanged() {
@@ -1064,6 +1102,7 @@
 
   function syncSettingsFields() {
     syncPositionFields();
+    syncExtraFields();
     settingsHotkeyButton.textContent = settingsHotkey;
     if (petChoice) petChoice.setChoice(pet);
     if (languageChoice) languageChoice.setChoice(languageSetting);
@@ -1101,6 +1140,7 @@
       showClock = settingsSnapshot.showClock;
       clockStyle = settingsSnapshot.clockStyle;
       setPet(settingsSnapshot.pet);
+      Object.keys(settingsSnapshot.extras || {}).forEach(key => setExtra(key, settingsSnapshot.extras[key], false));
       applySceneClasses();
     }
     flushNativeSettingsChanged();
@@ -1115,7 +1155,7 @@
 
   function openSettings(data) {
     if (data) applyNativeSettings(data);
-    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey, hideHotkey, cardShape, languageSetting };
+    settingsSnapshot = { x: positionX, y: positionY, hotkey: settingsHotkey, pet, showClock, clockStyle, cardScale, raisePet, feedHotkey, playHotkey, hideHotkey, cardShape, languageSetting, extras: { ...extras } };
     settingsOpen = true;
     applySceneClasses();
     document.body.classList.add('settings-open');
@@ -1261,7 +1301,10 @@
     if (typeof data.languageSetting === 'string') setLanguage(data.languageSetting, false);
     else if (typeof data.language === 'string') setLanguage(data.language, false);
     if (typeof data.hidden === 'boolean') petHidden = data.hidden;
-    if (typeof data.careMoments === 'boolean') careMoments = data.careMoments;
+    // DMP-40: the Reactions group and the look settings, as the plugin keeps them
+    EXTRA_SETTINGS.forEach(setting => {
+      if (typeof data[setting.key] === (setting.kind === 'flag' ? 'boolean' : 'number')) setExtra(setting.key, data[setting.key], false);
+    });
     if (typeof data.clock === 'boolean') showClock = data.clock;
     if (data.clockStyle === 'plate' || data.clockStyle === 'ribbon') clockStyle = data.clockStyle;
     if (Number.isFinite(data.scale)) cardScale = clampScale(data.scale);
@@ -1872,6 +1915,17 @@
     }
   }
   clockEnabledInput.addEventListener('change', event => setClock(event.target.checked, clockStyle));
+  // DMP-40: each extra setting's switch, or its slider and number box
+  EXTRA_SETTINGS.forEach(setting => {
+    const input = document.getElementById(setting.id);
+    if (!input) return;
+    if (setting.kind === 'flag') input.addEventListener('change', event => setExtra(setting.key, event.target.checked));
+    else {
+      input.addEventListener('input', event => setExtra(setting.key, event.target.value));
+      const box = document.getElementById(`${setting.id}-value`);
+      if (box) box.addEventListener('change', event => setExtra(setting.key, event.target.value));
+    }
+  });
 
   // resize the card, then redraw everything that's drawn to its size
   function applyShape(shape) {

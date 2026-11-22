@@ -104,6 +104,25 @@
         </label>
       </div>
       <div class="settings-group">
+        <h2 class="dv-kicker" data-i18n="reactionsHeading">Reactions</h2>
+        <label class="settings-row dv-setting-row" for="react-to-mods">
+          <span class="dv-setting-row__label"><b data-i18n="reactToMods">React to other mods</b><small data-i18n="reactToModsNote">Cheers your biggest hits in DovahDamage, waves at new followers, and lets other mods make your companion react</small></span>
+          <span class="dv-setting-row__control"><span class="dv-toggle"><input id="react-to-mods" class="settings-toggle" type="checkbox"><span class="dv-toggle__track"><i></i></span><span class="toggle-state" data-i18n="toggleOff">Off</span></span></span>
+        </label>
+        <label class="settings-row dv-setting-row" for="reaction-cooldown">
+          <span class="dv-setting-row__label"><b data-i18n="reactionCooldown">Time between reactions</b><small data-i18n="secondsUnit">seconds</small></span>
+          <span class="dv-setting-row__control position-control"><input id="reaction-cooldown" class="dv-slider" type="range" min="2" max="60" step="1"><input id="reaction-cooldown-value" class="dv-setting-row__value" type="number" min="2" max="60" step="1"></span>
+        </label>
+        <label class="settings-row dv-setting-row" for="care-moments">
+          <span class="dv-setting-row__label"><b data-i18n="careMoments">Shared moments count as care</b><small data-i18n="careMomentsNote">A big moment makes a raised companion a little happier, at most three times a game day</small></span>
+          <span class="dv-setting-row__control"><span class="dv-toggle"><input id="care-moments" class="settings-toggle" type="checkbox"><span class="dv-toggle__track"><i></i></span><span class="toggle-state" data-i18n="toggleOff">Off</span></span></span>
+        </label>
+        <label class="settings-row dv-setting-row" for="chronicle-lines">
+          <span class="dv-setting-row__label"><b data-i18n="chronicleLines">Your companion speaks in Chronicle</b><small data-i18n="chronicleLinesNote">A line in the chat now and then, at most one a minute</small></span>
+          <span class="dv-setting-row__control"><span class="dv-toggle"><input id="chronicle-lines" class="settings-toggle" type="checkbox"><span class="dv-toggle__track"><i></i></span><span class="toggle-state" data-i18n="toggleOff">Off</span></span></span>
+        </label>
+      </div>
+      <div class="settings-group">
         <h2 class="dv-kicker" data-i18n="clock">Clock</h2>
         <label class="settings-row dv-setting-row" for="clock-enabled">
           <span class="dv-setting-row__label"><b data-i18n="showClock">Show clock</b><small data-i18n="showClockHint">In-game time and date above the card</small></span>

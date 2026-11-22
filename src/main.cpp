@@ -430,7 +430,11 @@ namespace MiniPets
                ",\"languageSetting\":" + JsonString(LanguageSetting()) +
                ",\"hubLanguage\":" + JsonString(Hub::HubLanguage()) +
                ",\"hidden\":" + (g_settings.petHidden ? "true" : "false") +
-               ",\"careMoments\":" + (g_settings.careMoments ? "true" : "false") + "}";
+               ",\"careMoments\":" + (g_settings.careMoments ? "true" : "false") +
+               // DMP-40: the Reactions group in the settings
+               ",\"reactToMods\":" + (g_settings.reactToMods ? "true" : "false") +
+               ",\"reactionCooldown\":" + std::to_string(g_settings.reactionCooldown) +
+               ",\"chronicleLines\":" + (g_settings.chronicleLines ? "true" : "false") + "}";
     }
 
     std::string LanguageSetting()
